@@ -1,0 +1,26 @@
+/autom4te.cache
+/configure
+Makefile.in
+Makefile
+.*.swp
+
+# autoreconf crap
+/aclocal.m4
+/compile
+/config.guess
+/config.h.in
+/config.sub
+/install-sh
+/ltmain.sh
+/missing
+
+# Configured directory crap
+*.o
+/config.h
+/config.log
+/config.status
+/libtool
+/stamp-h1
+
+# Built directory crap
+.libs
