@@ -1,5 +1,8 @@
 
-lib_LTLIBRARIES = libcompile-practical.la
+lib_LTLIBRARIES = libpractical-sa.la
+noinst_PROGRAMS = practical-sa-ut
 
-libcompile_practical_la_LDFLAGS = -version-info 0:0:0
-libcompile_practical_la_SOURCES =
+libpractical_sa_la_LDFLAGS = -version-info 0:0:0
+libpractical_sa_la_SOURCES = tokenizer.cpp
+
+practical_sa_ut_SOURCES = ut_runner.cpp slice_ut.cpp

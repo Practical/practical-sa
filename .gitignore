@@ -1,8 +1,13 @@
 /autom4te.cache
 /configure
+/depcomp
 Makefile.in
 Makefile
 .*.swp
+*~
+
+# Out of tree build directories
+/build*
 
 # autoreconf crap
 /aclocal.m4
