@@ -17,10 +17,11 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
 AC_PROG_MKDIR_P
+PKG_PROG_PKG_CONFIG
 
 # Checks for libraries.
+PKG_CHECK_MODULES([CPPUNIT], [cppunit], , [AC_MSG_FAILURE([CppUnit module not found])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([cppunit/extensions/HelperMacros.h], [], [AC_MSG_FAILURE([CppUnit headers not found])])
