@@ -56,7 +56,7 @@ public:
         assert(start<len);
         assert(end<=len);
 
-        return Slice(ptr+start, end - start - 1);
+        return Slice(ptr+start, end - start);
     }
 
     Slice<const T> subslice(size_t start, size_t end) const {
@@ -66,7 +66,7 @@ public:
         assert(start<len);
         assert(end<=len);
 
-        return Slice<const T>(ptr+start, end - start - 1);
+        return Slice<const T>(ptr+start, end - start);
     }
 };
 

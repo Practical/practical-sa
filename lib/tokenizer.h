@@ -5,30 +5,43 @@
 
 #include <slice.h>
 
-class Tokenizer {
-    Slice<const char> file;
-    size_t line=0, col=0;
-    size_t position=0;
+class tokenizer_error : public std::exception {
+    const char *msg;
+    size_t line, col;
+public:
+    tokenizer_error(const char *msg, size_t line, size_t col) : msg(msg), line(line), col(col) {
+    }
 
+    const char *what() const noexcept {
+        return msg;
+    }
+};
+
+class Tokenizer {
 public:
     enum class Tokens {
         WS, /// White space
         OPEN_ROUND_BRACKET,
     };
 
+private:
+    Slice<const char> file;
+    size_t line=0, col=0;
+    size_t position=0;
+    Tokens token;
+    Slice<const char> tokenText;
+
+public:
     Tokenizer(Slice<const char> file) : file(file) {
+        line = 1;
+        col = 1;
+        next();
     }
 
-    Tokens token() {
-        assert(false); // TODO implement
-    }
+    bool next();
 
-    void next() {
-        assert(false); // TODO implement
-    }
-
-    bool done() const {
-        assert(false); // TODO implement
+    Tokens currentToken() {
+        return token;
     }
 
     size_t currentLine() const {
@@ -40,19 +53,19 @@ public:
     }
 
     Slice<const char> currentTokenText() const {
-        assert(false); // TODO implement
+        return tokenText;
     }
+
+private:
+    static bool isWS(char chr) {
+        return chr==' ' || chr=='\n' || chr=='\r' || chr=='\t';
+    }
+
+    void consumeWS();
+
+    void nextChar();
 };
 
-std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
-#define CASE(name) case Tokenizer::Tokens::name: out<<#name; break
-    switch(token) {
-        CASE(WS);
-        CASE(OPEN_ROUND_BRACKET);
-    }
-
-    return out;
-#undef CASE
-}
+std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token);
 
 #endif // TOKENIZER_H

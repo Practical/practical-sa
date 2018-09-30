@@ -32,7 +32,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
 
         Slice<T> result;
 
-        result = buffer.subslice(0, i+1);
+        result = buffer.subslice(0, i);
         buffer = buffer.subslice(i+1);
 
         return result;
@@ -87,24 +87,22 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 }
 #undef CASE
             } else {
-                std::cout << "No match line: " << l << " Len: " << line.length() << " buffer: " << testPlan.length() << "\n";
+                std::cout << "No match line: \"" << l << "\" Len: " << line.length() << " buffer: " << testPlan.length() << "\n";
             }
         }
 
         size_t expectedIndex = 0;
         Tokenizer tokenizer(testData);
-        while( !tokenizer.done() ) {
+        while( tokenizer.next() ) {
             TestPoint *point = &testPoints[expectedIndex];
-            if( tokenizer.token() == point->token ) {
+            if( tokenizer.currentToken() == point->token ) {
                 CPPUNIT_ASSERT( tokenizer.currentLine() == point->line );
                 CPPUNIT_ASSERT( tokenizer.currentCol() == point->column );
                 expectedIndex++;
-                tokenizer.next();
-            } else if( tokenizer.token()==Tokenizer::Tokens::WS ) {
+            } else if( tokenizer.currentToken()==Tokenizer::Tokens::WS ) {
                 // Do nothing: we're allowed to ignore white spaces
-                tokenizer.next();
             } else {
-                std::cerr << "At " << tokenizer.currentLine() << ":" << tokenizer.currentCol() << ": Detected token " << tokenizer.token() <<
+                std::cerr << "At " << tokenizer.currentLine() << ":" << tokenizer.currentCol() << ": Detected token " << tokenizer.currentToken() <<
                         ", expected " << point->token << " " << point->line << ":" << point->column << ": text was \"" <<
                         tokenizer.currentTokenText() << "\"\n";
                 CPPUNIT_ASSERT(false);
