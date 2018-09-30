@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cassert>
+#include <iostream>
 
 template <class T>
 class Slice {
@@ -20,6 +21,14 @@ public:
     // Accessors
     size_t length() const {
         return len;
+    }
+
+    T *get() {
+        return ptr;
+    }
+
+    const T *get() const {
+        return ptr;
     }
 
     T &operator[](size_t index) {
@@ -60,5 +69,14 @@ public:
         return Slice<const T>(ptr+start, end - start - 1);
     }
 };
+
+template <typename T>
+std::ostream &operator<<( std::ostream &out, const Slice<T> &data ) {
+    for( size_t i=0; i<data.length(); ++i ) {
+        out<<data[i];
+    }
+
+    return out;
+}
 
 #endif // SLICE_H
