@@ -48,7 +48,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
 
         auto testName = consumeLine(testPlan);
 
-        std::regex csvParse("([A-Z]+),(\\d+),(\\d+)");
+        std::regex csvParse("([A-Z0-9_]+),(\\d+),(\\d+)");
 
         std::cout<<testName<<"\n";
 
@@ -76,7 +76,25 @@ class TokenizerTest : public CppUnit::TestFixture  {
                     testPoints.push_back(point);\
                 }
                 CASE(WS)
-                else CASE(OPEN_ROUND_BRACKET)
+                else CASE(SEMICOLON)
+                // Bracket types
+                else CASE(BRACKET_ROUND_OPEN)
+                else CASE(BRACKET_ROUND_CLOSE)
+                else CASE(BRACKET_SQUARE_OPEN)
+                else CASE(BRACKET_SQUARE_CLOSE)
+                else CASE(BRACKET_CURLY_OPEN)
+                else CASE(BRACKET_CURLY_CLOSE)
+                // Operators
+                // Literals
+                else CASE(LITERAL_INT_2)
+                else CASE(LITERAL_INT_8)
+                else CASE(LITERAL_INT_10)
+                else CASE(LITERAL_INT_16)
+                else CASE(LITERAL_FP)
+                else CASE(LITERAL_STRING)
+                // Identifier like
+                else CASE(IDENTIFIER)
+                else CASE(RESERVED_DEF)
                 else if( parsedFields[1].str()=="END" ) {
                     done = true;
                     finishLine = line;
@@ -88,6 +106,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
 #undef CASE
             } else {
                 std::cout << "No match line: \"" << l << "\" Len: " << line.length() << " buffer: " << testPlan.length() << "\n";
+                CPPUNIT_ASSERT(false);
             }
         }
 
@@ -109,6 +128,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
             }
         }
 
+        CPPUNIT_ASSERT( expectedIndex == testPoints.size() );
         CPPUNIT_ASSERT( tokenizer.currentLine()==finishLine );
         CPPUNIT_ASSERT( tokenizer.currentCol()==finishCol );
     }
