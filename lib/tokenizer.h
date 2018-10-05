@@ -20,6 +20,14 @@ public:
     const char *what() const noexcept {
         return msg.get();
     }
+
+    size_t getLine() const {
+        return line;
+    }
+
+    size_t getCol() const {
+        return col;
+    }
 };
 
 class Tokenizer {

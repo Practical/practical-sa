@@ -17,49 +17,43 @@ bool Tokenizer::next() {
     size_t startLine = line;
     size_t startCol = col;
     size_t tokenStart = position;
-    try {
-        char currentChar = file[tokenStart];
-        if(isWS(currentChar)) {
-            consumeWS();
-        } else if(currentChar==';') {
-            nextChar();
-            token = Tokens::SEMICOLON;
-        } else if(currentChar=='(') {
-            nextChar();
-            token = Tokens::BRACKET_ROUND_OPEN;
-        } else if(currentChar==')') {
-            nextChar();
-            token = Tokens::BRACKET_ROUND_CLOSE;
-        } else if(currentChar=='[') {
-            nextChar();
-            token = Tokens::BRACKET_SQUARE_OPEN;
-        } else if(currentChar==']') {
-            nextChar();
-            token = Tokens::BRACKET_SQUARE_CLOSE;
-        } else if(currentChar=='{') {
-            nextChar();
-            token = Tokens::BRACKET_CURLY_OPEN;
-        } else if(currentChar=='}') {
-            nextChar();
-            token = Tokens::BRACKET_CURLY_CLOSE;
-        } else if(currentChar=='"') {
-            consumeStringLiteral();
-        } else if(isDigit(currentChar)) {
-            consumeNumericLiteral();
-        } else if(isIdentifierAlpha(currentChar)) {
-            consumeIdentifier();
-        } else {
-            throw tokenizer_error("Invalid character encountered", startLine, startCol);
-        }
-        tokenText = file.subslice(tokenStart, position);
-        tokenLine = startLine;
-        tokenCol = startCol;
-        assert( token!=Tokens::ERR );
-    } catch( tokenizer_error &err ) {
-        tokenLine = line;
-        tokenCol = col;
-        tokenText = file.subslice(tokenStart, position);
+    char currentChar = file[tokenStart];
+    if(isWS(currentChar)) {
+        consumeWS();
+    } else if(currentChar==';') {
+        nextChar();
+        token = Tokens::SEMICOLON;
+    } else if(currentChar=='(') {
+        nextChar();
+        token = Tokens::BRACKET_ROUND_OPEN;
+    } else if(currentChar==')') {
+        nextChar();
+        token = Tokens::BRACKET_ROUND_CLOSE;
+    } else if(currentChar=='[') {
+        nextChar();
+        token = Tokens::BRACKET_SQUARE_OPEN;
+    } else if(currentChar==']') {
+        nextChar();
+        token = Tokens::BRACKET_SQUARE_CLOSE;
+    } else if(currentChar=='{') {
+        nextChar();
+        token = Tokens::BRACKET_CURLY_OPEN;
+    } else if(currentChar=='}') {
+        nextChar();
+        token = Tokens::BRACKET_CURLY_CLOSE;
+    } else if(currentChar=='"') {
+        consumeStringLiteral();
+    } else if(isDigit(currentChar)) {
+        consumeNumericLiteral();
+    } else if(isIdentifierAlpha(currentChar)) {
+        consumeIdentifier();
+    } else {
+        throw tokenizer_error("Invalid character encountered", startLine, startCol);
     }
+    tokenText = file.subslice(tokenStart, position);
+    tokenLine = startLine;
+    tokenCol = startCol;
+    assert( token!=Tokens::ERR );
 
     return true;
 }

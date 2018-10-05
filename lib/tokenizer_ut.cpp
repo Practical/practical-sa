@@ -115,26 +115,31 @@ class TokenizerTest : public CppUnit::TestFixture  {
         Tokenizer tokenizer(testData);
         while( true ) {
             TestPoint *point = &testPoints[expectedIndex];
-            Tokenizer::Tokens currentToken;
 
+            Tokenizer::Tokens currentToken;
+            size_t currentLine, currentCol;
             try {
                 if( !tokenizer.next() )
                     break;
 
                 currentToken = tokenizer.currentToken();
+                currentLine = tokenizer.currentLine();
+                currentCol = tokenizer.currentCol();
             } catch( tokenizer_error &ex ) {
                 currentToken = Tokenizer::Tokens::ERR;
+                currentLine = ex.getLine();
+                currentCol = ex.getCol();
             }
             std::cout<<"Tokenizer matched "<<currentToken<<"\n";
 
             if( currentToken == point->token ) {
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token line", point->line, tokenizer.currentLine() );
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token column", point->column, tokenizer.currentCol() );
+                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token line", point->line, currentLine );
+                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token column", point->column, currentCol );
                 expectedIndex++;
-            } else if( tokenizer.currentToken()==Tokenizer::Tokens::WS ) {
+            } else if( currentToken==Tokenizer::Tokens::WS ) {
                 // Do nothing: we're allowed to ignore white spaces
             } else {
-                std::cerr << "At " << tokenizer.currentLine() << ":" << tokenizer.currentCol() << ": Detected token " << tokenizer.currentToken() <<
+                std::cerr << "At " << currentLine << ":" << currentCol << ": Detected token " << currentToken <<
                         ", expected " << point->token << " " << point->line << ":" << point->column << ": text was \"" <<
                         tokenizer.currentTokenText() << "\"\n";
                 CPPUNIT_ASSERT_EQUAL_MESSAGE("Tokenizer returned unexpected token", point->token, currentToken);
