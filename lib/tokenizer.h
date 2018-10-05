@@ -25,7 +25,8 @@ public:
 class Tokenizer {
 public:
     enum class Tokens {
-        WS, /// White space
+        ERR, // Error in parsing
+        WS, // White space
         SEMICOLON,
         // Bracket types
         BRACKET_ROUND_OPEN,

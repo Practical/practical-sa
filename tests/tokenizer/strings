@@ -1,0 +1,5 @@
+"A normal string with reserved words def"
+"A bad string with a naked new line
+"A string with an escaped new line\
+is actually fine"
+"This string just goes on and on and o

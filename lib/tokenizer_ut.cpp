@@ -75,7 +75,8 @@ class TokenizerTest : public CppUnit::TestFixture  {
                     point.line = line; point.column = col;\
                     testPoints.push_back(point);\
                 }
-                CASE(WS)
+                CASE(ERR)
+                else CASE(WS)
                 else CASE(SEMICOLON)
                 // Bracket types
                 else CASE(BRACKET_ROUND_OPEN)
@@ -101,7 +102,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
                     finishCol = col;
                 } else {
                     std::cerr<<"Requested unknown token \""<<parsedFields[1].str()<<"\"\n";
-                    CPPUNIT_ASSERT(false);
+                    CPPUNIT_FAIL("Test plan requested an unknown token");
                 }
 #undef CASE
             } else {
@@ -112,11 +113,23 @@ class TokenizerTest : public CppUnit::TestFixture  {
 
         size_t expectedIndex = 0;
         Tokenizer tokenizer(testData);
-        while( tokenizer.next() ) {
+        while( true ) {
             TestPoint *point = &testPoints[expectedIndex];
-            if( tokenizer.currentToken() == point->token ) {
-                CPPUNIT_ASSERT( tokenizer.currentLine() == point->line );
-                CPPUNIT_ASSERT( tokenizer.currentCol() == point->column );
+            Tokenizer::Tokens currentToken;
+
+            try {
+                if( !tokenizer.next() )
+                    break;
+
+                currentToken = tokenizer.currentToken();
+            } catch( tokenizer_error &ex ) {
+                currentToken = Tokenizer::Tokens::ERR;
+            }
+            std::cout<<"Tokenizer matched "<<currentToken<<"\n";
+
+            if( currentToken == point->token ) {
+                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token line", point->line, tokenizer.currentLine() );
+                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token column", point->column, tokenizer.currentCol() );
                 expectedIndex++;
             } else if( tokenizer.currentToken()==Tokenizer::Tokens::WS ) {
                 // Do nothing: we're allowed to ignore white spaces
@@ -124,13 +137,14 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 std::cerr << "At " << tokenizer.currentLine() << ":" << tokenizer.currentCol() << ": Detected token " << tokenizer.currentToken() <<
                         ", expected " << point->token << " " << point->line << ":" << point->column << ": text was \"" <<
                         tokenizer.currentTokenText() << "\"\n";
-                CPPUNIT_ASSERT(false);
+                CPPUNIT_ASSERT_EQUAL_MESSAGE("Tokenizer returned unexpected token", point->token, currentToken);
+                CPPUNIT_FAIL("Unreachable code reached");
             }
         }
 
-        CPPUNIT_ASSERT( expectedIndex == testPoints.size() );
-        CPPUNIT_ASSERT( tokenizer.currentLine()==finishLine );
-        CPPUNIT_ASSERT( tokenizer.currentCol()==finishCol );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all expected tokens were matched", testPoints.size(), expectedIndex );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Tokenizer finish line incorrect", finishLine, tokenizer.currentLine() );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Tokenizer finish column incorrect", finishCol, tokenizer.currentCol() );
     }
 
     void test() {
