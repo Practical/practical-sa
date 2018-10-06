@@ -18,3 +18,7 @@ latency are everything.
 
 # Status
 Practical is currently in preliminary the implementation effort stage. It does not, yet, have any working compiler.
+
+# What's Planned?
+For specifics on the plans for the language, syntax and features, please check out the
+[language's wiki](https://github.com/Practical/practical-sa/wiki).
