@@ -16,14 +16,14 @@ class TokenizerTest : public CppUnit::TestFixture  {
 
     template <typename T>
     static Slice<T> consumeLine(Slice<T> &buffer) {
-        if( buffer.length()==0 )
+        if( buffer.size()==0 )
             throw std::runtime_error("Buffer fully consumed");
 
         size_t i = 0;
-        while( i<buffer.length() && buffer[i]!='\n' )
+        while( i<buffer.size() && buffer[i]!='\n' )
             ++i;
 
-        if( i==buffer.length() ) {
+        if( i==buffer.size() ) {
             auto result = buffer;
             buffer = Slice<T>();
 
@@ -42,7 +42,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
         Mmap<MapMode::CopyOnWrite> testPlanMap(file);
         Slice<char> testPlan = testPlanMap.getSlice<char>();
 
-        file.resize(file.length() - 3);
+        file.resize(file.size() - 3);
         Mmap<MapMode::ReadOnly> testDataMap(file);
         Slice<const char> testData = testDataMap.getSlice<const char>();
 
@@ -60,10 +60,10 @@ class TokenizerTest : public CppUnit::TestFixture  {
         size_t finishLine, finishCol;
 
         bool done = false;
-        while( !done && testPlan.length()>0 ) {
+        while( !done && testPlan.size()>0 ) {
             auto line = consumeLine(testPlan);
             std::smatch parsedFields;
-            std::string l(line.get(), line.length());
+            std::string l(line.get(), line.size());
             if( std::regex_match( l, parsedFields, csvParse ) ) {
                 TestPoint point;
 
@@ -78,6 +78,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 CASE(ERR)
                 else CASE(WS)
                 else CASE(SEMICOLON)
+                else CASE(COMMA)
                 // Bracket types
                 else CASE(BRACKET_ROUND_OPEN)
                 else CASE(BRACKET_ROUND_CLOSE)
@@ -86,6 +87,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 else CASE(BRACKET_CURLY_OPEN)
                 else CASE(BRACKET_CURLY_CLOSE)
                 // Operators
+                else CASE(OP_ARROW)
                 // Literals
                 else CASE(LITERAL_INT_2)
                 else CASE(LITERAL_INT_8)
@@ -106,7 +108,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 }
 #undef CASE
             } else {
-                std::cout << "No match line: \"" << l << "\" Len: " << line.length() << " buffer: " << testPlan.length() << "\n";
+                std::cout << "No match line: \"" << l << "\" Len: " << line.size() << " buffer: " << testPlan.size() << "\n";
                 CPPUNIT_ASSERT(false);
             }
         }

@@ -5,28 +5,12 @@
 #include <iostream>
 #include <memory>
 
+#include "defines.h"
 #include "slice.h"
 
-class tokenizer_error : public std::exception {
-    size_t line, col;
-    std::unique_ptr<char> msg;
+class tokenizer_error : public compile_error {
 public:
-    tokenizer_error(const char *msg, size_t line, size_t col) : line(line), col(col) {
-        size_t buffsize = strlen(msg) + 100;
-        this->msg = std::unique_ptr<char>(new char[buffsize]);
-        snprintf(this->msg.get(), buffsize, "%s at %lu:%lu", msg, line, col);
-    }
-
-    const char *what() const noexcept {
-        return msg.get();
-    }
-
-    size_t getLine() const {
-        return line;
-    }
-
-    size_t getCol() const {
-        return col;
+    tokenizer_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
     }
 };
 
@@ -35,7 +19,10 @@ public:
     enum class Tokens {
         ERR, // Error in parsing
         WS, // White space
+        COMMENT,
+        // Syntax separators
         SEMICOLON,
+        COMMA,
         // Bracket types
         BRACKET_ROUND_OPEN,
         BRACKET_ROUND_CLOSE,
@@ -44,6 +31,22 @@ public:
         BRACKET_CURLY_OPEN,
         BRACKET_CURLY_CLOSE,
         // Operators
+        OP_ASTERISK,
+        OP_ARROW,                       // ->
+        OP_LOGIC_NOT,
+        OP_LOGIC_AND,
+        OP_LOGIC_OR,
+        OP_MODULOUS,
+        OP_MINUS,
+        OP_MINUS_MINUS,
+        OP_PLUS,
+        OP_PLUS_PLUS,
+        OP_BIT_AND,
+        OP_BIT_OR,
+        OP_BIT_NOT,
+        OP_ASSIGN,
+        OP_ASSIGN_MINUS,
+        OP_ASSIGN_PLUS,
         // Literals
         LITERAL_INT_2,
         LITERAL_INT_8,
@@ -54,6 +57,12 @@ public:
         // Identifier like
         IDENTIFIER,
         RESERVED_DEF,
+    };
+
+    struct Token {
+        Slice<const char> text;
+        Tokens token = Tokens::ERR;
+        size_t line=0, col=0;
     };
 
 private:
@@ -70,7 +79,18 @@ public:
 
     bool next();
 
-    Tokens currentToken() {
+    Token current() const {
+        Token ret;
+
+        ret.text = currentTokenText();
+        ret.line = currentLine();
+        ret.col = currentCol();
+        ret.token = currentToken();
+
+        return ret;
+    }
+
+    Tokens currentToken() const {
         return token;
     }
 
@@ -102,6 +122,7 @@ private:
     }
 
     void consumeWS();
+    void consumeOp();
     void consumeStringLiteral();
     void consumeNumericLiteral();
     void consumeIdentifier();

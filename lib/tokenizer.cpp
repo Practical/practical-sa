@@ -1,11 +1,28 @@
 #include <regex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <tokenizer.h>
 
+static const std::unordered_set<char> operatorChars = {
+    '~', '!', '#', '/', '$', '%', '^', '&', '*', '-', '=', '+', '<', '>', '.', '|' };
+static const std::unordered_map<std::string, Tokenizer::Tokens> operators {
+    { "!", Tokenizer::Tokens::OP_LOGIC_NOT },
+    { "%", Tokenizer::Tokens::OP_MODULOUS },
+    { "&", Tokenizer::Tokens::OP_BIT_AND },
+    { "&&", Tokenizer::Tokens::OP_LOGIC_AND },
+    { "*", Tokenizer::Tokens::OP_ASTERISK },
+    { "-", Tokenizer::Tokens::OP_MINUS },
+    { "--", Tokenizer::Tokens::OP_MINUS_MINUS },
+    { "-=", Tokenizer::Tokens::OP_ASSIGN_MINUS },
+    { "->", Tokenizer::Tokens::OP_ARROW },
+};
+static const std::unordered_map<std::string, Tokenizer::Tokens> reservedWords { { "def", Tokenizer::Tokens::RESERVED_DEF } };
+
+
 bool Tokenizer::next() {
-    if( file.length()==position ) {
+    if( file.size()==position ) {
         // We've reached our EOF
         tokenLine = line;
         tokenCol = col;
@@ -41,6 +58,8 @@ bool Tokenizer::next() {
     } else if(currentChar=='}') {
         nextChar();
         token = Tokens::BRACKET_CURLY_CLOSE;
+    } else if(operatorChars.find(currentChar) != operatorChars.end()) {
+        consumeOp();
     } else if(currentChar=='"') {
         consumeStringLiteral();
     } else if(isDigit(currentChar)) {
@@ -48,6 +67,7 @@ bool Tokenizer::next() {
     } else if(isIdentifierAlpha(currentChar)) {
         consumeIdentifier();
     } else {
+        tokenText = file.subslice(tokenStart, tokenStart+1);
         throw tokenizer_error("Invalid character encountered", startLine, startCol);
     }
     tokenText = file.subslice(tokenStart, position);
@@ -62,6 +82,21 @@ void Tokenizer::consumeWS() {
     token = Tokens::WS;
     while( nextChar() && isWS(file[position]) )
         ;
+}
+
+void Tokenizer::consumeOp() {
+    auto startPosition = position;
+    while( nextChar() && operatorChars.find(file[position])!=operatorChars.end() )
+        ;
+
+    auto op = file.subslice(startPosition, position);
+    auto tokenIt = operators.find( sliceToString(op) );
+    if( tokenIt != operators.end() ) {
+        token = tokenIt->second;
+    } else {
+        // Man am I going to regret this error message
+        throw tokenizer_error("Practical does not support inventing weird operators", line, col);
+    }
 }
 
 void Tokenizer::consumeStringLiteral() {
@@ -112,8 +147,6 @@ void Tokenizer::consumeNumericLiteral() {
     }
 }
 
-static const std::unordered_map<std::string, Tokenizer::Tokens> reservedWords { { "def", Tokenizer::Tokens::RESERVED_DEF } };
-
 void Tokenizer::consumeIdentifier() {
     std::string id;
 
@@ -138,7 +171,7 @@ bool Tokenizer::nextChar() {
     position++;
     col++;
 
-    return position<file.length();
+    return position<file.size();
 }
 
 std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
@@ -146,13 +179,31 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
     switch(token) {
         CASE(ERR);
         CASE(WS);
+        CASE(COMMENT);
         CASE(SEMICOLON);
+        CASE(COMMA);
         CASE(BRACKET_ROUND_OPEN);
         CASE(BRACKET_ROUND_CLOSE);
         CASE(BRACKET_SQUARE_OPEN);
         CASE(BRACKET_SQUARE_CLOSE);
         CASE(BRACKET_CURLY_OPEN);
         CASE(BRACKET_CURLY_CLOSE);
+        CASE(OP_ASTERISK);
+        CASE(OP_ARROW);
+        CASE(OP_LOGIC_NOT);
+        CASE(OP_LOGIC_AND);
+        CASE(OP_LOGIC_OR);
+        CASE(OP_MODULOUS);
+        CASE(OP_MINUS);
+        CASE(OP_MINUS_MINUS);
+        CASE(OP_PLUS);
+        CASE(OP_PLUS_PLUS);
+        CASE(OP_BIT_AND);
+        CASE(OP_BIT_OR);
+        CASE(OP_BIT_NOT);
+        CASE(OP_ASSIGN);
+        CASE(OP_ASSIGN_MINUS);
+        CASE(OP_ASSIGN_PLUS);
         CASE(LITERAL_INT_2);
         CASE(LITERAL_INT_8);
         CASE(LITERAL_INT_10);

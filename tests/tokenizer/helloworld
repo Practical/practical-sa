@@ -1,4 +1,4 @@
-def main() {
+def main() -> S32 {
     writeln("Hello, world\n");
 
     0

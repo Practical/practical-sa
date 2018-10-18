@@ -9,7 +9,7 @@ class SliceTest : public CppUnit::TestFixture  {
 #define TEST_STR "Hello, world"
         char string[] = TEST_STR;
         auto slice = Slice<char>(string, sizeof(TEST_STR));
-        CPPUNIT_ASSERT( slice.length()==13 );
+        CPPUNIT_ASSERT( slice.size()==13 );
         CPPUNIT_ASSERT( slice[0]=='H' );
         CPPUNIT_ASSERT( slice[4]=='o' );
         slice[1] = 'a';
@@ -18,13 +18,13 @@ class SliceTest : public CppUnit::TestFixture  {
 
         auto subslice = static_cast<const Slice<char> &>(slice).subslice(1, 10);
         CPPUNIT_ASSERT( subslice[1]=='l' );
-        CPPUNIT_ASSERT( subslice[subslice.length()-1]=='r' );
-        CPPUNIT_ASSERT( subslice.length()==9 );
+        CPPUNIT_ASSERT( subslice[subslice.size()-1]=='r' );
+        CPPUNIT_ASSERT( subslice.size()==9 );
 
         auto mutableSubslice = slice.subslice(2, 11);
         CPPUNIT_ASSERT( mutableSubslice[1]=='l' );
-        CPPUNIT_ASSERT( mutableSubslice[subslice.length()-1]=='l' );
-        CPPUNIT_ASSERT( mutableSubslice.length()==9 );
+        CPPUNIT_ASSERT( mutableSubslice[subslice.size()-1]=='l' );
+        CPPUNIT_ASSERT( mutableSubslice.size()==9 );
 
     }
 
@@ -36,10 +36,10 @@ class SliceTest : public CppUnit::TestFixture  {
         auto sub1 = slice.subslice(0, i);
         auto sub2 = slice.subslice(i+1);
 
-        CPPUNIT_ASSERT( sub1.length()==5 );
+        CPPUNIT_ASSERT( sub1.size()==5 );
         CPPUNIT_ASSERT( sub1[0]=='H' );
         CPPUNIT_ASSERT( sub1[4]=='o' );
-        CPPUNIT_ASSERT( sub2.length()==3 );
+        CPPUNIT_ASSERT( sub2.size()==3 );
         CPPUNIT_ASSERT( sub2[0]=='h' );
         CPPUNIT_ASSERT( sub2[2]=='\n' );
     }
