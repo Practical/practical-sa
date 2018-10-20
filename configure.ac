@@ -23,7 +23,6 @@ PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([CPPUNIT], [cppunit], , [AC_MSG_FAILURE([CppUnit module not found])])
 
 # Checks for header files.
-AC_CHECK_HEADERS([cppunit/extensions/HelperMacros.h], [], [AC_MSG_FAILURE([CppUnit headers not found])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T

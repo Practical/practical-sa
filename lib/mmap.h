@@ -17,7 +17,10 @@ class Mmap : NoCopy {
     size_t length = 0;
 
 public:
-    Mmap(std::string path) {
+    Mmap(std::string path) : Mmap(path.c_str()) {
+    }
+
+    Mmap(const char *path) {
         static constexpr int OPEN_FLAGS = (mode==MapMode::Writeable ? O_RDWR : O_RDONLY);
         FD fd(path, OPEN_FLAGS);
 

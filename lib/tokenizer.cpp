@@ -86,6 +86,7 @@ void Tokenizer::consumeWS() {
 
 void Tokenizer::consumeOp() {
     auto startPosition = position;
+    auto startLine = line, startCol = col;
     while( nextChar() && operatorChars.find(file[position])!=operatorChars.end() )
         ;
 
@@ -95,7 +96,7 @@ void Tokenizer::consumeOp() {
         token = tokenIt->second;
     } else {
         // Man am I going to regret this error message
-        throw tokenizer_error("Practical does not support inventing weird operators", line, col);
+        throw tokenizer_error("Practical does not support inventing weird operators", startLine, startCol);
     }
 }
 
