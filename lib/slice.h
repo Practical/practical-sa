@@ -1,6 +1,8 @@
 #ifndef SLICE_H
 #define SLICE_H
 
+#include "defines.h"
+
 #include <cstddef>
 #include <cassert>
 #include <iostream>
@@ -80,6 +82,19 @@ public:
 
         return Slice<const T>(ptr+start, end - start);
     }
+
+    // Compare the data pointed by the two slices. Allows using slice as key in hash
+    bool operator==(const Slice &rhs) const {
+        if( size() != rhs.size() )
+            return false;
+
+        for( size_t i=0; i<size(); ++i ) {
+            if( (*this)[i]!=rhs[i] )
+                return false;
+        }
+
+        return true;
+    }
 };
 
 template <typename T>
@@ -96,6 +111,25 @@ static inline std::string sliceToString( const Slice<const char> &src ) {
         return std::string();
 
     return std::string(&src[0], src.size());
+}
+
+namespace std {
+    template <typename T>
+    struct hash< Slice<T> > {
+        static constexpr size_t FibonacciHashMultiplier = static_cast<size_t>(-1) / GoldenRatio;
+
+        size_t operator()(const Slice<T> &slice) const {
+            size_t result = 0;
+
+            std::hash< typename std::remove_cv<T>::type > recursive;
+            for( size_t i=0; i<slice.size(); ++i ) {
+                result += recursive(slice[i]);
+                result *= FibonacciHashMultiplier;
+            }
+
+            return result;
+        }
+    };
 }
 
 #endif // SLICE_H

@@ -4,6 +4,8 @@
 
 #include "slice.h"
 
+#include <unordered_map>
+
 class SliceTest : public CppUnit::TestFixture  {
     void basicTest() {
 #define TEST_STR "Hello, world"
@@ -44,6 +46,30 @@ class SliceTest : public CppUnit::TestFixture  {
         CPPUNIT_ASSERT( sub2[2]=='\n' );
     }
 
+    void hashTest() {
+        std::unordered_map<Slice<const char>, int> map;
+
+        char buffer[] = "1234567891";
+        Slice<const char> s(buffer, 1);
+        std::hash<Slice<const char>> hasher;
+        size_t hash1 = hasher(s);
+
+        for( size_t i=0; i<sizeof(buffer); ++i ) {
+            s = Slice<const char>(buffer+i, 1);
+            map[s] = i;
+        }
+        for( size_t i=0; i<sizeof(buffer)-1; ++i ) {
+            s = Slice<const char>(buffer+i, 2);
+            map[s] = i + 20;
+        }
+
+        CPPUNIT_ASSERT( hash1 != static_cast<unsigned int>(hash1) );
+        s = Slice<const char>(buffer+9, 1);
+        CPPUNIT_ASSERT( hash1 == hasher(s) );
+
+        s = Slice<const char>("23", 2);
+        CPPUNIT_ASSERT( map[s] == 21 );
+    }
 public:
     static CppUnit::Test *suite()
     {
@@ -54,6 +80,9 @@ public:
         suiteOfTests->addTest( new CppUnit::TestCaller<SliceTest>(
                     "tokenizerFailure",
                     &SliceTest::tokenizerFailure ) );
+        suiteOfTests->addTest( new CppUnit::TestCaller<SliceTest>(
+                    "hashTest",
+                    &SliceTest::hashTest ) );
         return suiteOfTests;
     }
 };

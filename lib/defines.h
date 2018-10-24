@@ -1,6 +1,7 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include <cmath>
 #include <cstring>
 #include <utility>
 
@@ -31,5 +32,7 @@ template <typename T, typename... ARGS>
 std::unique_ptr<T> safenew(ARGS... args) {
     return std::unique_ptr<T>( new T(std::forward<ARGS...>(args...)) );
 }
+
+static constexpr double GoldenRatio = (1 + sqrt(5.0)) / 2;
 
 #endif // DEFINES_H
