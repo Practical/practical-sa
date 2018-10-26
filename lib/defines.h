@@ -2,7 +2,10 @@
 #define DEFINES_H
 
 #include <cmath>
+#include <cstdio>
 #include <cstring>
+#include <exception>
+#include <memory>
 #include <utility>
 
 class compile_error : public std::exception {
@@ -29,7 +32,7 @@ public:
 };
 
 template <typename T, typename... ARGS>
-std::unique_ptr<T> safenew(ARGS... args) {
+std::unique_ptr<T> safenew(ARGS&&... args) {
     return std::unique_ptr<T>( new T(std::forward<ARGS...>(args...)) );
 }
 

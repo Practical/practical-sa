@@ -3,6 +3,7 @@
 /depcomp
 Makefile.in
 Makefile
+tags
 .*.swp
 *~
 

@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cassert>
 #include <iostream>
+#include <vector>
 
 template <class T>
 class Slice {
@@ -106,7 +107,9 @@ std::ostream &operator<<( std::ostream &out, const Slice<T> &data ) {
     return out;
 }
 
-static inline std::string sliceToString( const Slice<const char> &src ) {
+typedef Slice<const char> String;
+
+static inline std::string sliceToString( const String &src ) {
     if( src.size()==0 )
         return std::string();
 

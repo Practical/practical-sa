@@ -93,6 +93,10 @@ namespace NonTerminals {
         CompoundExpression body;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
+
+        String name() const {
+            return decl.name.text;
+        }
     };
 
     struct Module : public NonTerminal {
