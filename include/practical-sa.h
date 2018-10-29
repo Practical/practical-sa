@@ -2,9 +2,9 @@
 #define LIB_PRACTICAL_SA_H
 
 #include <memory>
+#include <string>
 
 namespace PracticalSemanticAnalyzer {
-    // Virtual base class for data abstraction and API stability reasons
     class CompilerArguments {
     public:
     };
@@ -12,7 +12,7 @@ namespace PracticalSemanticAnalyzer {
     std::unique_ptr<CompilerArguments> allocateArguments();
 
     // XXX Should path actually be a buffer?
-    int compile(std::string path, std::unique_ptr<CompilerArguments> arguments);
+    int compile(std::string path, const CompilerArguments *arguments);
 
     /// Callbacks used by the semantic analyzer to allow the SA user to actually generate code
     struct CodeGenHooks {

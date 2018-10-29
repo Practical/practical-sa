@@ -274,18 +274,4 @@ size_t Module::parse(Slice<const Tokenizer::Token> source) {
 
 } // namespace NonTerminals
 
-NonTerminals::Module parse(Slice<const char> source) {
-    std::vector<Tokenizer::Token> tokens;
-    Tokenizer tokenizer(source);
-
-    while( tokenizer.next() ) {
-        tokens.push_back(tokenizer.current());
-    }
-
-    NonTerminals::Module module;
-    module.parse( tokens );
-
-    return module;
-}
-
 } // namespace Parser

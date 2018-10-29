@@ -74,7 +74,7 @@ private:
     Slice<const char> tokenText;
 
 public:
-    Tokenizer(Slice<const char> file) : file(file), line(1), col(1) {
+    Tokenizer(String file) : file(file), line(1), col(1) {
     }
 
     bool next();
@@ -105,6 +105,8 @@ public:
     Slice<const char> currentTokenText() const {
         return tokenText;
     }
+
+    static std::vector<Token> tokenize(String source);
 
 private:
     // XXX all of the is* functions here are ASCII

@@ -106,8 +106,6 @@ namespace NonTerminals {
     };
 }
 
-NonTerminals::Module parse(Slice<const char> source);
-
 } // namespace Parser
 
 #endif // PARSER_H

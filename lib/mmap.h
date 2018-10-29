@@ -1,12 +1,13 @@
 #ifndef MMAP_H
 #define MMAP_H
 
-#include <type_traits>
+#include "fd.h"
+#include "nocopy.h"
+#include "slice.h"
 
 #include <sys/mman.h>
 
-#include "nocopy.h"
-#include "fd.h"
+#include <type_traits>
 
 enum class MapMode {
     ReadOnly, Writeable, CopyOnWrite

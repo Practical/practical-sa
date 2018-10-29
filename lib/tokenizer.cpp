@@ -78,6 +78,18 @@ bool Tokenizer::next() {
     return true;
 }
 
+std::vector<Tokenizer::Token> Tokenizer::tokenize(String source) {
+    std::vector<Tokenizer::Token> tokens;
+
+    Tokenizer tokenizer(source);
+
+    while( tokenizer.next() ) {
+        tokens.push_back(tokenizer.current());
+    }
+
+    return tokens;
+}
+
 void Tokenizer::consumeWS() {
     token = Tokens::WS;
     while( nextChar() && isWS(file[position]) )

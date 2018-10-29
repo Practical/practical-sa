@@ -13,7 +13,12 @@ int main(int argc, char *argv[]) {
     try {
         Mmap<MapMode::ReadOnly> source(argv[1]);
 
-        auto module = Parser::parse(source.getSlice<const char>());
+        // Tokenize
+        auto tokens = Tokenizer::tokenize(source.getSlice<const char>());
+
+        // Parse
+        Parser::NonTerminals::Module module;
+        module.parse( tokens );
     } catch(std::exception &error) {
         std::cerr << "Parsing failed: " << error.what() << "\n";
 
