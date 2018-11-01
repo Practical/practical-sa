@@ -1,21 +1,20 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "defines.h"
+#include "lookup_context.h"
+#include "slice.h"
+#include "tokenizer.h"
+
 #include <memory>
 #include <variant>
 #include <vector>
-
-#include "defines.h"
-#include "slice.h"
-#include "tokenizer.h"
 
 class parser_error : public compile_error {
 public:
     parser_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
     }
 };
-
-namespace Parser {
 
 namespace NonTerminals {
     // Base class for all non-terminals.
@@ -52,6 +51,7 @@ namespace NonTerminals {
     struct CompoundExpression : public NonTerminal {
         StatementList statementList;
         Expression expression;
+        LookupContext context;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
@@ -101,11 +101,16 @@ namespace NonTerminals {
 
     struct Module : public NonTerminal {
         std::vector< FuncDef > functionDefinitions;
+        std::vector< Tokenizer::Token > tokens;
+        LookupContext context;
 
+        void parse(String source);
         size_t parse(Slice<const Tokenizer::Token> source) override final;
-    };
-}
 
-} // namespace Parser
+        void symbolsPass1(LookupContext *parent) {
+            context.pass1(functionDefinitions);
+        }
+    };
+} // NonTerminals namespace
 
 #endif // PARSER_H

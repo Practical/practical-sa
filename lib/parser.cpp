@@ -2,7 +2,6 @@
 
 #include "scope_tracing.h"
 
-namespace Parser {
 namespace NonTerminals {
 
 static bool skipWS(Slice<const Tokenizer::Token> source, size_t &index) {
@@ -21,7 +20,7 @@ static bool skipWS(Slice<const Tokenizer::Token> source, size_t &index) {
 // Sets the index to the next token, verifying EOF and skipping WS if necessary
 static void nextToken(Slice<const Tokenizer::Token> source, size_t &index, const char *msg, bool skipWS = true) {
     if( skipWS )
-        Parser::NonTerminals::skipWS(source, index);
+        NonTerminals::skipWS(source, index);
 
     if( index==source.size() )
         throw parser_error(msg, 0, 0);
@@ -255,6 +254,11 @@ size_t FuncDef::parse(Slice<const Tokenizer::Token> source) {
     return tokensConsumed;
 }
 
+void Module::parse(String source) {
+    tokens = Tokenizer::tokenize(source);
+    parse(tokens);
+}
+
 size_t Module::parse(Slice<const Tokenizer::Token> source) {
     size_t tokensConsumed = 0;
 
@@ -273,5 +277,3 @@ size_t Module::parse(Slice<const Tokenizer::Token> source) {
 }
 
 } // namespace NonTerminals
-
-} // namespace Parser

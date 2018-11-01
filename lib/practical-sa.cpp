@@ -2,9 +2,9 @@
 
 #include <practical-sa.h>
 
+#include "ast.h"
 #include "mmap.h"
 #include "parser.h"
-#include "semantic_analyzer.h"
 
 #include "defines.h"
 
@@ -17,15 +17,14 @@ int compile(std::string path, const CompilerArguments *args) {
     // Load file into memory
     Mmap<MapMode::ReadOnly> sourceFile(path);
 
-    // Tokenize
-    auto tokens = Tokenizer::tokenize(sourceFile.getSlice<const char>());
+    AST ast;
 
     // Parse
-    Parser::NonTerminals::Module moduleAst;
-    moduleAst.parse( tokens );
+    ast.parseModule(sourceFile.getSlice<const char>());
 
     // Semantic analysis
-    SemanticAnalyzer::Context moduleCtx(moduleAst);
+    ast.prepare();
+
 
     return 0;
 }
