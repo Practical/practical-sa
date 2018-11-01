@@ -17,7 +17,7 @@ void AST::prepare()
 }
 
 void AST::parseModule(String moduleSource) {
-    auto module = safenew<NonTerminals::Module>();
+    auto module = safenew<NonTerminals::Module>(&globalCtx);
     module->parse(moduleSource);
 
     module->symbolsPass1(&globalCtx);

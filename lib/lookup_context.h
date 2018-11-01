@@ -19,15 +19,18 @@ namespace NonTerminals {
 class LookupContext : private NoCopy {
     struct NamedObject {
         enum class Type { FunctionDef };
-        std::variant< Parser::NonTerminals::FuncDef * > definition;
+        std::variant< NonTerminals::FuncDef * > definition;
     };
 
     // My place in the world
-    LookupContext *parent = nullptr;
+    const LookupContext *parent = nullptr;
 
     std::unordered_map<String, NamedObject> symbols;
 
 public:
+
+    LookupContext(const LookupContext *parent) : parent(parent) {
+    }
 
     void registerBuiltInType(const char *name);
 

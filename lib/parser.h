@@ -25,7 +25,7 @@ namespace NonTerminals {
         // This function is not really virtual. It's used this way to force all children to have the same signature
         // Returns how many tokens were consumed
         // Throws parser_error if fails to parse
-        virtual size_t parse(Slice<const Tokenizer::Token> source) = 0;
+        virtual size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) = 0;
     };
 
     struct CompoundExpression;
@@ -33,19 +33,19 @@ namespace NonTerminals {
     struct Expression : public NonTerminal {
         std::variant<std::monostate, std::unique_ptr<CompoundExpression>, Tokenizer::Token> value;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct Statement : public NonTerminal {
         Expression expression;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct StatementList : public NonTerminal {
         std::vector<Statement> statements;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct CompoundExpression : public NonTerminal {
@@ -53,31 +53,34 @@ namespace NonTerminals {
         Expression expression;
         LookupContext context;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        CompoundExpression(const LookupContext *parent) : context(parent) {
+        }
+
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct FuncDeclRet : public NonTerminal {
         Tokenizer::Token type;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct FuncDeclArg : public NonTerminal {
         Tokenizer::Token name, type;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct FuncDeclArgsNonEmpty : public NonTerminal {
         std::vector<FuncDeclArg> arguments;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct FuncDeclArgs : public NonTerminal {
         std::vector<FuncDeclArg> arguments;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct FuncDeclBody : public NonTerminal {
@@ -85,14 +88,17 @@ namespace NonTerminals {
         FuncDeclArgs arguments;
         FuncDeclRet returnType;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
 
     struct FuncDef : public NonTerminal {
         FuncDeclBody decl;
         CompoundExpression body;
 
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        FuncDef(const LookupContext *ctx) : body{ctx} {
+        }
+
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
 
         String name() const {
             return decl.name.text;
@@ -104,8 +110,11 @@ namespace NonTerminals {
         std::vector< Tokenizer::Token > tokens;
         LookupContext context;
 
+        Module(LookupContext *parent) : context(parent) {
+        }
+
         void parse(String source);
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
 
         void symbolsPass1(LookupContext *parent) {
             context.pass1(functionDefinitions);

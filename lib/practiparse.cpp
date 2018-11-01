@@ -17,8 +17,8 @@ int main(int argc, char *argv[]) {
         auto tokens = Tokenizer::tokenize(source.getSlice<const char>());
 
         // Parse
-        NonTerminals::Module module;
-        module.parse( tokens );
+        NonTerminals::Module module(nullptr);
+        module.parse( tokens, nullptr );
     } catch(std::exception &error) {
         std::cerr << "Parsing failed: " << error.what() << "\n";
 
