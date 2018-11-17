@@ -3,6 +3,7 @@
 
 #include "defines.h"
 #include "lookup_context.h"
+#include "practical-sa.h"
 #include "slice.h"
 #include "tokenizer.h"
 
@@ -103,9 +104,12 @@ namespace NonTerminals {
         String name() const {
             return decl.name.text;
         }
+
+        void codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen);
     };
 
     struct Module : public NonTerminal {
+        PracticalSemanticAnalyzer::ModuleId id;
         std::vector< FuncDef > functionDefinitions;
         std::vector< Tokenizer::Token > tokens;
         LookupContext context;
@@ -119,6 +123,8 @@ namespace NonTerminals {
         void symbolsPass1(LookupContext *parent) {
             context.pass1(functionDefinitions);
         }
+
+        void codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen);
     };
 } // NonTerminals namespace
 

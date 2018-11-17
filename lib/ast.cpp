@@ -24,3 +24,10 @@ void AST::parseModule(String moduleSource) {
 
     modules.emplace(toSlice("Dummy module"), std::move(module));
 }
+
+void AST::codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen) {
+    // XXX We should only code-gen some of the modules?
+    for(auto &module: modules) {
+        module.second->codeGen(codeGen);
+    }
+}

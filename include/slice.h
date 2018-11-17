@@ -25,7 +25,7 @@ public:
     Slice &operator=(const Slice &rhs) = default;
     Slice() = default;
 
-    Slice(T *ptr, size_t length) : ptr(ptr), len(length) {
+    constexpr Slice(T *ptr, size_t length) : ptr(ptr), len(length) {
     }
 
     /* implicit conversion */ Slice(vector_type &vector) :
@@ -116,7 +116,7 @@ static inline std::string sliceToString( const String &src ) {
     return std::string(&src[0], src.size());
 }
 
-static inline String toSlice(const char *str) {
+constexpr static inline String toSlice(const char *str) {
     return String(str, strlen(str));
 }
 
@@ -125,7 +125,7 @@ namespace std {
     struct hash< Slice<T> > {
         static constexpr size_t FibonacciHashMultiplier = static_cast<size_t>(-1) / GoldenRatio;
 
-        size_t operator()(const Slice<T> &slice) const {
+        constexpr size_t operator()(const Slice<T> &slice) const {
             size_t result = 0;
 
             std::hash< typename std::remove_cv<T>::type > recursive;

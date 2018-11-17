@@ -254,6 +254,10 @@ size_t FuncDef::parse(Slice<const Tokenizer::Token> source, const LookupContext 
     return tokensConsumed;
 }
 
+void FuncDef::codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen) {
+    // TODO implement
+}
+
 void Module::parse(String source) {
     tokens = Tokenizer::tokenize(source);
     parse(tokens, nullptr);
@@ -274,6 +278,16 @@ size_t Module::parse(Slice<const Tokenizer::Token> source, const LookupContext *
     }
 
     return tokensConsumed;
+}
+
+void Module::codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen) {
+    codeGen->module(PracticalSemanticAnalyzer::VisitMode::Enter, id, toSlice("OnlyModule"), toSlice("No file"), 1, 1);
+
+    for(auto &function: functionDefinitions) {
+        function.codeGen(codeGen);
+    }
+
+    codeGen->module(PracticalSemanticAnalyzer::VisitMode::Exit, id, toSlice("OnlyModule"), toSlice("No file"), 1, 1);
 }
 
 } // namespace NonTerminals

@@ -3,6 +3,8 @@
 #include "parser.h"
 #include "practical-sa.h"
 
+#include "typed.h"
+
 void LookupContext::registerBuiltInType(const char *name) {
 }
 

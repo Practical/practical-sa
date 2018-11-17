@@ -3,6 +3,7 @@
 
 #include "lookup_context.h"
 #include "parser.h"
+#include "practical-sa.h"
 
 #include <memory>
 
@@ -16,6 +17,8 @@ struct AST {
     void prepare();
 
     void parseModule(String moduleSource);
+
+    void codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen);
 };
 
 #endif // AST_H

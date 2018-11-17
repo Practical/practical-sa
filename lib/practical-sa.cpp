@@ -13,7 +13,7 @@ std::unique_ptr<CompilerArguments> allocateArguments() {
     return safenew<CompilerArguments>();
 }
 
-int compile(std::string path, const CompilerArguments *args) {
+int compile(std::string path, const CompilerArguments *arguments, CodeGen *codeGen) {
     // Load file into memory
     Mmap<MapMode::ReadOnly> sourceFile(path);
 
@@ -25,6 +25,9 @@ int compile(std::string path, const CompilerArguments *args) {
     // Semantic analysis
     ast.prepare();
 
+
+    // And that other thing
+    ast.codeGen(codeGen);
 
     return 0;
 }
