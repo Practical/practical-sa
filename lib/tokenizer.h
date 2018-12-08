@@ -60,7 +60,7 @@ public:
     };
 
     struct Token {
-        Slice<const char> text;
+        String text;
         Tokens token = Tokens::ERR;
         size_t line=0, col=0;
     };

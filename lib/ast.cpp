@@ -3,17 +3,17 @@
 void AST::prepare()
 {
     // Register the built-in types
-    globalCtx.registerBuiltInType("S8");
-    globalCtx.registerBuiltInType("S16");
-    globalCtx.registerBuiltInType("S32");
-    globalCtx.registerBuiltInType("S64");
-    globalCtx.registerBuiltInType("S128");
+    globalCtx.registerBuiltInType("S8", BuiltInType::Type::SignedInt, 1);
+    globalCtx.registerBuiltInType("S16", BuiltInType::Type::SignedInt, 2);
+    globalCtx.registerBuiltInType("S32", BuiltInType::Type::SignedInt, 4);
+    globalCtx.registerBuiltInType("S64", BuiltInType::Type::SignedInt, 8);
+    globalCtx.registerBuiltInType("S128", BuiltInType::Type::SignedInt, 16);
 
-    globalCtx.registerBuiltInType("U8");
-    globalCtx.registerBuiltInType("U16");
-    globalCtx.registerBuiltInType("U32");
-    globalCtx.registerBuiltInType("U64");
-    globalCtx.registerBuiltInType("U128");
+    globalCtx.registerBuiltInType("U8", BuiltInType::Type::UnsignedInt, 1);
+    globalCtx.registerBuiltInType("U16", BuiltInType::Type::UnsignedInt, 2);
+    globalCtx.registerBuiltInType("U32", BuiltInType::Type::UnsignedInt, 4);
+    globalCtx.registerBuiltInType("U64", BuiltInType::Type::UnsignedInt, 8);
+    globalCtx.registerBuiltInType("U128", BuiltInType::Type::UnsignedInt, 16);
 }
 
 void AST::parseModule(String moduleSource) {

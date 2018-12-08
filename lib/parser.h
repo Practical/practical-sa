@@ -11,6 +11,8 @@
 #include <variant>
 #include <vector>
 
+using namespace PracticalSemanticAnalyzer;
+
 class parser_error : public compile_error {
 public:
     parser_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
@@ -95,6 +97,7 @@ namespace NonTerminals {
     struct FuncDef : public NonTerminal {
         FuncDeclBody decl;
         CompoundExpression body;
+        PracticalSemanticAnalyzer::IdentifierId id;
 
         FuncDef(const LookupContext *ctx) : body{ctx} {
         }

@@ -2,14 +2,17 @@
 #define TYPED_H
 
 #include <cstddef>
+#include <functional>
 #include <type_traits>
 
 template <typename Type, Type initValue, size_t module, size_t id>
 class Typed {
-    typename std::enable_if< std::is_integral<Type>::value, Type>::type val = initValue;
+    static_assert( std::is_integral<Type>::value, "Typed only works with integral types" );
+    Type val = initValue;
 
 public:
     typedef Type UnderlyingType;
+    static constexpr Type InitValue = initValue;
 
     Typed() = default;
     // Default copying okay
@@ -17,14 +20,14 @@ public:
     explicit constexpr Typed(Type _val) : val(_val) {
     }
 
-    Typed get() const {
+    Type get() const {
         return val;
     }
 
-    bool operator==(Type rhs) const {
+    bool operator==(Typed rhs) const {
         return val==rhs.val;
     }
-    bool operator!=(Type rhs) const {
+    bool operator!=(Typed rhs) const {
         return val!=rhs.val;
     }
 
@@ -33,10 +36,23 @@ public:
         Type index = startValue;
 
     public:
-        Type alloc() {
-            return Type(index++);
+        Type allocate() {
+            return Type(++index);
         }
     };
 };
+
+namespace std {
+    template <typename Type, Type initValue, size_t module, size_t id>
+    struct hash< Typed<Type, initValue, module, id> > {
+    private:
+        std::hash<Type> hasher;
+
+    public:
+        constexpr size_t operator()(const Typed<Type, initValue, module, id> &val) const {
+            return hasher(val.get());
+        }
+    };
+}
 
 #endif // TYPED_H
