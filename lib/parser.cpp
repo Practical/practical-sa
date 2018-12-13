@@ -58,6 +58,24 @@ bool wishForToken(Tokenizer::Tokens expected, Slice<const Tokenizer::Token> sour
     return false;
 }
 
+size_t Type::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
+    size_t tokensConsumed = 0;
+
+    type = expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected type",
+            "EOF while parsing type" );
+
+    return tokensConsumed;
+}
+
+void Type::symbolsPass2(const LookupContext *parent)
+{
+    auto symbol = parent->getSymbol(type.text);
+    if( symbol==nullptr || !symbol->isType() )
+        throw pass2_error("Type name expected", type.line, type.col);
+
+    // TODO implement
+}
+
 size_t Expression::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
     size_t tokensConsumed = 0;
 
@@ -148,9 +166,7 @@ size_t FuncDeclRet::parse(Slice<const Tokenizer::Token> source, const LookupCont
                 "EOF while parsing function return type" );
         // TODO If we found an arrow, probably best to fail if the rest doesn't match
 
-        type = expectToken(
-                Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected argument type",
-                "EOF while parsing function return type" );
+        tokensConsumed += type.parse(source.subslice(tokensConsumed), ctx);
     } catch( parser_error &err ) {
         // Match ϵ
         return 0;
@@ -159,12 +175,14 @@ size_t FuncDeclRet::parse(Slice<const Tokenizer::Token> source, const LookupCont
     return tokensConsumed;
 }
 
+void FuncDeclRet::symbolsPass2(const LookupContext *ctx) {
+    type.symbolsPass2(ctx);
+}
+
 size_t FuncDeclArg::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
     size_t tokensConsumed = 0;
 
-    type = expectToken(
-            Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected argument type",
-            "EOF while parsing function arguments" );
+    tokensConsumed += type.parse(source, ctx);
     name = expectToken(
             Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected argument name",
             "EOF while parsing function arguments" );
@@ -231,6 +249,10 @@ size_t FuncDeclBody::parse(Slice<const Tokenizer::Token> source, const LookupCon
     return tokensConsumed;
 }
 
+void FuncDeclBody::symbolsPass2(const LookupContext *ctx) {
+    returnType.symbolsPass2(ctx);
+}
+
 size_t FuncDef::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
     size_t tokensConsumed = 0;
 
@@ -252,6 +274,10 @@ size_t FuncDef::parse(Slice<const Tokenizer::Token> source, const LookupContext 
     tokensConsumed += body.parse( source.subslice(tokensConsumed), ctx );
 
     return tokensConsumed;
+}
+
+void FuncDef::symbolsPass2(const LookupContext *ctx) {
+    decl.symbolsPass2(ctx);
 }
 
 void FuncDef::codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen) {

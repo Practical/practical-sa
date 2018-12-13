@@ -3,6 +3,8 @@
 void AST::prepare()
 {
     // Register the built-in types
+    globalCtx.registerBuiltInType("Void", BuiltInType::Type::Void, 0);
+
     globalCtx.registerBuiltInType("S8", BuiltInType::Type::SignedInt, 1);
     globalCtx.registerBuiltInType("S16", BuiltInType::Type::SignedInt, 2);
     globalCtx.registerBuiltInType("S32", BuiltInType::Type::SignedInt, 4);
@@ -21,6 +23,7 @@ void AST::parseModule(String moduleSource) {
     module->parse(moduleSource);
 
     module->symbolsPass1(&globalCtx);
+    module->symbolsPass2(&globalCtx);
 
     modules.emplace(toSlice("Dummy module"), std::move(module));
 }

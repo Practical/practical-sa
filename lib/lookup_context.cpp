@@ -23,6 +23,17 @@ LookupContext::NamedObject::NamedObject( T &&arg )
     setId();
 }
 
+const LookupContext::NamedObject *LookupContext::getSymbol(String name) const {
+    auto iterator = symbols.find(name);
+    if( iterator!=symbols.end() )
+        return &(iterator->second);
+
+    if( parent==nullptr )
+        return nullptr;
+
+    return parent->getSymbol(name);
+}
+
 void LookupContext::registerBuiltInType(const char *name, BuiltInType::Type type, uint8_t size) {
     addSymbol( toSlice(name), NamedObject( BuiltInType() ) );
 }
@@ -73,7 +84,7 @@ void LookupContext::NamedObject::setId() {
 }
 
 template <typename NT>
-void LookupContext::pass1(std::vector< NT > &definitions) {
+void LookupContext::symbolsPass1(std::vector< NT > &definitions) {
     for( auto &symbol : definitions ) {
         LookupContext::NamedObject def(&symbol);
 
@@ -87,5 +98,12 @@ void LookupContext::pass1(std::vector< NT > &definitions) {
     }
 }
 
+void LookupContext::symbolsPass2(std::vector< NonTerminals::FuncDef > &definitions) {
+    for( auto &funcDef : definitions ) {
+        // Resolve types in decleration
+        funcDef.symbolsPass2(this);
+    }
+}
+
 // Since we're defining the template inside a cpp file, we need to explicitly instantiate the function
-template void LookupContext::pass1<NonTerminals::FuncDef>(std::vector<NonTerminals::FuncDef> &);
+template void LookupContext::symbolsPass1<NonTerminals::FuncDef>(std::vector<NonTerminals::FuncDef> &);

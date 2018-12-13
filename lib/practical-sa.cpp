@@ -19,12 +19,9 @@ int compile(std::string path, const CompilerArguments *arguments, CodeGen *codeG
 
     AST ast;
 
-    // Parse
-    ast.parseModule(sourceFile.getSlice<const char>());
-
-    // Semantic analysis
+    // Parse + symbols lookup
     ast.prepare();
-
+    ast.parseModule(sourceFile.getSlice<const char>());
 
     // And that other thing
     ast.codeGen(codeGen);

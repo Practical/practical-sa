@@ -19,6 +19,18 @@ public:
     }
 };
 
+class pass1_error : public compile_error {
+public:
+    pass1_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    }
+};
+
+class pass2_error : public compile_error {
+public:
+    pass2_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    }
+};
+
 namespace NonTerminals {
     // Base class for all non-terminals.
     struct NonTerminal {
@@ -29,6 +41,14 @@ namespace NonTerminals {
         // Returns how many tokens were consumed
         // Throws parser_error if fails to parse
         virtual size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) = 0;
+    };
+
+    struct Type : public NonTerminal {
+        Tokenizer::Token type;
+        IdentifierId identId;
+
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        void symbolsPass2(const LookupContext *parent);
     };
 
     struct CompoundExpression;
@@ -63,13 +83,15 @@ namespace NonTerminals {
     };
 
     struct FuncDeclRet : public NonTerminal {
-        Tokenizer::Token type;
+        Type type;
 
         size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        void symbolsPass2(const LookupContext *ctx);
     };
 
     struct FuncDeclArg : public NonTerminal {
-        Tokenizer::Token name, type;
+        Tokenizer::Token name;
+        Type type;
 
         size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
     };
@@ -92,6 +114,7 @@ namespace NonTerminals {
         FuncDeclRet returnType;
 
         size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        void symbolsPass2(const LookupContext *ctx);
     };
 
     struct FuncDef : public NonTerminal {
@@ -107,6 +130,8 @@ namespace NonTerminals {
         String name() const {
             return decl.name.text;
         }
+
+        void symbolsPass2(const LookupContext *ctx);
 
         void codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen);
     };
@@ -124,7 +149,11 @@ namespace NonTerminals {
         size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
 
         void symbolsPass1(LookupContext *parent) {
-            context.pass1(functionDefinitions);
+            context.symbolsPass1(functionDefinitions);
+        }
+
+        void symbolsPass2(LookupContext *parent) {
+            context.symbolsPass2(functionDefinitions);
         }
 
         void codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen);
