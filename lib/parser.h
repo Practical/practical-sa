@@ -133,7 +133,7 @@ namespace NonTerminals {
 
         void symbolsPass2(const LookupContext *ctx);
 
-        void codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen);
+        void codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen);
     };
 
     struct Module : public NonTerminal {
@@ -156,7 +156,7 @@ namespace NonTerminals {
             context.symbolsPass2(functionDefinitions);
         }
 
-        void codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen);
+        void codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen);
     };
 } // NonTerminals namespace
 

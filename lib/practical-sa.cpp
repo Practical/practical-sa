@@ -13,7 +13,7 @@ std::unique_ptr<CompilerArguments> allocateArguments() {
     return safenew<CompilerArguments>();
 }
 
-int compile(std::string path, const CompilerArguments *arguments, CodeGen *codeGen) {
+int compile(std::string path, const CompilerArguments *arguments, ModuleGen *codeGen) {
     // Load file into memory
     Mmap<MapMode::ReadOnly> sourceFile(path);
 

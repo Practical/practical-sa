@@ -2,6 +2,14 @@
 
 #include "scope_tracing.h"
 
+static PracticalSemanticAnalyzer::StaticType toStaticType(const NonTerminals::Type &type) {
+    PracticalSemanticAnalyzer::StaticType ret;
+
+    ret.id = type.identId;
+
+    return ret;
+}
+
 namespace NonTerminals {
 
 static bool skipWS(Slice<const Tokenizer::Token> source, size_t &index) {
@@ -280,8 +288,22 @@ void FuncDef::symbolsPass2(const LookupContext *ctx) {
     decl.symbolsPass2(ctx);
 }
 
-void FuncDef::codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen) {
+void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
+    std::shared_ptr<FunctionGen> functionGen = moduleGen->handleFunction(id);
+
+    if( functionGen==nullptr )
+        return;
+
+    functionGen->functionEnter(
+            id,
+            decl.name.text,
+            toStaticType(decl.returnType.type),
+            Slice<VariableDeclaration>(),
+            toSlice("No file"), decl.name.line, decl.name.col);
+
     // TODO implement
+
+    functionGen->functionLeave(id);
 }
 
 void Module::parse(String source) {
@@ -306,14 +328,14 @@ size_t Module::parse(Slice<const Tokenizer::Token> source, const LookupContext *
     return tokensConsumed;
 }
 
-void Module::codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen) {
-    codeGen->module(PracticalSemanticAnalyzer::VisitMode::Enter, id, toSlice("OnlyModule"), toSlice("No file"), 1, 1);
+void Module::codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen) {
+    codeGen->moduleEnter(id, toSlice("OnlyModule"), toSlice("No file"), 1, 1);
 
     for(auto &function: functionDefinitions) {
         function.codeGen(codeGen);
     }
 
-    codeGen->module(PracticalSemanticAnalyzer::VisitMode::Exit, id, toSlice("OnlyModule"), toSlice("No file"), 1, 1);
+    codeGen->moduleLeave(id);
 }
 
 } // namespace NonTerminals

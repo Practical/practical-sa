@@ -18,7 +18,7 @@ struct AST {
 
     void parseModule(String moduleSource);
 
-    void codeGen(PracticalSemanticAnalyzer::CodeGen *codeGen);
+    void codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen);
 };
 
 #endif // AST_H
