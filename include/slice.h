@@ -96,6 +96,18 @@ public:
 
         return true;
     }
+
+    T* begin() {
+        return get();
+    }
+
+    const T* begin() const {
+        return get();
+    }
+
+    const T* end() const {
+        return get() + size();
+    }
 };
 
 template <typename T>

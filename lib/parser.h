@@ -51,18 +51,28 @@ namespace NonTerminals {
         void symbolsPass2(const LookupContext *parent);
     };
 
+    struct Literal : public NonTerminal {
+        Tokenizer::Token token;
+
+        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        ExpressionId codeGen(FunctionGen *functionGen);
+    };
+
     struct CompoundExpression;
 
     struct Expression : public NonTerminal {
-        std::variant<std::monostate, std::unique_ptr<CompoundExpression>, Tokenizer::Token> value;
+        enum class ExpressionType { None, CompoundExpression, Literal, Identifier };
+        std::variant<std::monostate, std::unique_ptr<CompoundExpression>, Literal, Tokenizer::Token> value;
 
         size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        ExpressionId codeGen( FunctionGen *functionGen );
     };
 
     struct Statement : public NonTerminal {
         Expression expression;
 
         size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        void codeGen( FunctionGen *functionGen );
     };
 
     struct StatementList : public NonTerminal {
@@ -80,6 +90,7 @@ namespace NonTerminals {
         }
 
         size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        ExpressionId codeGen( FunctionGen *functionGen );
     };
 
     struct FuncDeclRet : public NonTerminal {

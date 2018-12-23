@@ -1,5 +1,6 @@
 #include "parser.h"
 
+#include "ast.h"
 #include "scope_tracing.h"
 
 static PracticalSemanticAnalyzer::StaticType toStaticType(const NonTerminals::Type &type) {
@@ -84,6 +85,56 @@ void Type::symbolsPass2(const LookupContext *parent)
     // TODO implement
 }
 
+size_t Literal::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
+    size_t tokensConsumed = 0;
+
+    nextToken(source, tokensConsumed, "EOF while parsing literal");
+    const Tokenizer::Token *currentToken = &source[tokensConsumed++];
+
+    switch( currentToken->token ) {
+    case Tokenizer::Tokens::LITERAL_INT_2:
+    case Tokenizer::Tokens::LITERAL_INT_8:
+    case Tokenizer::Tokens::LITERAL_INT_10:
+    case Tokenizer::Tokens::LITERAL_INT_16:
+    case Tokenizer::Tokens::LITERAL_FP:
+    case Tokenizer::Tokens::LITERAL_STRING:
+        break;
+    default:
+        throw parser_error("Invalid expression", currentToken->line, currentToken->col);
+    }
+
+    token = *currentToken;
+
+    return tokensConsumed;
+}
+
+ExpressionId Literal::codeGen(FunctionGen *functionGen) {
+    String text = token.text;
+
+    ExpressionId id = expressionIdAllocator.allocate();
+
+    switch( token.token ) {
+    case Tokenizer::Tokens::LITERAL_INT_10:
+        {
+            LongEnoughInt res = 0;
+
+            for( char c: text ) {
+                assert( c>='0' && c<='9' );
+                res *= 10;
+                res += c-'0';
+            }
+
+            // TODO check range and assign type
+            functionGen->setLiteral(id, res);
+        }
+        break;
+    default:
+        abort(); // TODO implement
+    }
+
+    return id;
+}
+
 size_t Expression::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
     size_t tokensConsumed = 0;
 
@@ -97,25 +148,36 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source, const LookupConte
     }
 
     assert(tokensConsumed==0);
-    nextToken(source, tokensConsumed, "EOF while parsing function arguments");
-    const Tokenizer::Token *currentToken = &source[tokensConsumed++];
 
-    switch( currentToken->token ) {
-    case Tokenizer::Tokens::IDENTIFIER:
-    case Tokenizer::Tokens::LITERAL_INT_2:
-    case Tokenizer::Tokens::LITERAL_INT_8:
-    case Tokenizer::Tokens::LITERAL_INT_10:
-    case Tokenizer::Tokens::LITERAL_INT_16:
-    case Tokenizer::Tokens::LITERAL_FP:
-    case Tokenizer::Tokens::LITERAL_STRING:
-        break;
-    default:
-        throw parser_error("Invalid expression", currentToken->line, currentToken->col);
+    try {
+        // Maybe a Literal
+        value.emplace<Literal>();
+        tokensConsumed += std::get<Literal>(value).parse(source, ctx);
+
+        return tokensConsumed;
+    } catch( parser_error &err ) {
     }
 
-    value = source[tokensConsumed];
+    assert(tokensConsumed==0);
+
+    value = expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expecting an identifier", "EOF mid expression");
 
     return tokensConsumed;
+}
+
+ExpressionId Expression::codeGen( FunctionGen *functionGen ) {
+    switch( ExpressionType(value.index()) ) {
+    case ExpressionType::None:
+        return voidExpressionId;
+    case ExpressionType::CompoundExpression:
+        return std::get< static_cast<unsigned int>(ExpressionType::CompoundExpression) >(value)->codeGen(functionGen);
+    case ExpressionType::Literal:
+        return std::get< static_cast<unsigned int>(ExpressionType::Literal) >(value).codeGen(functionGen);
+    case ExpressionType::Identifier:
+        abort(); // TODO implement
+    }
+
+    abort(); // Unreachable code
 }
 
 size_t Statement::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
@@ -127,6 +189,10 @@ size_t Statement::parse(Slice<const Tokenizer::Token> source, const LookupContex
             "Unexpected EOF" );
 
     return tokensConsumed;
+}
+
+void Statement::codeGen( FunctionGen *functionGen ) {
+    expression.codeGen( functionGen ); // Disregard return value;
 }
 
 size_t StatementList::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
@@ -163,6 +229,14 @@ size_t CompoundExpression::parse(Slice<const Tokenizer::Token> source, const Loo
             "Unmatched {" );
 
     return tokensConsumed;
+}
+
+ExpressionId CompoundExpression::codeGen( FunctionGen *functionGen ) {
+    for( auto &statement: statementList.statements ) {
+        statement.codeGen( functionGen );
+    }
+
+    return expression.codeGen( functionGen );
 }
 
 size_t FuncDeclRet::parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) {
@@ -301,7 +375,8 @@ void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
             Slice<VariableDeclaration>(),
             toSlice("No file"), decl.name.line, decl.name.col);
 
-    // TODO implement
+    ExpressionId result = body.codeGen( functionGen.get() );
+    functionGen->returnValue(result);
 
     functionGen->functionLeave(id);
 }

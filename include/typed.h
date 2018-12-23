@@ -36,8 +36,8 @@ public:
         Type index = startValue;
 
     public:
-        Type allocate() {
-            return Type(++index);
+        Typed allocate() {
+            return Typed(++index);
         }
     };
 };

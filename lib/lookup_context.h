@@ -18,7 +18,7 @@ namespace NonTerminals {
 
 struct BuiltInType {
     String name;
-    enum class Type { Void, SignedInt, UnsignedInt } type;
+    enum class Type { Void, Boolean, SignedInt, UnsignedInt, InternalUnsignedInt } type;
     uint8_t size;
     PracticalSemanticAnalyzer::IdentifierId id;
 };

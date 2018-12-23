@@ -8,6 +8,9 @@
 #include <memory>
 #include <string>
 
+// An unsigned int type long enough to be castable to any int type without losing precision
+typedef unsigned long long LongEnoughInt;
+
 namespace PracticalSemanticAnalyzer {
     // Hopefully unique module ID for our typed ids
     static constexpr size_t PracticalSAModuleId = 0xc5489da402dc5a84;
@@ -38,6 +41,9 @@ namespace PracticalSemanticAnalyzer {
                 IdentifierId id, String name, StaticType returnType, Slice<VariableDeclaration> arguments,
                 String file, size_t line, size_t col) = 0;
         virtual void functionLeave(IdentifierId id) = 0;
+
+        virtual void returnValue(ExpressionId id) = 0;
+        virtual void setLiteral(ExpressionId id, LongEnoughInt value) = 0;
     };
 
     class ModuleGen {

@@ -7,6 +7,9 @@
 
 #include <memory>
 
+extern PracticalSemanticAnalyzer::ExpressionId::Allocator<> expressionIdAllocator;
+extern PracticalSemanticAnalyzer::ExpressionId voidExpressionId;
+
 struct AST {
     LookupContext globalCtx;
     std::unordered_map<String, std::unique_ptr<NonTerminals::Module>> modules;
