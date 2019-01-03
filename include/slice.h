@@ -128,7 +128,7 @@ static inline std::string sliceToString( const String &src ) {
     return std::string(&src[0], src.size());
 }
 
-constexpr static inline String toSlice(const char *str) {
+static inline String toSlice(const char *str) {
     return String(str, strlen(str));
 }
 
