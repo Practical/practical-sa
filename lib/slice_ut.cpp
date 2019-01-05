@@ -1,10 +1,9 @@
-#include <string.h>
+#include "slice.h"
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "slice.h"
-
 #include <unordered_map>
+#include <string.h>
 
 class SliceTest : public CppUnit::TestFixture  {
     void basicTest() {
