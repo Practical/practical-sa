@@ -40,83 +40,83 @@ namespace NonTerminals {
         // This function is not really virtual. It's used this way to force all children to have the same signature
         // Returns how many tokens were consumed
         // Throws parser_error if fails to parse
-        virtual size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) = 0;
+        virtual size_t parse(Slice<const Tokenizer::Token> source) = 0;
     };
 
     struct Type : public NonTerminal {
         Tokenizer::Token type;
-        IdentifierId identId;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
-        void symbolsPass2(const LookupContext *parent);
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t getLine() const {
+            return type.line;
+        }
+        size_t getCol() const {
+            return type.col;
+        }
     };
 
     struct Literal : public NonTerminal {
         Tokenizer::Token token;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
-        ExpressionId codeGen(FunctionGen *functionGen);
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct CompoundExpression;
 
     struct Expression : public NonTerminal {
-        enum class ExpressionType { None, CompoundExpression, Literal, Identifier };
-        std::variant<std::monostate, std::unique_ptr<CompoundExpression>, Literal, Tokenizer::Token> value;
+        enum ExpressionType { None, CompoundExpression, Literal, Identifier };
+        std::variant<
+                std::monostate, std::unique_ptr<::NonTerminals::CompoundExpression>, ::NonTerminals::Literal, Tokenizer::Token
+                > value;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
-        ExpressionId codeGen( FunctionGen *functionGen );
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct Statement : public NonTerminal {
         Expression expression;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
-        void codeGen( FunctionGen *functionGen );
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct StatementList : public NonTerminal {
         std::vector<Statement> statements;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct CompoundExpression : public NonTerminal {
         StatementList statementList;
         Expression expression;
-        LookupContext context;
 
-        CompoundExpression(const LookupContext *parent) : context(parent) {
+        CompoundExpression() {
         }
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
-        ExpressionId codeGen( FunctionGen *functionGen );
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct FuncDeclRet : public NonTerminal {
         Type type;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
-        void symbolsPass2(const LookupContext *ctx);
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct FuncDeclArg : public NonTerminal {
         Tokenizer::Token name;
         Type type;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct FuncDeclArgsNonEmpty : public NonTerminal {
         std::vector<FuncDeclArg> arguments;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct FuncDeclArgs : public NonTerminal {
         std::vector<FuncDeclArg> arguments;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct FuncDeclBody : public NonTerminal {
@@ -124,50 +124,33 @@ namespace NonTerminals {
         FuncDeclArgs arguments;
         FuncDeclRet returnType;
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
-        void symbolsPass2(const LookupContext *ctx);
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct FuncDef : public NonTerminal {
         FuncDeclBody decl;
         CompoundExpression body;
-        PracticalSemanticAnalyzer::IdentifierId id;
 
-        FuncDef(const LookupContext *ctx) : body{ctx} {
+        FuncDef() : body{} {
         }
 
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
 
-        String name() const {
+        String getName() const {
             return decl.name.text;
         }
-
-        void symbolsPass2(const LookupContext *ctx);
-
-        void codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen);
     };
 
     struct Module : public NonTerminal {
-        PracticalSemanticAnalyzer::ModuleId id;
         std::vector< FuncDef > functionDefinitions;
         std::vector< Tokenizer::Token > tokens;
-        LookupContext context;
-
-        Module(LookupContext *parent) : context(parent) {
-        }
 
         void parse(String source);
-        size_t parse(Slice<const Tokenizer::Token> source, const LookupContext *ctx) override final;
-
-        void symbolsPass1(LookupContext *parent) {
-            context.symbolsPass1(functionDefinitions);
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+        String getName() const {
+            return toSlice("__main");
         }
 
-        void symbolsPass2(LookupContext *parent) {
-            context.symbolsPass2(functionDefinitions);
-        }
-
-        void codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen);
     };
 } // NonTerminals namespace
 

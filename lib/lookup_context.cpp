@@ -1,6 +1,6 @@
 #include "lookup_context.h"
 
-#include "parser.h"
+#include "ast_nodes.h"
 #include "practical-sa.h"
 
 #include "typed.h"
@@ -9,16 +9,14 @@ static IdentifierId::Allocator<> idAllocator;
 
 std::unordered_map<PracticalSemanticAnalyzer::IdentifierId, LookupContext::NamedObject*> LookupContext::identifierRepository;
 
-template <typename T>
-LookupContext::NamedObject::NamedObject( const T &arg )
-    : definition(std::in_place_type<T>, arg)
+LookupContext::NamedObject::NamedObject( const BuiltInType &type )
+    : definition(std::in_place_type<BuiltInType>, type)
 {
     setId();
 }
 
-template <typename T>
-LookupContext::NamedObject::NamedObject( T &&arg )
-    : definition( std::in_place_type<T>, std::move(arg) )
+LookupContext::NamedObject::NamedObject( AST::FuncDef *funcDef )
+    : definition( std::in_place_type<AST::FuncDef *>, funcDef )
 {
     setId();
 }
@@ -35,10 +33,10 @@ const LookupContext::NamedObject *LookupContext::getSymbol(String name) const {
 }
 
 void LookupContext::registerBuiltInType(const char *name, BuiltInType::Type type, uint8_t size) {
-    addSymbol( toSlice(name), NamedObject( BuiltInType() ) );
+    addSymbolPass1( toSlice(name), NamedObject( BuiltInType() ) );
 }
 
-void LookupContext::addSymbol(String name, NamedObject &&definition) {
+void LookupContext::addSymbolPass1(String name, NamedObject &&definition) {
     IdentifierId id(definition.getId());
 
     auto emplaceResult = symbols.try_emplace( name, std::move(definition));
@@ -52,8 +50,8 @@ IdentifierId LookupContext::NamedObject::getId() const {
             return builtin.id;
         }
 
-        IdentifierId operator()( const NonTerminals::FuncDef *func ) {
-            return func->id;
+        IdentifierId operator()( const AST::FuncDef *func ) {
+            return func->getId();
         }
     };
 
@@ -75,35 +73,10 @@ void LookupContext::NamedObject::setId() {
             builtin.id = id;
         }
 
-        void operator()( NonTerminals::FuncDef *func ) {
-            func->id = id;
+        void operator()( AST::FuncDef *func ) {
+            func->setId( id );
         }
     };
 
     std::visit(Visitor(id), definition);
 }
-
-template <typename NT>
-void LookupContext::symbolsPass1(std::vector< NT > &definitions) {
-    for( auto &symbol : definitions ) {
-        LookupContext::NamedObject def(&symbol);
-
-        auto previousDefinition = symbols.find(symbol.name());
-        if( previousDefinition == symbols.end() ) {
-            addSymbol(symbol.name(), std::move(def));
-        } else {
-            // XXX Overloads not yet implemented
-            assert(false);
-        }
-    }
-}
-
-void LookupContext::symbolsPass2(std::vector< NonTerminals::FuncDef > &definitions) {
-    for( auto &funcDef : definitions ) {
-        // Resolve types in decleration
-        funcDef.symbolsPass2(this);
-    }
-}
-
-// Since we're defining the template inside a cpp file, we need to explicitly instantiate the function
-template void LookupContext::symbolsPass1<NonTerminals::FuncDef>(std::vector<NonTerminals::FuncDef> &);

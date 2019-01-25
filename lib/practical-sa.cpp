@@ -17,7 +17,7 @@ int compile(std::string path, const CompilerArguments *arguments, ModuleGen *cod
     // Load file into memory
     Mmap<MapMode::ReadOnly> sourceFile(path);
 
-    AST ast;
+    AST::AST ast;
 
     // Parse + symbols lookup
     ast.prepare();

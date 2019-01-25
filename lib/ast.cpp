@@ -2,6 +2,9 @@
 
 PracticalSemanticAnalyzer::ExpressionId::Allocator<> expressionIdAllocator;
 PracticalSemanticAnalyzer::ExpressionId voidExpressionId;
+PracticalSemanticAnalyzer::ModuleId::Allocator<> moduleIdAllocator;
+
+namespace AST {
 
 void AST::prepare()
 {
@@ -32,18 +35,27 @@ void AST::prepare()
 }
 
 void AST::parseModule(String moduleSource) {
-    auto module = safenew<NonTerminals::Module>(&globalCtx);
+    auto module = safenew<NonTerminals::Module>();
     module->parse(moduleSource);
 
-    module->symbolsPass1(&globalCtx);
-    module->symbolsPass2(&globalCtx);
+    auto parseModule = parsedModules.emplace(module->getName(), std::move(module));
+    assert( parseModule.second ); // module already existed
 
-    modules.emplace(toSlice("Dummy module"), std::move(module));
+    auto astModule = modulesAST.emplace(
+            parseModule.first->second->getName(),
+            new ::AST::Module( parseModule.first->second.get(), &globalCtx )
+            );
+    assert( astModule.second ); // Module already existed
+
+    astModule.first->second->symbolsPass1();
+    astModule.first->second->symbolsPass2();
 }
 
 void AST::codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen) {
     // XXX We should only code-gen some of the modules?
-    for(auto &module: modules) {
+    for(auto &module: modulesAST) {
         module.second->codeGen(codeGen);
     }
 }
+
+} // Namespace AST

@@ -8,11 +8,12 @@
 
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include <variant>
 #include <vector>
 
 // We need to forward declare the non-terminals we point to
-namespace NonTerminals {
+namespace AST {
     struct FuncDef;
 }
 
@@ -26,12 +27,13 @@ struct BuiltInType {
 // A Context is anything that may contain further symbolic definitions. This may be a module, a struct, a function or even an
 // anonymous block of code.
 class LookupContext : private NoCopy {
+public:
     struct NamedObject {
         enum class Type { BuiltInType, FuncDef, END };
-        std::variant< BuiltInType, NonTerminals::FuncDef * > definition;
+        std::variant< ::BuiltInType, AST::FuncDef * > definition;
 
-        template <typename T> NamedObject( const T &arg );
-        template <typename T> NamedObject( T &&arg );
+        NamedObject( const ::BuiltInType &type );
+        NamedObject( AST::FuncDef *funcDef );
 
         PracticalSemanticAnalyzer::IdentifierId getId() const;
 
@@ -55,6 +57,7 @@ class LookupContext : private NoCopy {
         void setId();
     };
 
+private:
     // My place in the world
     const LookupContext *parent = nullptr;
 
@@ -68,16 +71,7 @@ public:
     const NamedObject *getSymbol(String name) const;
 
     void registerBuiltInType(const char *name, BuiltInType::Type type, uint8_t size);
-    void addSymbol(String name, NamedObject &&definition);
-
-    // Symbol table generation passes
-
-    // Pass 1: collect the names of the entities
-    template <typename NT>
-    void symbolsPass1(std::vector<NT> &definitions);
-
-    // Pass 2: See what connects to what
-    void symbolsPass2(std::vector< NonTerminals::FuncDef > &definitions);
+    void addSymbolPass1(String name, NamedObject &&definition);
 };
 
 #endif // LOOKUP_CONTEXT_H

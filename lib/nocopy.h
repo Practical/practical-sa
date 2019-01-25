@@ -7,13 +7,6 @@ public:
     NoCopy(const NoCopy &rhs) = delete;
     NoCopy &operator=(const NoCopy &rhs) = delete;
 
-    NoCopy(NoCopy &&rhs) {
-    }
-
-    NoCopy &operator=(NoCopy &&rhs) {
-        return *this;
-    }
-
     NoCopy() = default;
     ~NoCopy() = default;
 };
