@@ -1,12 +1,14 @@
 #ifndef LIB_PRACTICAL_SA_H
 #define LIB_PRACTICAL_SA_H
 
+#include "nocopy.h"
 #include "typed.h"
 #include "slice.h"
 
 #include <iostream>
 #include <memory>
 #include <string>
+#include <variant>
 
 // An unsigned int type long enough to be castable to any int type without losing precision
 typedef unsigned long long LongEnoughInt;
@@ -23,27 +25,49 @@ namespace PracticalSemanticAnalyzer {
     public:
     };
 
-    struct StaticType {
+    class StaticType : private NoCopy {
+    private:
         IdentifierId id;
+
+    public:
+        StaticType() = default;
+        StaticType(IdentifierId _id) : id(_id) {
+        }
+
+        IdentifierId getId() const {
+            return id;
+        }
+
+        void setId( IdentifierId id ) {
+            this->id = id;
+        }
+
+        bool operator==( const StaticType &that ) const {
+            return this->id==that.id;
+        }
+
+        bool operator!=( const StaticType &that ) const {
+            return !operator==( that );
+        }
     };
 
     struct VariableDeclaration {
-        StaticType type;
+        const StaticType &type;
         String name;
 
-        VariableDeclaration(StaticType _type, String _name) : type(_type), name(_name) {}
+        VariableDeclaration(const StaticType &_type, String _name) : type(_type), name(_name) {}
     };
 
     /// Callbacks used by the semantic analyzer to allow the SA user to actually generate code
     class FunctionGen {
     public:
         virtual void functionEnter(
-                IdentifierId id, String name, StaticType returnType, Slice<VariableDeclaration> arguments,
+                IdentifierId id, String name, const StaticType& returnType, Slice<VariableDeclaration> arguments,
                 String file, size_t line, size_t col) = 0;
         virtual void functionLeave(IdentifierId id) = 0;
 
         virtual void returnValue(ExpressionId id) = 0;
-        virtual void setLiteral(ExpressionId id, LongEnoughInt value) = 0;
+        virtual void setLiteral(ExpressionId id, LongEnoughInt value, const StaticType &type) = 0;
     };
 
     class ModuleGen {
@@ -58,6 +82,21 @@ namespace PracticalSemanticAnalyzer {
 
     // XXX Should path actually be a buffer?
     int compile(std::string path, const CompilerArguments *arguments, ModuleGen *codeGen);
+
+    namespace NamedType {
+        struct BuiltIn {
+            String name;
+            enum class Type { Invalid, Void, Boolean, SignedInt, UnsignedInt, InternalUnsignedInt } type = Type::Invalid;
+            uint8_t sizeInBits = 0;
+            PracticalSemanticAnalyzer::IdentifierId id{0};
+        };
+    }
+
+    struct TypeMeanings {
+        enum { BuiltIn };
+    };
+
+    std::variant<const NamedType::BuiltIn *> getTypeMeaning(IdentifierId id);
 } // End namespace PracticalSemanticAnalyzer
 
 #endif // LIB_PRACTICAL_SA_H

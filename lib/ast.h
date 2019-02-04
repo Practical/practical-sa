@@ -14,15 +14,26 @@ extern PracticalSemanticAnalyzer::ModuleId::Allocator<> moduleIdAllocator;
 
 namespace AST {
 
+class semantic_error : public compile_error {
+public:
+    semantic_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    }
+};
+
 class AST {
-    LookupContext globalCtx;
+    static LookupContext globalCtx;
     std::unordered_map<String, std::unique_ptr<NonTerminals::Module>> parsedModules;
     std::unordered_map<String, std::unique_ptr<::AST::Module>> modulesAST;
 
 public:
 
-    AST() : globalCtx(nullptr) {
+    AST() {
     }
+
+    static const LookupContext &getGlobalCtx() {
+        return globalCtx;
+    }
+    static StaticType deductLiteralRange(LongEnoughInt value);
 
     void prepare();
 
@@ -30,6 +41,8 @@ public:
 
     void codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen);
 };
+
+bool implicitCastAllowed(const StaticType &sourceType, const StaticType &destType, const LookupContext &ctx);
 
 } // namespace AST
 

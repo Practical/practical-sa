@@ -12,7 +12,7 @@ void Type::symbolsPass2(LookupContext *ctx) {
     if( symbol==nullptr || !symbol->isType() )
         throw pass2_error("Type name expected", parseType->getLine(), parseType->getCol());
 
-    staticType.id = symbol->getId();
+    staticType.setId( symbol->getId() );
 }
 
 CompoundExpression::CompoundExpression(LookupContext *parentCtx, const NonTerminals::CompoundExpression *_parserExpresison)
@@ -28,19 +28,21 @@ void CompoundExpression::symbolsPass2() {
     // TODO implement
 }
 
-ExpressionId CompoundExpression::codeGen(FunctionGen *codeGen) {
+ExpressionId CompoundExpression::codeGen(FunctionGen *codeGen, const StaticType *expectedResult) {
     for( auto &statement: parserExpression->statementList.statements ) {
         codeGenStatement( codeGen, &statement );
     }
 
-    return codeGenExpression( codeGen, &parserExpression->expression );
+    return codeGenExpression( codeGen, expectedResult, &parserExpression->expression );
 }
 
 void CompoundExpression::codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement) {
-    codeGenExpression(codeGen, &statement->expression); // Disregard return value
+    codeGenExpression(codeGen, nullptr, &statement->expression); // Disregard return value
 }
 
-ExpressionId CompoundExpression::codeGenExpression(FunctionGen *codeGen, const NonTerminals::Expression *expression) {
+ExpressionId CompoundExpression::codeGenExpression(
+        FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression *expression)
+{
     using namespace NonTerminals;
 
     switch( Expression::ExpressionType(expression->value.index()) ) {
@@ -53,7 +55,7 @@ ExpressionId CompoundExpression::codeGenExpression(FunctionGen *codeGen, const N
                 codeGen(functionGen);
         */
     case Expression::ExpressionType::Literal:
-        return codeGenLiteral( codeGen, &std::get< Expression::ExpressionType::Literal >(expression->value) );
+        return codeGenLiteral( codeGen, expectedResult, &std::get< Expression::ExpressionType::Literal >(expression->value) );
     case Expression::ExpressionType::Identifier:
         abort(); // TODO implement
     }
@@ -61,29 +63,38 @@ ExpressionId CompoundExpression::codeGenExpression(FunctionGen *codeGen, const N
     return voidExpressionId;
 }
 
-ExpressionId CompoundExpression::codeGenLiteral(FunctionGen *codeGen, const NonTerminals::Literal *literal) {
+ExpressionId CompoundExpression::codeGenLiteral(
+        FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Literal *literal)
+{
     String text = literal->token.text;
 
     ExpressionId id = expressionIdAllocator.allocate();
 
+    LongEnoughInt res = 0;
+
     switch( literal->token.token ) {
     case Tokenizer::Tokens::LITERAL_INT_10:
-        {
-            LongEnoughInt res = 0;
-
-            for( char c: text ) {
-                assert( c>='0' && c<='9' );
-                res *= 10;
-                res += c-'0';
-            }
-
+        for( char c: text ) {
             // TODO check range and assign type
-            codeGen->setLiteral(id, res);
+
+            assert( c>='0' && c<='9' );
+            res *= 10;
+            res += c-'0';
         }
         break;
     default:
         abort(); // TODO implement
     }
+
+    // XXX use value range propagation instead
+    StaticType resType( AST::AST::deductLiteralRange(res) );
+    bool useExpected = false;
+    if( expectedResult!=nullptr ) {
+        if( implicitCastAllowed(resType, *expectedResult, AST::getGlobalCtx()) )
+            useExpected = true;
+    }
+
+    codeGen->setLiteral(id, res, useExpected ? *expectedResult : resType);
 
     return id;
 }
@@ -94,11 +105,13 @@ FuncDecl::FuncDecl(const NonTerminals::FuncDeclBody *nt)
 }
 
 void FuncDecl::symbolsPass1(LookupContext *ctx) {
-    // TODO implement
+    // TODO implement ?
 }
 
 void FuncDecl::symbolsPass2(LookupContext *ctx) {
-    // TODO implement
+    retType.symbolsPass2(ctx);
+
+    // TODO parse the arguments
 }
 
 FuncDef::FuncDef(const NonTerminals::FuncDef *nt, LookupContext *ctx)
@@ -141,7 +154,7 @@ void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
             Slice<VariableDeclaration>(),
             toSlice("No file"), declaration.getLine(), declaration.getCol());
 
-    ExpressionId result = body.codeGen( functionGen.get() );
+    ExpressionId result = body.codeGen( functionGen.get(), &declaration.getRetType() );
     functionGen->returnValue(result);
 
     functionGen->functionLeave(id);

@@ -14,11 +14,10 @@ class Type : NoCopy {
 public:
     Type(const NonTerminals::Type *nt);
 
-    StaticType getType() const {
+    const StaticType &getType() const {
         return staticType;
     }
 
-    void symbolsPass1(LookupContext *ctx) {}
     void symbolsPass2(LookupContext *ctx);
 };
 
@@ -31,12 +30,13 @@ public:
 
     void symbolsPass1();
     void symbolsPass2();
-    ExpressionId codeGen(FunctionGen *codeGen);
+    ExpressionId codeGen(FunctionGen *codeGen, const StaticType *expectedResult);
 
 private:
     void codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement);
-    ExpressionId codeGenExpression(FunctionGen *codeGen, const NonTerminals::Expression *expression);
-    ExpressionId codeGenLiteral(FunctionGen *codeGen, const NonTerminals::Literal *literal);
+    ExpressionId codeGenExpression(
+            FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression *expression);
+    ExpressionId codeGenLiteral(FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Literal *literal);
 };
 
 class FuncDeclArgs : NoCopy {
@@ -62,7 +62,7 @@ public:
         return parserFuncDecl->name.col;
     }
 
-    StaticType getRetType() const {
+    const StaticType &getRetType() const {
         return retType.getType();
     }
 

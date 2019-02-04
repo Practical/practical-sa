@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <type_traits>
 
 template <typename Type, Type initValue, size_t module, size_t id>
@@ -53,6 +54,11 @@ namespace std {
             return hasher(val.get());
         }
     };
+}
+
+template<typename T, T init, size_t mod, size_t id>
+std::ostream &operator<<(std::ostream &out, Typed<T, init, mod, id> t) {
+    return out << "Typed(" << t.get() << ")";
 }
 
 #endif // TYPED_H

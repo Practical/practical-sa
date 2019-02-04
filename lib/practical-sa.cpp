@@ -29,4 +29,24 @@ int compile(std::string path, const CompilerArguments *arguments, ModuleGen *cod
     return 0;
 }
 
+std::variant<const NamedType::BuiltIn *> getTypeMeaning(IdentifierId id) {
+    using Variant = std::variant<const NamedType::BuiltIn *>;
+
+    auto namedObject = LookupContext::lookupIdentifier(id);
+
+    assert( namedObject->isType() ); // TODO implement
+
+    struct Visitor {
+        Variant operator()(const ::BuiltInType &type) const {
+            return Variant(&type);
+        }
+
+        Variant operator()(const AST::FuncDef *funcDef) const {
+            abort(); // TODO impelement
+        }
+    };
+
+    return std::visit(Visitor(), namedObject->definition);
+}
+
 } // PracticalSemanticAnalyzer

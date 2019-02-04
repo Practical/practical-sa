@@ -32,8 +32,12 @@ const LookupContext::NamedObject *LookupContext::getSymbol(String name) const {
     return parent->getSymbol(name);
 }
 
-void LookupContext::registerBuiltInType(const char *name, BuiltInType::Type type, uint8_t size) {
-    addSymbolPass1( toSlice(name), NamedObject( BuiltInType() ) );
+const LookupContext::NamedObject *LookupContext::getSymbol(PracticalSemanticAnalyzer::IdentifierId id) const {
+    return identifierRepository.at(id);
+}
+
+void LookupContext::registerBuiltInType( const BuiltInType &type ) {
+    addSymbolPass1( type.name, NamedObject( type ) );
 }
 
 void LookupContext::addSymbolPass1(String name, NamedObject &&definition) {
@@ -42,6 +46,10 @@ void LookupContext::addSymbolPass1(String name, NamedObject &&definition) {
     auto emplaceResult = symbols.try_emplace( name, std::move(definition));
     assert(emplaceResult.second); // Trying to add a symbol that is already present
     identifierRepository.insert( std::make_pair( id, &(*emplaceResult.first).second ) );
+}
+
+const LookupContext::NamedObject *LookupContext::lookupIdentifier(PracticalSemanticAnalyzer::IdentifierId id) {
+    return identifierRepository.at(id);
 }
 
 IdentifierId LookupContext::NamedObject::getId() const {
