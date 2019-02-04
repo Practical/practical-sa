@@ -1,6 +1,7 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include <assert.h>
 #include <cstdio>
 #include <cstring>
 #include <exception>
@@ -12,12 +13,13 @@ class compile_error : public std::exception {
     std::unique_ptr<char> msg;
 public:
     compile_error(const char *msg, size_t line, size_t col) : line(line), col(col) {
-        size_t buffsize = strlen(msg) + 100;
-        this->msg = std::unique_ptr<char>(new char[buffsize]);
-        snprintf(this->msg.get(), buffsize, "%s at %lu:%lu", msg, line, col);
+        setMsg(msg);
     }
 
+    compile_error(size_t line, size_t col) : line(line), col(col) {}
+
     const char *what() const noexcept {
+        assert(msg);
         return msg.get();
     }
 
@@ -27,6 +29,13 @@ public:
 
     size_t getCol() const {
         return col;
+    }
+
+protected:
+    void setMsg(const char *msg) {
+        size_t buffsize = strlen(msg) + 100;
+        this->msg = std::unique_ptr<char>(new char[buffsize]);
+        snprintf(this->msg.get(), buffsize, "%s at %lu:%lu", msg, line, col);
     }
 };
 

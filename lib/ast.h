@@ -14,10 +14,9 @@ extern PracticalSemanticAnalyzer::ModuleId::Allocator<> moduleIdAllocator;
 
 namespace AST {
 
-class semantic_error : public compile_error {
+class ImplicitCastNotAllowed : public compile_error {
 public:
-    semantic_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
-    }
+    ImplicitCastNotAllowed(const StaticType *src, const StaticType *dst, size_t line, size_t col);
 };
 
 class AST {

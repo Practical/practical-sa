@@ -50,6 +50,7 @@ namespace PracticalSemanticAnalyzer {
             return !operator==( that );
         }
     };
+    std::ostream &operator<<(std::ostream &out, const StaticType &type);
 
     struct VariableDeclaration {
         const StaticType &type;

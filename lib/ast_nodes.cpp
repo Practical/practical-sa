@@ -90,8 +90,10 @@ ExpressionId CompoundExpression::codeGenLiteral(
     StaticType resType( AST::AST::deductLiteralRange(res) );
     bool useExpected = false;
     if( expectedResult!=nullptr ) {
-        if( implicitCastAllowed(resType, *expectedResult, AST::getGlobalCtx()) )
-            useExpected = true;
+        if( !implicitCastAllowed(resType, *expectedResult, AST::getGlobalCtx()) )
+            throw ImplicitCastNotAllowed(&resType, expectedResult, literal->token.line, literal->token.col);
+
+        useExpected = true;
     }
 
     codeGen->setLiteral(id, res, useExpected ? *expectedResult : resType);

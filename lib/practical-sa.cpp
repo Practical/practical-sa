@@ -9,6 +9,20 @@
 #include "defines.h"
 
 namespace PracticalSemanticAnalyzer {
+std::ostream &operator<<(std::ostream &out, const StaticType &type) {
+    auto namedType = getTypeMeaning(type.getId());
+
+    struct Visitor {
+        String operator()(const NamedType::BuiltIn *builtIn) const {
+            return builtIn->name;
+        }
+    };
+
+    out << std::visit(Visitor(), namedType);
+
+    return out;
+}
+
 std::unique_ptr<CompilerArguments> allocateArguments() {
     return safenew<CompilerArguments>();
 }
