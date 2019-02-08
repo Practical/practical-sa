@@ -44,7 +44,7 @@ void LookupContext::addSymbolPass1(String name, NamedObject &&definition) {
     IdentifierId id(definition.getId());
 
     auto emplaceResult = symbols.try_emplace( name, std::move(definition));
-    assert(emplaceResult.second); // Trying to add a symbol that is already present
+    ASSERT(emplaceResult.second) << "Trying to add symbol \"" << name << "\" that is already present";
     identifierRepository.insert( std::make_pair( id, &(*emplaceResult.first).second ) );
 }
 
@@ -64,7 +64,7 @@ IdentifierId LookupContext::NamedObject::getId() const {
     };
 
     IdentifierId id = std::visit(Visitor(), definition);
-    assert( id != IdentifierId() ); // id is uninitialized
+    ASSERT( id != IdentifierId() ) << "id is uninitialized";
 
     return id;
 }

@@ -1,9 +1,11 @@
+#include <tokenizer.h>
+
+#include "asserts.h"
+
 #include <regex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-
-#include <tokenizer.h>
 
 static const std::unordered_set<char> operatorChars = {
     '~', '!', '#', '/', '$', '%', '^', '&', '*', '-', '=', '+', '<', '>', '.', '|' };
@@ -73,7 +75,7 @@ bool Tokenizer::next() {
     tokenText = file.subslice(tokenStart, position);
     tokenLine = startLine;
     tokenCol = startCol;
-    assert( token!=Tokens::ERR );
+    ASSERT( token!=Tokens::ERR );
 
     return true;
 }

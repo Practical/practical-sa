@@ -2,6 +2,8 @@
 
 #include "ast.h"
 
+#include "asserts.h"
+
 namespace AST {
 
 Type::Type(const NonTerminals::Type *nt) : parseType(nt) {
@@ -49,7 +51,7 @@ ExpressionId CompoundExpression::codeGenExpression(
     case Expression::ExpressionType::None:
         return voidExpressionId;
     case Expression::ExpressionType::CompoundExpression:
-        abort();
+        ABORT() << "TODO implement";
         /*
         return std::get< static_cast<unsigned int>(Expression::ExpressionType::CompoundExpression) >(expression->value)->
                 codeGen(functionGen);
@@ -57,7 +59,7 @@ ExpressionId CompoundExpression::codeGenExpression(
     case Expression::ExpressionType::Literal:
         return codeGenLiteral( codeGen, expectedResult, &std::get< Expression::ExpressionType::Literal >(expression->value) );
     case Expression::ExpressionType::Identifier:
-        abort(); // TODO implement
+        ABORT() << "TODO implement";
     }
 
     return voidExpressionId;
@@ -77,13 +79,13 @@ ExpressionId CompoundExpression::codeGenLiteral(
         for( char c: text ) {
             // TODO check range and assign type
 
-            assert( c>='0' && c<='9' );
+            ASSERT( c>='0' && c<='9' ) << "Decimal literal has character '"<<c<<"' out of allowed range";
             res *= 10;
             res += c-'0';
         }
         break;
     default:
-        abort(); // TODO implement
+        ABORT() << "TODO implement";
     }
 
     // XXX use value range propagation instead
@@ -175,8 +177,7 @@ void Module::symbolsPass1() {
         if( previousDefinition == nullptr ) {
             ctx.addSymbolPass1(symbol.getName(), std::move(def));
         } else {
-            // XXX Overloads not yet implemented
-            assert(false);
+            ABORT() << "TODO Overloads not yet implemented";
         }
 
         funcDef->symbolsPass1(&ctx);

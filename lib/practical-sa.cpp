@@ -48,7 +48,7 @@ std::variant<const NamedType::BuiltIn *> getTypeMeaning(IdentifierId id) {
 
     auto namedObject = LookupContext::lookupIdentifier(id);
 
-    assert( namedObject->isType() ); // TODO implement
+    ASSERT( namedObject->isType() ) << "TODO implement";
 
     struct Visitor {
         Variant operator()(const ::BuiltInType &type) const {
@@ -56,7 +56,7 @@ std::variant<const NamedType::BuiltIn *> getTypeMeaning(IdentifierId id) {
         }
 
         Variant operator()(const AST::FuncDef *funcDef) const {
-            abort(); // TODO impelement
+            ABORT() << "TODO impelement";
         }
     };
 

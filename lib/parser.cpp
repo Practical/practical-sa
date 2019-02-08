@@ -102,7 +102,7 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source) {
     } catch( parser_error &err ) {
     }
 
-    assert(tokensConsumed==0);
+    ASSERT(tokensConsumed==0);
 
     try {
         // Maybe a Literal
@@ -113,7 +113,7 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source) {
     } catch( parser_error &err ) {
     }
 
-    assert(tokensConsumed==0);
+    ASSERT(tokensConsumed==0);
 
     value = expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expecting an identifier", "EOF mid expression");
 

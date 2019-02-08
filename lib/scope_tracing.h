@@ -1,6 +1,7 @@
 #ifndef SCOPE_TRACING_H
 #define SCOPE_TRACING_H
 
+#include "asserts.h"
 #include "nocopy.h"
 
 #include <cassert>
@@ -20,7 +21,7 @@ public:
 
     ~ScopeTrace() {
         --nesting;
-        assert(nesting==myNesting);
+        ASSERT(nesting==myNesting);
         auto ex = std::current_exception();
         if( ex )
             indent(std::cerr) << "Leaving " << name << "\n";

@@ -1,11 +1,11 @@
 #ifndef EXACT_INT_H
 #define EXACT_INT_H
 
+#include "asserts.h"
+
 #include <cstdint>
 #include <iostream>
 #include <variant>
-
-#include <assert.h>
 
 // An integer type that can hold the whole range of 128 bits, both signed and unsigned
 class ExactInt {
@@ -75,12 +75,12 @@ public:
     }
 
     Tu getUnsigned() const {
-        assert( nonNegative() );
+        ASSERT( nonNegative() );
         return u;
     }
 
     Ts getSigned() const {
-        assert( type==Type::SIGNED || s>=0 );
+        ASSERT( type==Type::SIGNED || s>=0 );
         return s;
     }
 

@@ -33,7 +33,7 @@ StaticType AST::deductLiteralRange(LongEnoughInt value) {
         } else if( value>=INT64_MIN ) {
             typeName = toSlice("S64");
         } else {
-            abort(); // XXX implement
+            ABORT() << "TODO implement";
         }
     } else {
         if( value<=INT8_MAX ) {
@@ -53,14 +53,14 @@ StaticType AST::deductLiteralRange(LongEnoughInt value) {
         } else if( value<=UINT64_MAX ) {
             typeName = toSlice("U64");
         } else {
-            abort(); // XXX implement
+            ABORT() << "XXX implement";
         }
     }
 
     auto object = globalCtx.getSymbol(typeName);
-    assert(object != nullptr); // Couldn't look up built-in types
+    ASSERT(object != nullptr) << "Failed to look up built-in type \"" << typeName << "\"";
     const BuiltInType *type = std::get_if<BuiltInType>(&object->definition);
-    assert(type != nullptr); // The built-in type is defined by name, but not of type built-in type
+    ASSERT(type != nullptr) << "The built-in type \"" << typeName << "\" is defined by name, but not of type built-in type";
 
     return StaticType( type->id );
 }
@@ -98,13 +98,13 @@ void AST::parseModule(String moduleSource) {
     module->parse(moduleSource);
 
     auto parseModule = parsedModules.emplace(module->getName(), std::move(module));
-    assert( parseModule.second ); // module already existed
+    ASSERT( parseModule.second ) << "module \"" << module->getName() << "\" already existed";
 
     auto astModule = modulesAST.emplace(
             parseModule.first->second->getName(),
             new ::AST::Module( parseModule.first->second.get(), &globalCtx )
             );
-    assert( astModule.second ); // Module already existed
+    ASSERT( astModule.second ) << "Module \"" << parseModule.first->second->getName() << "\"already existed";
 
     astModule.first->second->symbolsPass1();
     astModule.first->second->symbolsPass2();
@@ -125,8 +125,8 @@ bool implicitCastAllowed(const StaticType &sourceType, const StaticType &destTyp
     const LookupContext::NamedObject *namedSource = ctx.getSymbol( sourceType.getId() );
     const LookupContext::NamedObject *namedDest = ctx.getSymbol( destType.getId() );
 
-    assert( namedSource->definition.index()==LookupContext::NamedObject::Type::BuiltInType );
-    assert( namedDest->definition.index()==LookupContext::NamedObject::Type::BuiltInType );
+    ASSERT( namedSource->definition.index()==LookupContext::NamedObject::Type::BuiltInType );
+    ASSERT( namedDest->definition.index()==LookupContext::NamedObject::Type::BuiltInType );
 
     const BuiltInType *builtinSource = &std::get<BuiltInType>( namedSource->definition );
     const BuiltInType *builtinDest = &std::get<BuiltInType>( namedDest->definition );
@@ -147,7 +147,7 @@ bool implicitCastAllowed(const StaticType &sourceType, const StaticType &destTyp
         }
     }
 
-    abort(); // Shouldn't reach here
+    ABORT() << "Unreachable code reached";
 }
 
 } // Namespace AST

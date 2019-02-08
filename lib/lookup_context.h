@@ -3,6 +3,7 @@
 
 #include <practical-sa.h>
 
+#include "asserts.h"
 #include "nocopy.h"
 #include "slice.h"
 
@@ -24,7 +25,7 @@ struct BuiltInType : public PracticalSemanticAnalyzer::NamedType::BuiltIn {
         type = _type;
         sizeInBits = _sizeInBits;
 
-        assert( type!=Type::Invalid );
+        ASSERT( type!=Type::Invalid );
     }
 };
 
@@ -45,21 +46,20 @@ public:
 
         bool isType() const {
             auto defIdx = definition.index();
-            assert( defIdx!=std::variant_npos ); // Attempt to query an empty variant
-            assert( defIdx < Type::END ); // Variant out of range
+            ASSERT( defIdx!=std::variant_npos ) << "Attempt to query an empty variant";
+            ASSERT( defIdx < Type::END ) << "Variant out of range";
             switch( defIdx ) {
             case Type::BuiltInType:
                 return true;
             case Type::FuncDef:
                 return false;
             case Type::END:
-                abort(); // We just checked it ain't it.
+                ABORT() << "Unreachable code";
             default:
-                abort();
+                ABORT();
             }
 
-            assert(false); // Switch missed an option
-            return false;
+            ABORT() << "Switch missed an option";
         }
     private:
         void setId();
