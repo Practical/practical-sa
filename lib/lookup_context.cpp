@@ -15,8 +15,8 @@ LookupContext::NamedObject::NamedObject( const BuiltInType &type )
     setId();
 }
 
-LookupContext::NamedObject::NamedObject( AST::FuncDef *funcDef )
-    : definition( std::in_place_type<AST::FuncDef *>, funcDef )
+LookupContext::NamedObject::NamedObject( const AST::FuncDef *funcDef )
+    : definition( std::in_place_type<const AST::FuncDef *>, funcDef )
 {
     setId();
 }
@@ -54,6 +54,10 @@ const LookupContext::NamedObject *LookupContext::lookupIdentifier(PracticalSeman
 
 IdentifierId LookupContext::NamedObject::getId() const {
     struct Visitor {
+        IdentifierId operator()( std::monostate none ) {
+            ABORT() << "Asked for ID of an empty NamedObject";
+        }
+
         IdentifierId operator()( const BuiltInType &builtin ) {
             return builtin.id;
         }
@@ -77,12 +81,16 @@ void LookupContext::NamedObject::setId() {
 
         Visitor(IdentifierId _id) : id(_id) {}
 
+        void operator()( std::monostate none ) {
+            ABORT() << "Tried to set ID of an empty NamedObject";
+        }
+
         void operator()( BuiltInType &builtin ) {
             builtin.id = id;
         }
 
-        void operator()( AST::FuncDef *func ) {
-            func->setId( id );
+        void operator()( const AST::FuncDef *func ) {
+            const_cast<AST::FuncDef *>(func)->setId( id );
         }
     };
 

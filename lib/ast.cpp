@@ -125,11 +125,11 @@ bool implicitCastAllowed(const StaticType &sourceType, const StaticType &destTyp
     const LookupContext::NamedObject *namedSource = ctx.getSymbol( sourceType.getId() );
     const LookupContext::NamedObject *namedDest = ctx.getSymbol( destType.getId() );
 
-    ASSERT( namedSource->definition.index()==LookupContext::NamedObject::Type::BuiltInType );
-    ASSERT( namedDest->definition.index()==LookupContext::NamedObject::Type::BuiltInType );
+    const BuiltInType *builtinSource = std::get_if<BuiltInType>( &namedSource->definition );
+    const BuiltInType *builtinDest = std::get_if<BuiltInType>( &namedDest->definition );
 
-    const BuiltInType *builtinSource = &std::get<BuiltInType>( namedSource->definition );
-    const BuiltInType *builtinDest = &std::get<BuiltInType>( namedDest->definition );
+    ASSERT( builtinSource!=nullptr );
+    ASSERT( builtinDest!=nullptr );
 
     if( builtinSource->type==BuiltInType::Type::SignedInt ) {
         if( builtinDest->type!=BuiltInType::Type::SignedInt )

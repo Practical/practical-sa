@@ -34,32 +34,29 @@ struct BuiltInType : public PracticalSemanticAnalyzer::NamedType::BuiltIn {
 class LookupContext : private NoCopy {
 public:
     struct NamedObject {
-        struct Type {
-            enum { BuiltInType, FuncDef, END };
-        };
-        std::variant< ::BuiltInType, AST::FuncDef * > definition;
+        std::variant< std::monostate, ::BuiltInType, const AST::FuncDef * > definition;
 
         NamedObject( const ::BuiltInType &type );
-        NamedObject( AST::FuncDef *funcDef );
+        NamedObject( const AST::FuncDef *funcDef );
 
         PracticalSemanticAnalyzer::IdentifierId getId() const;
 
         bool isType() const {
-            auto defIdx = definition.index();
-            ASSERT( defIdx!=std::variant_npos ) << "Attempt to query an empty variant";
-            ASSERT( defIdx < Type::END ) << "Variant out of range";
-            switch( defIdx ) {
-            case Type::BuiltInType:
-                return true;
-            case Type::FuncDef:
-                return false;
-            case Type::END:
-                ABORT() << "Unreachable code";
-            default:
-                ABORT();
-            }
+            struct Visitor {
+                bool operator()( std::monostate none ) const {
+                    ABORT() << "Attempt to query an empty variant";
+                }
 
-            ABORT() << "Switch missed an option";
+                bool operator()( const ::BuiltInType &builtin ) const {
+                    return true;
+                }
+
+                bool operator()( const AST::FuncDef *function ) const {
+                    return false;
+                }
+            };
+
+            return std::visit( Visitor(), definition );
         }
     private:
         void setId();

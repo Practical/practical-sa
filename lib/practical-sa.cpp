@@ -51,6 +51,10 @@ std::variant<const NamedType::BuiltIn *> getTypeMeaning(IdentifierId id) {
     ASSERT( namedObject->isType() ) << "TODO implement";
 
     struct Visitor {
+        Variant operator()( std::monostate none ) const {
+            ABORT() << "Unreachable code";
+        }
+
         Variant operator()(const ::BuiltInType &type) const {
             return Variant(&type);
         }
