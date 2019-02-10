@@ -64,16 +64,32 @@ namespace NonTerminals {
     struct CompoundExpression;
 
     struct Expression : public NonTerminal {
-        enum ExpressionType { None, CompoundExpression, Literal, Identifier };
         std::variant<
-                std::monostate, std::unique_ptr<::NonTerminals::CompoundExpression>, ::NonTerminals::Literal, Tokenizer::Token
-                > value;
+                std::monostate,
+                std::unique_ptr<::NonTerminals::CompoundExpression>,
+                ::NonTerminals::Literal,
+                const Tokenizer::Token *
+            > value;
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+    };
+
+    struct VariableDeclBody : public NonTerminal {
+        const Tokenizer::Token *name;
+        Type type;
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+    };
+
+    struct VariableDefinition : public NonTerminal {
+        VariableDeclBody body;
+        std::unique_ptr<Expression> initValue;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct Statement : public NonTerminal {
-        Expression expression;
+        std::variant<std::monostate, Expression, VariableDefinition> content;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };

@@ -62,6 +62,10 @@ std::variant<const NamedType::BuiltIn *> getTypeMeaning(IdentifierId id) {
         Variant operator()(const AST::FuncDef *funcDef) const {
             ABORT() << "TODO impelement";
         }
+
+        Variant operator()(const VariableDef &varDef) const {
+            ABORT() << "TODO impelement";
+        }
     };
 
     return std::visit(Visitor(), namedObject->definition);

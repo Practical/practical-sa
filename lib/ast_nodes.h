@@ -19,6 +19,10 @@ public:
     }
 
     void symbolsPass2(LookupContext *ctx);
+
+    StaticType removeType() && {
+        return std::move(staticType);
+    }
 };
 
 class CompoundExpression : NoCopy {
@@ -36,6 +40,7 @@ private:
     void codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement);
     ExpressionId codeGenExpression(
             FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression *expression);
+    void codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition);
     ExpressionId codeGenLiteral(FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Literal *literal);
 };
 

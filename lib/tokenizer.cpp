@@ -8,8 +8,9 @@
 #include <unordered_set>
 
 static const std::unordered_set<char> operatorChars = {
-    '~', '!', '#', '/', '$', '%', '^', '&', '*', '-', '=', '+', '<', '>', '.', '|' };
+    '~', '!', '#', '/', '$', '%', '^', '&', '*', '-', '=', '+', '<', '>', '.', '|', ':' };
 static const std::unordered_map<std::string, Tokenizer::Tokens> operators {
+    { "=", Tokenizer::Tokens::OP_ASSIGN },
     { "!", Tokenizer::Tokens::OP_LOGIC_NOT },
     { "%", Tokenizer::Tokens::OP_MODULOUS },
     { "&", Tokenizer::Tokens::OP_BIT_AND },
@@ -19,6 +20,7 @@ static const std::unordered_map<std::string, Tokenizer::Tokens> operators {
     { "--", Tokenizer::Tokens::OP_MINUS_MINUS },
     { "-=", Tokenizer::Tokens::OP_ASSIGN_MINUS },
     { "->", Tokenizer::Tokens::OP_ARROW },
+    { ":", Tokenizer::Tokens::OP_COLON },
 };
 static const std::unordered_map<std::string, Tokenizer::Tokens> reservedWords { { "def", Tokenizer::Tokens::RESERVED_DEF } };
 

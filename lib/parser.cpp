@@ -115,19 +115,72 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source) {
 
     ASSERT(tokensConsumed==0);
 
-    value = expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expecting an identifier", "EOF mid expression");
+    value = &expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expecting an identifier", "EOF mid expression");
+
+    return tokensConsumed;
+}
+
+size_t VariableDeclBody::parse(Slice<const Tokenizer::Token> source) {
+    size_t tokensConsumed = 0;
+
+    name = &expectToken(
+            Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Variable declaration does not start with variable name",
+            "Unexpected EOF" );
+
+    expectToken( Tokenizer::Tokens::OP_COLON, source, tokensConsumed, "Expected \":\" after variable name", "Unexpected EOF" );
+    tokensConsumed += type.parse( source.subslice(tokensConsumed) );
+
+    return tokensConsumed;
+}
+
+size_t VariableDefinition::parse(Slice<const Tokenizer::Token> source) {
+    size_t tokensConsumed = 0;
+
+    expectToken( Tokenizer::Tokens::RESERVED_DEF, source, tokensConsumed, "Variable definition does not start with def keyword",
+            "Unexpected EOF" );
+
+    tokensConsumed += body.parse(source.subslice(tokensConsumed));
+
+    try {
+        size_t provisionalConsumed = tokensConsumed;
+
+        expectToken( Tokenizer::Tokens::OP_ASSIGN, source, provisionalConsumed, "", "" );
+
+        // XXX parse outside the catch
+        Expression initValue;
+        provisionalConsumed += initValue.parse( source.subslice(provisionalConsumed) );
+
+        this->initValue = safenew<Expression>( std::move(initValue) );
+        tokensConsumed = provisionalConsumed;
+    } catch( parser_error &err ) {
+    }
 
     return tokensConsumed;
 }
 
 size_t Statement::parse(Slice<const Tokenizer::Token> source) {
+    try {
+        Expression expression;
+        size_t tokensConsumed = expression.parse(source);
+
+        expectToken( Tokenizer::Tokens::SEMICOLON, source, tokensConsumed, "Statement does not end with a semicolon",
+                "Unexpected EOF" );
+
+        content = std::move(expression);
+
+        return tokensConsumed;
+    } catch( parser_error &err ) {
+    }
+
     size_t tokensConsumed = 0;
 
-    tokensConsumed += expression.parse(source);
+    VariableDefinition def;
 
+    tokensConsumed += def.parse(source);
     expectToken( Tokenizer::Tokens::SEMICOLON, source, tokensConsumed, "Statement does not end with a semicolon",
             "Unexpected EOF" );
 
+    content = std::move(def);
     return tokensConsumed;
 }
 

@@ -39,7 +39,25 @@ ExpressionId CompoundExpression::codeGen(FunctionGen *codeGen, const StaticType 
 }
 
 void CompoundExpression::codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement) {
-    codeGenExpression(codeGen, nullptr, &statement->expression); // Disregard return value
+
+    struct Visitor {
+        CompoundExpression *_this;
+        FunctionGen *codeGen;
+
+        void operator()(const NonTerminals::Expression &expression) {
+            _this->codeGenExpression(codeGen, nullptr, &expression); // Disregard return value
+        }
+
+        void operator()(const NonTerminals::VariableDefinition &definition) {
+            _this->codeGenVarDef(codeGen, &definition);
+        }
+
+        void operator()(std::monostate mono) {
+            ABORT() << "Codegen called on unparsed expression";
+        }
+    } visitor = { this, codeGen };
+
+    std::visit( visitor, statement->content );
 }
 
 ExpressionId CompoundExpression::codeGenExpression(
@@ -47,22 +65,50 @@ ExpressionId CompoundExpression::codeGenExpression(
 {
     using namespace NonTerminals;
 
-    switch( Expression::ExpressionType(expression->value.index()) ) {
-    case Expression::ExpressionType::None:
-        return voidExpressionId;
-    case Expression::ExpressionType::CompoundExpression:
-        ABORT() << "TODO implement";
-        /*
-        return std::get< static_cast<unsigned int>(Expression::ExpressionType::CompoundExpression) >(expression->value)->
-                codeGen(functionGen);
-        */
-    case Expression::ExpressionType::Literal:
-        return codeGenLiteral( codeGen, expectedResult, &std::get< Expression::ExpressionType::Literal >(expression->value) );
-    case Expression::ExpressionType::Identifier:
-        ABORT() << "TODO implement";
-    }
+    struct Visitor {
+        CompoundExpression *_this;
+        FunctionGen *codeGen;
+        const StaticType *expectedResult;
 
-    return voidExpressionId;
+        ExpressionId operator()( std::monostate none ) const {
+            return voidExpressionId;
+        }
+
+        ExpressionId operator()( const std::unique_ptr<NonTerminals::CompoundExpression> &compound ) const {
+            ABORT() << "TODO implement";
+            /*
+            return std::get< static_cast<unsigned int>(Expression::ExpressionType::CompoundExpression) >(expression->value)->
+                    codeGen(functionGen);
+            */
+        }
+
+        ExpressionId operator()( const NonTerminals::Literal &literal ) const {
+            return _this->codeGenLiteral( codeGen, expectedResult, &literal );
+        }
+
+        ExpressionId operator()( const Tokenizer::Token *identifier ) {
+            ABORT() << "TODO implement";
+        }
+    };
+
+    Visitor visitor = { this, codeGen, expectedResult };
+    return std::visit( visitor, expression->value );
+
+    // return voidExpressionId;
+}
+
+void CompoundExpression::codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition) {
+    Type varType( &definition->body.type );
+    varType.symbolsPass2( &ctx );
+    const VariableDef *namedVar = ctx.addVariable( definition->body.name, std::move(varType), expressionIdAllocator.allocate() );
+    codeGen->allocateStackVar( namedVar->lvalueId, namedVar->type, namedVar->name->text );
+
+    if( definition->initValue ) {
+        ExpressionId initValueId = codeGenExpression(codeGen, &namedVar->type, definition->initValue.get());
+        codeGen->assign( namedVar->lvalueId, initValueId );
+    } else {
+        ABORT() << "TODO Type default values not yet implemented";
+    }
 }
 
 ExpressionId CompoundExpression::codeGenLiteral(
@@ -155,7 +201,7 @@ void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
             id,
             declaration.getName(),
             declaration.getRetType(),
-            Slice<VariableDeclaration>(),
+            Slice<ArgumentDeclaration>(),
             toSlice("No file"), declaration.getLine(), declaration.getCol());
 
     ExpressionId result = body.codeGen( functionGen.get(), &declaration.getRetType() );

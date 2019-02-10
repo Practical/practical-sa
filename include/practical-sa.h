@@ -33,6 +33,9 @@ namespace PracticalSemanticAnalyzer {
         StaticType() = default;
         StaticType(IdentifierId _id) : id(_id) {
         }
+        StaticType(StaticType &&that) : id(that.id) {
+            that.id = IdentifierId(0);
+        }
 
         IdentifierId getId() const {
             return id;
@@ -52,23 +55,27 @@ namespace PracticalSemanticAnalyzer {
     };
     std::ostream &operator<<(std::ostream &out, const StaticType &type);
 
-    struct VariableDeclaration {
+    struct ArgumentDeclaration {
         const StaticType &type;
         String name;
 
-        VariableDeclaration(const StaticType &_type, String _name) : type(_type), name(_name) {}
+        ArgumentDeclaration(const StaticType &_type, String _name) : type(_type), name(_name) {}
     };
 
     /// Callbacks used by the semantic analyzer to allow the SA user to actually generate code
     class FunctionGen {
     public:
         virtual void functionEnter(
-                IdentifierId id, String name, const StaticType& returnType, Slice<VariableDeclaration> arguments,
+                IdentifierId id, String name, const StaticType& returnType, Slice<ArgumentDeclaration> arguments,
                 String file, size_t line, size_t col) = 0;
         virtual void functionLeave(IdentifierId id) = 0;
 
         virtual void returnValue(ExpressionId id) = 0;
         virtual void setLiteral(ExpressionId id, LongEnoughInt value, const StaticType &type) = 0;
+
+        // The ExpressionId refers to a pointer to the resulting allocated variable
+        virtual void allocateStackVar(ExpressionId id, const StaticType &type, String name) = 0;
+        virtual void assign( ExpressionId lvalue, ExpressionId rvalue ) = 0;
     };
 
     class ModuleGen {

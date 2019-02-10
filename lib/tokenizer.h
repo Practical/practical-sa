@@ -33,6 +33,7 @@ public:
         // Operators
         OP_ASTERISK,
         OP_ARROW,                       // ->
+        OP_COLON,
         OP_LOGIC_NOT,
         OP_LOGIC_AND,
         OP_LOGIC_OR,
