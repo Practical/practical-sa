@@ -10,11 +10,11 @@ Type::Type(const NonTerminals::Type *nt) : parseType(nt) {
 }
 
 void Type::symbolsPass2(LookupContext *ctx) {
-    auto symbol = ctx->getSymbol(parseType->type.text);
-    if( symbol==nullptr || !symbol->isType() )
+    auto type = ctx->lookupType(parseType->type.text);
+    if( type==nullptr )
         throw pass2_error("Type name expected", parseType->getLine(), parseType->getCol());
 
-    staticType.setId( symbol->getId() );
+    staticType.setId( type->id() );
 }
 
 CompoundExpression::CompoundExpression(LookupContext *parentCtx, const NonTerminals::CompoundExpression *_parserExpresison)
@@ -100,7 +100,8 @@ ExpressionId CompoundExpression::codeGenExpression(
 void CompoundExpression::codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition) {
     Type varType( &definition->body.type );
     varType.symbolsPass2( &ctx );
-    const VariableDef *namedVar = ctx.addVariable( definition->body.name, std::move(varType), expressionIdAllocator.allocate() );
+    const LookupContext::LocalVariable *namedVar = ctx.registerVariable( LookupContext::LocalVariable(
+			    definition->body.name, std::move(varType).removeType(), expressionIdAllocator.allocate() ) );
     codeGen->allocateStackVar( namedVar->lvalueId, namedVar->type, namedVar->name->text );
 
     if( definition->initValue ) {
@@ -217,11 +218,10 @@ Module::Module( NonTerminals::Module *parseModule, LookupContext *parentSymbolsT
 void Module::symbolsPass1() {
     for( auto &symbol : parseModule->functionDefinitions ) {
         FuncDef *funcDef = &functionDefinitions.emplace_back(&symbol, &ctx);
-        LookupContext::NamedObject def(funcDef);
 
-        auto previousDefinition = ctx.getSymbol(symbol.getName());
+        auto previousDefinition = ctx.lookupIdentifier(symbol.getName());
         if( previousDefinition == nullptr ) {
-            ctx.addSymbolPass1(symbol.getName(), std::move(def));
+            ctx.registerFunctionPass1( &symbol.decl.name );
         } else {
             ABORT() << "TODO Overloads not yet implemented";
         }

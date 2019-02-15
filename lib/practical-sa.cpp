@@ -10,15 +10,9 @@
 
 namespace PracticalSemanticAnalyzer {
 std::ostream &operator<<(std::ostream &out, const StaticType &type) {
-    auto namedType = getTypeMeaning(type.getId());
+    auto namedType = lookupTypeId(type.getId());
 
-    struct Visitor {
-        String operator()(const NamedType::BuiltIn *builtIn) const {
-            return builtIn->name;
-        }
-    };
-
-    out << std::visit(Visitor(), namedType);
+    out << namedType->name();
 
     return out;
 }
@@ -43,32 +37,8 @@ int compile(std::string path, const CompilerArguments *arguments, ModuleGen *cod
     return 0;
 }
 
-std::variant<const NamedType::BuiltIn *> getTypeMeaning(IdentifierId id) {
-    using Variant = std::variant<const NamedType::BuiltIn *>;
-
-    auto namedObject = LookupContext::lookupIdentifier(id);
-
-    ASSERT( namedObject->isType() ) << "TODO implement";
-
-    struct Visitor {
-        Variant operator()( std::monostate none ) const {
-            ABORT() << "Unreachable code";
-        }
-
-        Variant operator()(const ::BuiltInType &type) const {
-            return Variant(&type);
-        }
-
-        Variant operator()(const AST::FuncDef *funcDef) const {
-            ABORT() << "TODO impelement";
-        }
-
-        Variant operator()(const VariableDef &varDef) const {
-            ABORT() << "TODO impelement";
-        }
-    };
-
-    return std::visit(Visitor(), namedObject->definition);
+const NamedType *lookupTypeId(TypeId id) {
+    return LookupContext::lookupType(id);
 }
 
 } // PracticalSemanticAnalyzer

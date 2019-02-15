@@ -16,7 +16,8 @@ public:
     static constexpr Type InitValue = initValue;
 
     Typed() = default;
-    // Default copying okay
+    Typed(const Typed &that) = default;
+    Typed &operator=(const Typed &that) = default;
 
     explicit constexpr Typed(Type _val) : val(_val) {
     }

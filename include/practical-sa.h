@@ -19,6 +19,7 @@ namespace PracticalSemanticAnalyzer {
 
     typedef Typed<unsigned long, 0, PracticalSAModuleId, __LINE__> ModuleId;
     typedef Typed<unsigned long, 0, PracticalSAModuleId, __LINE__> IdentifierId;
+    typedef Typed<unsigned long, 0, PracticalSAModuleId, __LINE__> TypeId;
     typedef Typed<unsigned long, 0, PracticalSAModuleId, __LINE__> ExpressionId;
 
     class CompilerArguments {
@@ -27,21 +28,21 @@ namespace PracticalSemanticAnalyzer {
 
     class StaticType : private NoCopy {
     private:
-        IdentifierId id;
+        TypeId id;
 
     public:
         StaticType() = default;
-        StaticType(IdentifierId _id) : id(_id) {
+        StaticType(TypeId _id) : id(_id) {
         }
         StaticType(StaticType &&that) : id(that.id) {
-            that.id = IdentifierId(0);
+            that.id = TypeId(0);
         }
 
-        IdentifierId getId() const {
+        TypeId getId() const {
             return id;
         }
 
-        void setId( IdentifierId id ) {
+        void setId( TypeId id ) {
             this->id = id;
         }
 
@@ -91,20 +92,21 @@ namespace PracticalSemanticAnalyzer {
     // XXX Should path actually be a buffer?
     int compile(std::string path, const CompilerArguments *arguments, ModuleGen *codeGen);
 
-    namespace NamedType {
-        struct BuiltIn {
-            String name;
-            enum class Type { Invalid, Void, Boolean, SignedInt, UnsignedInt, InternalUnsignedInt } type = Type::Invalid;
-            uint8_t sizeInBits = 0;
-            PracticalSemanticAnalyzer::IdentifierId id{0};
-        };
-    }
+    class NamedType {
+    public:
+        enum class Type { Void, Char, UnsignedInteger, SignedInteger, Boolean };
 
-    struct TypeMeanings {
-        enum { BuiltIn };
+        virtual size_t size() const = 0;
+        virtual String name() const = 0;
+        virtual Type type() const = 0;
+        virtual TypeId id() const = 0;
+
+        bool isBuiltin() const {
+            return static_cast<int>( type() ) <= static_cast<int>( Type::Boolean );
+        }
     };
 
-    std::variant<const NamedType::BuiltIn *> getTypeMeaning(IdentifierId id);
+    const NamedType *lookupTypeId(TypeId id);
 } // End namespace PracticalSemanticAnalyzer
 
 #endif // LIB_PRACTICAL_SA_H

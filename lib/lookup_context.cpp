@@ -1,15 +1,18 @@
 #include "lookup_context.h"
 
-#include "ast_nodes.h"
-#include "practical-sa.h"
-
-#include "typed.h"
+#include "asserts.h"
 
 #include <sstream>
 
-static IdentifierId::Allocator<> idAllocator;
+using PracticalSemanticAnalyzer::IdentifierId;
+using PracticalSemanticAnalyzer::TypeId;
+using PracticalSemanticAnalyzer::ExpressionId;
+using PracticalSemanticAnalyzer::StaticType;
 
-std::unordered_map<PracticalSemanticAnalyzer::IdentifierId, LookupContext::NamedObject*> LookupContext::identifierRepository;
+static IdentifierId::Allocator<> idAllocator;
+static TypeId::Allocator<> typeAllocator;
+
+std::unordered_map<TypeId, const LookupContext::NamedType *> LookupContext::typeRepository;
 
 SymbolRedefined::SymbolRedefined(String symbol, size_t line, size_t col)
     : compile_error(line, col)
@@ -21,36 +24,69 @@ SymbolRedefined::SymbolRedefined(String symbol, size_t line, size_t col)
     setMsg( buf.str().c_str() );
 }
 
-VariableDef::VariableDef(const Tokenizer::Token *name, AST::Type &&type, ExpressionId lvalueId)
-    : name(name), type( std::move(type).removeType()), lvalueId(lvalueId)
+LookupContext::NamedType::NamedType(const Tokenizer::Token *name, LookupContext::NamedType::Type type, size_t size) :
+    _id(typeAllocator.allocate()), _size(size), _name(name), _type(type)
 {
 }
 
-LookupContext::NamedObject::NamedObject( const BuiltInType &type )
-    : definition(std::in_place_type<BuiltInType>, type)
-{
-    setId();
+LookupContext::NamedType::NamedType( NamedType &&that ) : _id(that._id), _size(that._size), _name(that._name), _type(that._type) {
 }
 
-LookupContext::NamedObject::NamedObject( const AST::FuncDef *funcDef )
-    : definition( std::in_place_type<const AST::FuncDef *>, funcDef )
+LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name) : name(name), id(idAllocator.allocate())
 {
-    setId();
 }
 
-LookupContext::NamedObject::NamedObject( VariableDef &&definition ) : definition( std::move(definition) )
+LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, StaticType &&type, ExpressionId lvalueId)
+    : name(name), id( idAllocator.allocate() ), type( std::move(type) ), lvalueId(lvalueId)
 {
-    setId();
 }
+
+LookupContext::Function::Function( const Tokenizer::Token *name ) : name(name) {}
+
+LookupContext::LookupContext( const LookupContext *parent ) : parent(parent) {}
 
 LookupContext::~LookupContext() {
     // Deregister our local symbols from the global registry
-    for( const auto &i: symbols ) {
-        identifierRepository.erase( i.second.getId() );
+    for( const auto &i: types ) {
+        typeRepository.erase( i.second.id() );
     }
 }
 
-const LookupContext::NamedObject *LookupContext::getSymbol(String name) const {
+TypeId LookupContext::registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size ) {
+    ASSERT( size>0 || type==NamedType::Type::Void );
+
+    auto emplaceResultName = types.emplace( name->text, NamedType(name, type, size) );
+    if( !emplaceResultName.second )
+        throw SymbolRedefined( name->text, name->line, name->col );
+
+    const LookupContext::NamedType *namedType = &(emplaceResultName.first->second);
+    auto emplaceResultId = typeRepository.emplace( namedType->id(), namedType );
+    ASSERT( emplaceResultId.second ) << "Type " << name->text << " has same ID " << namedType->id() << " as an existing type";
+
+    return namedType->id();
+}
+
+IdentifierId LookupContext::registerFunctionPass1( const Tokenizer::Token *name )
+{
+    auto emplaceResult = symbols.emplace( name->text, NamedObject( std::in_place_type<LookupContext::Function>, Function(name) ) );
+    if( !emplaceResult.second )
+        throw SymbolRedefined( name->text, name->line, name->col );
+
+    return std::get<LookupContext::Function>( emplaceResult.first->second ).id;
+}
+
+const LookupContext::LocalVariable *LookupContext::registerVariable( LocalVariable &&var ) {
+    auto name = var.name->text;
+    auto line = var.name->line;
+    auto col = var.name->col;
+
+    auto emplaceResult = symbols.emplace( name, std::move(var) );
+    if( !emplaceResult.second )
+        throw SymbolRedefined( name, line, col );
+
+    return &std::get<LocalVariable>( emplaceResult.first->second );
+}
+const LookupContext::NamedObject *LookupContext::lookupIdentifier(String name) const {
     auto iterator = symbols.find(name);
     if( iterator!=symbols.end() )
         return &(iterator->second);
@@ -58,95 +94,22 @@ const LookupContext::NamedObject *LookupContext::getSymbol(String name) const {
     if( parent==nullptr )
         return nullptr;
 
-    return parent->getSymbol(name);
+    return parent->lookupIdentifier(name);
 }
 
-const LookupContext::NamedObject *LookupContext::getSymbol(PracticalSemanticAnalyzer::IdentifierId id) const {
-    return identifierRepository.at(id);
+const LookupContext::NamedType *LookupContext::lookupType(String name) const {
+    auto iterator = types.find(name);
+    if( iterator!=types.end() )
+        return &(iterator->second);
+
+    if( parent==nullptr )
+        return nullptr;
+
+    return parent->lookupType(name);
 }
 
-void LookupContext::registerBuiltInType( const BuiltInType &type ) {
-    addSymbolPass1( type.name, NamedObject( type ) );
-}
-
-void LookupContext::addSymbolPass1(String name, NamedObject &&definition) {
-    IdentifierId id(definition.getId());
-
-    auto emplaceResult = symbols.try_emplace( name, std::move(definition));
-    ASSERT(emplaceResult.second) << "Trying to add symbol \"" << name << "\" that is already present";
-    identifierRepository.insert( std::make_pair( id, &(*emplaceResult.first).second ) );
-}
-
-const VariableDef *LookupContext::addVariable(const Tokenizer::Token *name, AST::Type &&type, ExpressionId lvalueId) {
-    auto iteratorPair = symbols.find(name->text);
-    if( iteratorPair!=symbols.end() ) {
-        // TODO add info about previous definition
-        throw SymbolRedefined(name->text, name->line, name->col);
-    }
-
-    // TODO check whether shadowing a higher scope same name variable
-    auto insertionIterator = symbols.emplace( name->text, NamedObject( VariableDef(name, std::move(type), lvalueId) ) );
-    ASSERT(insertionIterator.second) << "Trying to add variable \"" << name->text << "\" that is already present";
-
-    NamedObject *namedResult = &insertionIterator.first->second;
-    identifierRepository.insert( std::make_pair( namedResult->getId(), namedResult ) );
-
-    return &std::get<VariableDef>(namedResult->definition);
-}
-
-const LookupContext::NamedObject *LookupContext::lookupIdentifier(PracticalSemanticAnalyzer::IdentifierId id) {
-    return identifierRepository.at(id);
-}
-
-IdentifierId LookupContext::NamedObject::getId() const {
-    struct Visitor {
-        IdentifierId operator()( std::monostate none ) {
-            ABORT() << "Asked for ID of an empty NamedObject";
-        }
-
-        IdentifierId operator()( const BuiltInType &builtin ) {
-            return builtin.id;
-        }
-
-        IdentifierId operator()( const AST::FuncDef *func ) {
-            return func->getId();
-        }
-
-        IdentifierId operator()( const VariableDef &varDef ) {
-            return varDef.id;
-        }
-    };
-
-    IdentifierId id = std::visit(Visitor(), definition);
-    ASSERT( id != IdentifierId() ) << "id is uninitialized";
-
-    return id;
-}
-
-void LookupContext::NamedObject::setId() {
-    IdentifierId id( idAllocator.allocate() );
-
-    struct Visitor {
-        IdentifierId id;
-
-        Visitor(IdentifierId _id) : id(_id) {}
-
-        void operator()( std::monostate none ) {
-            ABORT() << "Tried to set ID of an empty NamedObject";
-        }
-
-        void operator()( BuiltInType &builtin ) {
-            builtin.id = id;
-        }
-
-        void operator()( const AST::FuncDef *func ) {
-            const_cast<AST::FuncDef *>(func)->setId( id );
-        }
-
-        void operator()( VariableDef &varDef ) {
-            varDef.id = id;
-        }
-    };
-
-    std::visit(Visitor(id), definition);
+const PracticalSemanticAnalyzer::NamedType *LookupContext::lookupType(TypeId id) {
+    auto iterator = typeRepository.find(id);
+    ASSERT( iterator!=typeRepository.end() ) << "Tried to look up type ID " << id << " which is no (longer?) defined.";
+    return iterator->second;
 }

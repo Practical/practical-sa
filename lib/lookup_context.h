@@ -1,110 +1,93 @@
 #ifndef LOOKUP_CONTEXT_H
 #define LOOKUP_CONTEXT_H
 
-#include <practical-sa.h>
-
-#include "asserts.h"
 #include "nocopy.h"
-#include "slice.h"
 #include "tokenizer.h"
 
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <variant>
-#include <vector>
+#include <practical-sa.h>
 
 class SymbolRedefined : public compile_error {
 public:
     SymbolRedefined(String symbol, size_t line, size_t col);
 };
 
-// We need to forward declare the non-terminals we point to
-namespace AST {
-    struct Type;
-    struct FuncDef;
-}
-
-struct BuiltInType : public PracticalSemanticAnalyzer::NamedType::BuiltIn {
-    BuiltInType( const char *_name, Type _type, uint8_t _sizeInBits )
-    {
-        name = toSlice(_name);
-        type = _type;
-        sizeInBits = _sizeInBits;
-
-        ASSERT( type!=Type::Invalid );
-    }
-};
-
-struct VariableDef {
-    PracticalSemanticAnalyzer::StaticType type;
-    const Tokenizer::Token *name;
-    PracticalSemanticAnalyzer::IdentifierId id;
-    PracticalSemanticAnalyzer::ExpressionId lvalueId;
-
-    VariableDef(const Tokenizer::Token *name, AST::Type &&type, PracticalSemanticAnalyzer::ExpressionId lvalueId);
-};
-
 // A Context is anything that may contain further symbolic definitions. This may be a module, a struct, a function or even an
 // anonymous block of code.
 class LookupContext : private NoCopy {
 public:
-    struct NamedObject {
-        std::variant< std::monostate, ::BuiltInType, const AST::FuncDef *, VariableDef > definition;
-
-        NamedObject( const ::BuiltInType &type );
-        NamedObject( const AST::FuncDef *funcDef );
-        NamedObject( VariableDef &&definition );
-
-        PracticalSemanticAnalyzer::IdentifierId getId() const;
-
-        bool isType() const {
-            struct Visitor {
-                bool operator()( std::monostate none ) const {
-                    ABORT() << "Attempt to query an empty variant";
-                }
-
-                bool operator()( const ::BuiltInType &builtin ) const {
-                    return true;
-                }
-
-                bool operator()( const AST::FuncDef *function ) const {
-                    return false;
-                }
-
-                bool operator()( const VariableDef &vardef ) const {
-                    return false;
-                }
-            };
-
-            return std::visit( Visitor(), definition );
-        }
+    class NamedType : public PracticalSemanticAnalyzer::NamedType, private NoCopy {
     private:
-        void setId();
+        PracticalSemanticAnalyzer::TypeId _id;
+        size_t _size;
+        const Tokenizer::Token *_name;
+        Type _type;
+
+    public:
+        NamedType(const Tokenizer::Token *name, NamedType::Type type, size_t size);
+        NamedType(NamedType &&other);
+        NamedType &operator=(NamedType &&other);
+
+        size_t size() const override {
+            return _size;
+        }
+
+        String name() const override {
+            return _name->text;
+        }
+
+        Type type() const override {
+            return _type;
+        }
+
+        PracticalSemanticAnalyzer::TypeId id() const {
+            return _id;
+        }
     };
 
-private:
-    // My place in the world
-    const LookupContext *parent = nullptr;
+    class LocalVariable {
+    public:
+        PracticalSemanticAnalyzer::StaticType type;
+        const Tokenizer::Token *name;
+        PracticalSemanticAnalyzer::IdentifierId id;
+        PracticalSemanticAnalyzer::ExpressionId lvalueId;
 
-    std::unordered_map<String, NamedObject> symbols;
-    static std::unordered_map<PracticalSemanticAnalyzer::IdentifierId, NamedObject*> identifierRepository; // TODO thread safety
+        explicit LocalVariable( const Tokenizer::Token *name );
+        LocalVariable(
+                const Tokenizer::Token *name, PracticalSemanticAnalyzer::StaticType &&type,
+                PracticalSemanticAnalyzer::ExpressionId lvalueId);
+    };
+
+    class Function {
+    public:
+        const Tokenizer::Token *name;
+        PracticalSemanticAnalyzer::IdentifierId id;
+        PracticalSemanticAnalyzer::StaticType returnType;
+
+        Function( const Tokenizer::Token *name );
+    };
+
+    using NamedObject = std::variant< LocalVariable, Function >;
+    
+private:
+    static std::unordered_map<PracticalSemanticAnalyzer::TypeId, const NamedType *> typeRepository;
+
+    const LookupContext *parent;
+
+    std::unordered_map< String, NamedType > types;
+    std::unordered_map< String, NamedObject > symbols;
 
 public:
-    LookupContext(const LookupContext *parent) : parent(parent) {
-    }
+    LookupContext( const LookupContext *parent );
     ~LookupContext();
 
-    const NamedObject *getSymbol(String name) const;
-    const NamedObject *getSymbol(PracticalSemanticAnalyzer::IdentifierId id) const;
+    PracticalSemanticAnalyzer::TypeId registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size );
+    PracticalSemanticAnalyzer::IdentifierId registerFunctionPass1( const Tokenizer::Token *name );
+    const LocalVariable *registerVariable( LocalVariable &&variable );
 
-    void registerBuiltInType(const BuiltInType &type);
-    void addSymbolPass1(String name, NamedObject &&definition);
+    const NamedObject *lookupIdentifier(String name) const;
+    const NamedType *lookupType(String name) const;
 
-    const VariableDef *addVariable(
-            const Tokenizer::Token *name, AST::Type &&type, PracticalSemanticAnalyzer::ExpressionId lvalueId);
-
-    static const NamedObject *lookupIdentifier(PracticalSemanticAnalyzer::IdentifierId id);
+    static const PracticalSemanticAnalyzer::NamedType *lookupType(PracticalSemanticAnalyzer::TypeId id);
 };
 
 #endif // LOOKUP_CONTEXT_H

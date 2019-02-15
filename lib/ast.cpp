@@ -1,10 +1,12 @@
 #include "ast.h"
 
+#include "asserts.h"
+
 #include <sstream>
 
-PracticalSemanticAnalyzer::ExpressionId::Allocator<> expressionIdAllocator;
-PracticalSemanticAnalyzer::ExpressionId voidExpressionId;
-PracticalSemanticAnalyzer::ModuleId::Allocator<> moduleIdAllocator;
+ExpressionId::Allocator<> expressionIdAllocator;
+ExpressionId voidExpressionId;
+ModuleId::Allocator<> moduleIdAllocator;
 
 namespace AST {
 
@@ -57,40 +59,52 @@ StaticType AST::deductLiteralRange(LongEnoughInt value) {
         }
     }
 
-    auto object = globalCtx.getSymbol(typeName);
-    ASSERT(object != nullptr) << "Failed to look up built-in type \"" << typeName << "\"";
-    const BuiltInType *type = std::get_if<BuiltInType>(&object->definition);
-    ASSERT(type != nullptr) << "The built-in type \"" << typeName << "\" is defined by name, but not of type built-in type";
+    auto type = globalCtx.lookupType(typeName);
+    ASSERT(type != nullptr) << "Failed to look up built-in type \"" << typeName << "\"";
 
-    return StaticType( type->id );
+    return StaticType( type->id() );
 }
+
+class BuiltInTypeToken : public Tokenizer::Token {
+public:
+    constexpr BuiltInTypeToken(const char *name) {
+        text = String( name, strlen(name) );
+        token = Tokenizer::Tokens::IDENTIFIER;
+    }
+};
 
 void AST::prepare()
 {
     // Register the built-in types
-    globalCtx.registerBuiltInType( BuiltInType("Void", BuiltInType::Type::Void, 0) );
+#define RegisterBuiltInType( name, type, size ) \
+    static constexpr BuiltInTypeToken name##Identifier(#name); \
+    globalCtx.registerType( &name##Identifier, NamedType::Type::type, size )
+
+    RegisterBuiltInType( Void, Void, 0 );
     voidExpressionId = expressionIdAllocator.allocate();
 
-    globalCtx.registerBuiltInType( BuiltInType("S8", BuiltInType::Type::SignedInt, 8) );
-    globalCtx.registerBuiltInType( BuiltInType("S16", BuiltInType::Type::SignedInt, 16) );
-    globalCtx.registerBuiltInType( BuiltInType("S32", BuiltInType::Type::SignedInt, 32) );
-    globalCtx.registerBuiltInType( BuiltInType("S64", BuiltInType::Type::SignedInt, 64) );
-    globalCtx.registerBuiltInType( BuiltInType("S128", BuiltInType::Type::SignedInt, 128) );
+    RegisterBuiltInType( Bool, Boolean, 1 );
 
-    globalCtx.registerBuiltInType( BuiltInType("Bool", BuiltInType::Type::Boolean, 1) );
+    RegisterBuiltInType( S8, SignedInteger, 8 );
+    RegisterBuiltInType( S16, SignedInteger, 16 );
+    RegisterBuiltInType( S32, SignedInteger, 32 );
+    RegisterBuiltInType( S64, SignedInteger, 64 );
+    RegisterBuiltInType( S128, SignedInteger, 128 );
 
-    globalCtx.registerBuiltInType( BuiltInType("U8", BuiltInType::Type::UnsignedInt, 8) );
-    globalCtx.registerBuiltInType( BuiltInType("U16", BuiltInType::Type::UnsignedInt, 16) );
-    globalCtx.registerBuiltInType( BuiltInType("U32", BuiltInType::Type::UnsignedInt, 32) );
-    globalCtx.registerBuiltInType( BuiltInType("U64", BuiltInType::Type::UnsignedInt, 64) );
-    globalCtx.registerBuiltInType( BuiltInType("U128", BuiltInType::Type::UnsignedInt, 128) );
+    RegisterBuiltInType( U8, UnsignedInteger, 8 );
+    RegisterBuiltInType( U16, UnsignedInteger, 16 );
+    RegisterBuiltInType( U32, UnsignedInteger, 32 );
+    RegisterBuiltInType( U64, UnsignedInteger, 64 );
+    RegisterBuiltInType( U128, UnsignedInteger, 128 );
 
     // Types for internal use only
-    globalCtx.registerBuiltInType( BuiltInType("__U7", BuiltInType::Type::InternalUnsignedInt, 7) );
-    globalCtx.registerBuiltInType( BuiltInType("__U15", BuiltInType::Type::InternalUnsignedInt, 15) );
-    globalCtx.registerBuiltInType( BuiltInType("__U31", BuiltInType::Type::InternalUnsignedInt, 31) );
-    globalCtx.registerBuiltInType( BuiltInType("__U63", BuiltInType::Type::InternalUnsignedInt, 63) );
-    globalCtx.registerBuiltInType( BuiltInType("__U127", BuiltInType::Type::InternalUnsignedInt, 127) );
+    RegisterBuiltInType( __U7, UnsignedInteger, 7 );
+    RegisterBuiltInType( __U15, UnsignedInteger, 15 );
+    RegisterBuiltInType( __U31, UnsignedInteger, 31 );
+    RegisterBuiltInType( __U63, UnsignedInteger, 63 );
+    RegisterBuiltInType( __U127, UnsignedInteger, 127 );
+
+#undef RegisterBuiltInType
 }
 
 void AST::parseModule(String moduleSource) {
@@ -110,7 +124,7 @@ void AST::parseModule(String moduleSource) {
     astModule.first->second->symbolsPass2();
 }
 
-void AST::codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen) {
+void AST::codeGen(ModuleGen *codeGen) {
     // XXX We should only code-gen some of the modules?
     for(auto &module: modulesAST) {
         module.second->codeGen(codeGen);
@@ -122,28 +136,26 @@ bool implicitCastAllowed(const StaticType &sourceType, const StaticType &destTyp
     if( sourceType==destType )
         return true;
 
-    const LookupContext::NamedObject *namedSource = ctx.getSymbol( sourceType.getId() );
-    const LookupContext::NamedObject *namedDest = ctx.getSymbol( destType.getId() );
+    const NamedType *namedSource = ctx.lookupType( sourceType.getId() );
+    const NamedType *namedDest = ctx.lookupType( destType.getId() );
 
-    const BuiltInType *builtinSource = std::get_if<BuiltInType>( &namedSource->definition );
-    const BuiltInType *builtinDest = std::get_if<BuiltInType>( &namedDest->definition );
+    ASSERT( namedSource!=nullptr );
+    ASSERT( namedDest!=nullptr );
 
-    ASSERT( builtinSource!=nullptr );
-    ASSERT( builtinDest!=nullptr );
-
-    if( builtinSource->type==BuiltInType::Type::SignedInt ) {
-        if( builtinDest->type!=BuiltInType::Type::SignedInt )
+    if( namedSource->type()==NamedType::Type::SignedInteger )
+    {
+        if( namedDest->type()!=NamedType::Type::SignedInteger )
             return false;
 
-        return builtinSource->sizeInBits <= builtinDest->sizeInBits;
+        return namedSource->size() <= namedDest->size();
     }
 
-    if( builtinSource->type==BuiltInType::Type::UnsignedInt || builtinSource->type==BuiltInType::Type::InternalUnsignedInt ) {
-        if( builtinDest->type==BuiltInType::Type::SignedInt )
-            return builtinSource->sizeInBits < builtinDest->sizeInBits;
+    if( namedSource->type()==NamedType::Type::UnsignedInteger ) {
+        if( namedDest->type()==NamedType::Type::SignedInteger )
+            return namedSource->size() < namedDest->size();
 
-        if( builtinDest->type==BuiltInType::Type::UnsignedInt || builtinDest->type==BuiltInType::Type::InternalUnsignedInt ) {
-            return builtinSource->sizeInBits <= builtinDest->sizeInBits;
+        if( namedDest->type()==NamedType::Type::UnsignedInteger ) {
+            return namedSource->size() <= namedDest->size();
         }
     }
 
