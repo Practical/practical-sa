@@ -3,8 +3,8 @@
 
 #include "defines.h"
 
-#include <cstddef>
 #include <cassert>
+#include <cstddef>
 #include <iostream>
 #include <vector>
 

@@ -14,11 +14,6 @@ extern PracticalSemanticAnalyzer::ModuleId::Allocator<> moduleIdAllocator;
 
 namespace AST {
 
-class ImplicitCastNotAllowed : public compile_error {
-public:
-    ImplicitCastNotAllowed(const StaticType *src, const StaticType *dst, size_t line, size_t col);
-};
-
 class AST {
     static LookupContext globalCtx;
     std::unordered_map<String, std::unique_ptr<NonTerminals::Module>> parsedModules;

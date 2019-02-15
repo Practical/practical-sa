@@ -12,16 +12,6 @@ namespace AST {
 
 LookupContext AST::globalCtx(nullptr);
 
-ImplicitCastNotAllowed::ImplicitCastNotAllowed(const StaticType *src, const StaticType *dst, size_t line, size_t col)
-        : compile_error(line, col)
-{
-    std::stringstream buf;
-
-    buf<<"Cannot implicitly cast from "<<*src<<" to "<<*dst;
-
-    setMsg( buf.str().c_str() );
-}
-
 StaticType AST::deductLiteralRange(LongEnoughInt value) {
     String typeName;
 

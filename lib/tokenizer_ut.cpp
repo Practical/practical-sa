@@ -1,11 +1,13 @@
-#include <algorithm>
-#include <regex>
+#include "tokenizer.h"
+
+#include "mmap.h"
+#include "practical-errors.h"
+#include "ut/dirscan.h"
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "tokenizer.h"
-#include "ut/dirscan.h"
-#include "mmap.h"
+#include <algorithm>
+#include <regex>
 
 class TokenizerTest : public CppUnit::TestFixture  {
     static constexpr size_t TEST_NAME_MAX_LENGTH = 200;
@@ -114,7 +116,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
         }
 
         size_t expectedIndex = 0;
-        Tokenizer tokenizer(testData);
+        Tokenizer::Tokenizer tokenizer(testData);
         while( true ) {
             TestPoint *point = &testPoints[expectedIndex];
 
@@ -127,7 +129,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 currentToken = tokenizer.currentToken();
                 currentLine = tokenizer.currentLine();
                 currentCol = tokenizer.currentCol();
-            } catch( tokenizer_error &ex ) {
+            } catch( PracticalSemanticAnalyzer::tokenizer_error &ex ) {
                 currentToken = Tokenizer::Tokens::ERR;
                 currentLine = ex.getLine();
                 currentCol = ex.getCol();

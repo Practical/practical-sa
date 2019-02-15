@@ -1,8 +1,11 @@
 #include "ast_nodes.h"
 
 #include "ast.h"
+#include "practical-errors.h"
 
 #include "asserts.h"
+
+using PracticalSemanticAnalyzer::CannotTakeValueOfFunction;
 
 namespace AST {
 

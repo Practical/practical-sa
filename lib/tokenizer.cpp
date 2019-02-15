@@ -1,28 +1,33 @@
 #include <tokenizer.h>
 
 #include "asserts.h"
+#include "practical-errors.h"
 
 #include <regex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 
+using PracticalSemanticAnalyzer::tokenizer_error;
+
+namespace Tokenizer {
+
 static const std::unordered_set<char> operatorChars = {
     '~', '!', '#', '/', '$', '%', '^', '&', '*', '-', '=', '+', '<', '>', '.', '|', ':' };
-static const std::unordered_map<std::string, Tokenizer::Tokens> operators {
-    { "=", Tokenizer::Tokens::OP_ASSIGN },
-    { "!", Tokenizer::Tokens::OP_LOGIC_NOT },
-    { "%", Tokenizer::Tokens::OP_MODULOUS },
-    { "&", Tokenizer::Tokens::OP_BIT_AND },
-    { "&&", Tokenizer::Tokens::OP_LOGIC_AND },
-    { "*", Tokenizer::Tokens::OP_ASTERISK },
-    { "-", Tokenizer::Tokens::OP_MINUS },
-    { "--", Tokenizer::Tokens::OP_MINUS_MINUS },
-    { "-=", Tokenizer::Tokens::OP_ASSIGN_MINUS },
-    { "->", Tokenizer::Tokens::OP_ARROW },
-    { ":", Tokenizer::Tokens::OP_COLON },
+static const std::unordered_map<std::string, Tokens> operators {
+    { "=", Tokens::OP_ASSIGN },
+    { "!", Tokens::OP_LOGIC_NOT },
+    { "%", Tokens::OP_MODULOUS },
+    { "&", Tokens::OP_BIT_AND },
+    { "&&", Tokens::OP_LOGIC_AND },
+    { "*", Tokens::OP_ASTERISK },
+    { "-", Tokens::OP_MINUS },
+    { "--", Tokens::OP_MINUS_MINUS },
+    { "-=", Tokens::OP_ASSIGN_MINUS },
+    { "->", Tokens::OP_ARROW },
+    { ":", Tokens::OP_COLON },
 };
-static const std::unordered_map<std::string, Tokenizer::Tokens> reservedWords { { "def", Tokenizer::Tokens::RESERVED_DEF } };
+static const std::unordered_map<std::string, Tokens> reservedWords { { "def", Tokens::RESERVED_DEF } };
 
 
 bool Tokenizer::next() {
@@ -82,8 +87,8 @@ bool Tokenizer::next() {
     return true;
 }
 
-std::vector<Tokenizer::Token> Tokenizer::tokenize(String source) {
-    std::vector<Tokenizer::Token> tokens;
+std::vector<Token> Tokenizer::tokenize(String source) {
+    std::vector<Token> tokens;
 
     Tokenizer tokenizer(source);
 
@@ -190,6 +195,8 @@ bool Tokenizer::nextChar() {
 
     return position<file.size();
 }
+
+} // namespace Tokenizer
 
 std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
 #define CASE(name) case Tokenizer::Tokens::name: out<<#name; break

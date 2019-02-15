@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
         Mmap<MapMode::ReadOnly> source(argv[1]);
 
         // Tokenize
-        auto tokens = Tokenizer::tokenize(source.getSlice<const char>());
+        auto tokens = Tokenizer::Tokenizer::tokenize(source.getSlice<const char>());
 
         // Parse
         NonTerminals::Module module;

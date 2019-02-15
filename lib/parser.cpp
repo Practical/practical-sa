@@ -1,5 +1,6 @@
 #include "parser.h"
 
+#include "practical-errors.h"
 #include "scope_tracing.h"
 
 namespace NonTerminals {
@@ -332,7 +333,7 @@ size_t FuncDef::parse(Slice<const Tokenizer::Token> source) {
 }
 
 void Module::parse(String source) {
-    tokens = Tokenizer::tokenize(source);
+    tokens = Tokenizer::Tokenizer::tokenize(source);
     parse(tokens);
 }
 

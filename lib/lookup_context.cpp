@@ -1,6 +1,7 @@
 #include "lookup_context.h"
 
 #include "asserts.h"
+#include "practical-errors.h"
 
 #include <sstream>
 
@@ -8,21 +9,12 @@ using PracticalSemanticAnalyzer::IdentifierId;
 using PracticalSemanticAnalyzer::TypeId;
 using PracticalSemanticAnalyzer::ExpressionId;
 using PracticalSemanticAnalyzer::StaticType;
+using PracticalSemanticAnalyzer::SymbolRedefined;
 
 static IdentifierId::Allocator<> idAllocator;
 static TypeId::Allocator<> typeAllocator;
 
 std::unordered_map<TypeId, const LookupContext::NamedType *> LookupContext::typeRepository;
-
-SymbolRedefined::SymbolRedefined(String symbol, size_t line, size_t col)
-    : compile_error(line, col)
-{
-    std::stringstream buf;
-
-    buf<<"Symbol "<<symbol<<" redefined";
-
-    setMsg( buf.str().c_str() );
-}
 
 LookupContext::NamedType::NamedType(const Tokenizer::Token *name, LookupContext::NamedType::Type type, size_t size) :
     _id(typeAllocator.allocate()), _size(size), _name(name), _type(type)

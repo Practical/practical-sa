@@ -6,11 +6,6 @@
 
 #include <practical-sa.h>
 
-class SymbolRedefined : public compile_error {
-public:
-    SymbolRedefined(String symbol, size_t line, size_t col);
-};
-
 // A Context is anything that may contain further symbolic definitions. This may be a module, a struct, a function or even an
 // anonymous block of code.
 class LookupContext : private NoCopy {

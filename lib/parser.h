@@ -13,24 +13,6 @@
 
 using namespace PracticalSemanticAnalyzer;
 
-class parser_error : public compile_error {
-public:
-    parser_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
-    }
-};
-
-class pass1_error : public compile_error {
-public:
-    pass1_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
-    }
-};
-
-class pass2_error : public compile_error {
-public:
-    pass2_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
-    }
-};
-
 namespace NonTerminals {
     // Base class for all non-terminals.
     struct NonTerminal {
