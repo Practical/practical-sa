@@ -69,6 +69,11 @@ private:
     Tokens token;
     Slice<const char> tokenText;
 
+    struct SavedPoint {
+        size_t line, col;
+        size_t position;
+    };
+
 public:
     Tokenizer(String file) : file(file), line(1), col(1) {
     }
@@ -125,7 +130,13 @@ private:
     void consumeNumericLiteral();
     void consumeIdentifier();
 
+    void consumePossibleComment();
+    void consumeLineComment();
+    void consumeNestableComment(SavedPoint startPoint);
+
     bool nextChar();
+    SavedPoint savePosition();
+    void restorePosition(SavedPoint position);
 };
 
 } // namespace Tokenizer

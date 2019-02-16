@@ -67,6 +67,8 @@ bool Tokenizer::next() {
     } else if(currentChar=='}') {
         nextChar();
         token = Tokens::BRACKET_CURLY_CLOSE;
+    } else if(currentChar=='/') {
+        consumePossibleComment();
     } else if(operatorChars.find(currentChar) != operatorChars.end()) {
         consumeOp();
     } else if(currentChar=='"') {
@@ -185,7 +187,58 @@ void Tokenizer::consumeIdentifier() {
     }
 }
 
+void Tokenizer::consumePossibleComment() {
+    auto savedPosition = savePosition();
+
+    if( !nextChar() ) {
+        // EOF - Not a comment
+        restorePosition(savedPosition);
+        return consumeOp();
+    }
+
+    switch( file[position] ) {
+    case '/':
+        consumeLineComment();
+        break;
+    case '*':
+        consumeNestableComment(savedPosition);
+        break;
+    default:
+        restorePosition(savedPosition);
+        consumeOp();
+    }
+}
+
+void Tokenizer::consumeLineComment() {
+    token = Tokens::COMMENT;
+    while( nextChar() && file[position]!='\n' )
+        ;
+}
+
+void Tokenizer::consumeNestableComment(SavedPoint startPoint) {
+    token = Tokens::COMMENT;
+
+    while( nextChar() ) {
+        SavedPoint recursiveStartPoint = savePosition();
+
+        // Nested comment
+        if( file[position]=='/' && nextChar() && file[position]=='*' ) {
+            consumeNestableComment(recursiveStartPoint);
+        } else if( file[position]=='*' && nextChar() && file[position]=='/' ) {
+            // Comment end
+            nextChar();
+            return;
+        }
+    }
+
+    throw tokenizer_error("Unterminated multi-line comment", startPoint.line, startPoint.col);
+}
+
 bool Tokenizer::nextChar() {
+    // Allow continued calling after EOF already reached
+    if( position>=file.size() )
+        return false;
+
     if( file[position]=='\n' ) {
         col=0;
         line++;
@@ -194,6 +247,16 @@ bool Tokenizer::nextChar() {
     col++;
 
     return position<file.size();
+}
+
+Tokenizer::SavedPoint Tokenizer::savePosition() {
+    return SavedPoint{ .line=line, .col=col, .position=position };
+}
+
+void Tokenizer::restorePosition(Tokenizer::SavedPoint position) {
+    line = position.line;
+    col = position.col;
+    this->position = position.position;
 }
 
 } // namespace Tokenizer
