@@ -77,6 +77,7 @@ namespace PracticalSemanticAnalyzer {
         // The ExpressionId refers to a pointer to the resulting allocated variable
         virtual void allocateStackVar(ExpressionId id, const StaticType &type, String name) = 0;
         virtual void assign( ExpressionId lvalue, ExpressionId rvalue ) = 0;
+        virtual void dereferencePointer( ExpressionId id, const StaticType &type, ExpressionId addr ) = 0;
     };
 
     class ModuleGen {

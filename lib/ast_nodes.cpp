@@ -90,7 +90,7 @@ ExpressionId CompoundExpression::codeGenExpression(
         }
 
         ExpressionId operator()( const Tokenizer::Token *identifier ) {
-            ABORT() << "TODO implement";
+            return _this->codeGenIdentifierLookup(codeGen, expectedResult, identifier);
         }
     };
 
@@ -151,6 +151,39 @@ ExpressionId CompoundExpression::codeGenLiteral(
     codeGen->setLiteral(id, res, useExpected ? *expectedResult : resType);
 
     return id;
+}
+
+ExpressionId CompoundExpression::codeGenIdentifierLookup(
+        FunctionGen *codeGen, const StaticType *expectedResult, const Tokenizer::Token *identifier)
+{
+    const LookupContext::NamedObject *referencedObject = ctx.lookupIdentifier( identifier->text );
+    if( referencedObject==nullptr )
+        throw SymbolNotFound(identifier->text, identifier->line, identifier->col);
+
+    struct Visitor {
+        const Tokenizer::Token *identifier;
+        FunctionGen *codeGen;
+        const StaticType *expectedResult;
+
+        ExpressionId operator()(const LookupContext::LocalVariable &localVar) const {
+            ExpressionId expId = expressionIdAllocator.allocate();
+            codeGen->dereferencePointer( expId, localVar.type, localVar.lvalueId );
+
+            /* TODO implement
+            if( expectedResult!=nullptr )
+                expId = codeGenImplicitCast( expId, localVar.type, *expectedResult, identifier );
+            */
+
+            return expId;
+        }
+
+        ExpressionId operator()(const LookupContext::Function &function) const {
+            throw CannotTakeValueOfFunction(identifier);
+        }
+    };
+
+    return std::visit(
+            Visitor{ .identifier=identifier, .codeGen=codeGen, .expectedResult=expectedResult }, *referencedObject );
 }
 
 FuncDecl::FuncDecl(const NonTerminals::FuncDeclBody *nt)

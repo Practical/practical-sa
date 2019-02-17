@@ -42,6 +42,8 @@ private:
             FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression *expression);
     void codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition);
     ExpressionId codeGenLiteral(FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Literal *literal);
+    ExpressionId codeGenIdentifierLookup(
+            FunctionGen *codeGen, const StaticType *expectedResult, const Tokenizer::Token *identifier);
 };
 
 class FuncDeclArgs : NoCopy {
