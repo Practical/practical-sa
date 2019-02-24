@@ -291,6 +291,7 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
         CASE(OP_ASSIGN);
         CASE(OP_ASSIGN_MINUS);
         CASE(OP_ASSIGN_PLUS);
+        CASE(OP_COLON);
         CASE(LITERAL_INT_2);
         CASE(LITERAL_INT_8);
         CASE(LITERAL_INT_10);

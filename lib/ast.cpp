@@ -16,13 +16,13 @@ StaticType AST::deductLiteralRange(LongEnoughInt value) {
     String typeName;
 
     if( value<0 ) {
-        if( value>=INT8_MIN ) {
+        if( value>=(LongEnoughInt)INT8_MIN ) {
             typeName = toSlice("S8");
-        } else if( value>=INT16_MIN ) {
+        } else if( value>=(LongEnoughInt)INT16_MIN ) {
             typeName = toSlice("S16");
-        } else if( value>=INT32_MIN ) {
+        } else if( value>=(LongEnoughInt)INT32_MIN ) {
             typeName = toSlice("S32");
-        } else if( value>=INT64_MIN ) {
+        } else if( value>=(LongEnoughInt)INT64_MIN ) {
             typeName = toSlice("S64");
         } else {
             ABORT() << "TODO implement";

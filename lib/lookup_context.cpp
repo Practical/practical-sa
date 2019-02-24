@@ -29,7 +29,7 @@ LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name) : name
 }
 
 LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, StaticType &&type, ExpressionId lvalueId)
-    : name(name), id( idAllocator.allocate() ), type( std::move(type) ), lvalueId(lvalueId)
+    : type( std::move(type) ), name(name), id( idAllocator.allocate() ), lvalueId(lvalueId)
 {
 }
 
