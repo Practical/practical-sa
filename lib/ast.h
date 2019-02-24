@@ -36,8 +36,6 @@ public:
     void codeGen(PracticalSemanticAnalyzer::ModuleGen *codeGen);
 };
 
-bool implicitCastAllowed(const StaticType &sourceType, const StaticType &destType, const LookupContext &ctx);
-
 } // namespace AST
 
 #endif // AST_H

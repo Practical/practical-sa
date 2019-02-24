@@ -121,35 +121,4 @@ void AST::codeGen(ModuleGen *codeGen) {
     }
 }
 
-bool implicitCastAllowed(const StaticType &sourceType, const StaticType &destType, const LookupContext &ctx) {
-    // Fastpath
-    if( sourceType==destType )
-        return true;
-
-    const NamedType *namedSource = ctx.lookupType( sourceType.getId() );
-    const NamedType *namedDest = ctx.lookupType( destType.getId() );
-
-    ASSERT( namedSource!=nullptr );
-    ASSERT( namedDest!=nullptr );
-
-    if( namedSource->type()==NamedType::Type::SignedInteger )
-    {
-        if( namedDest->type()!=NamedType::Type::SignedInteger )
-            return false;
-
-        return namedSource->size() <= namedDest->size();
-    }
-
-    if( namedSource->type()==NamedType::Type::UnsignedInteger ) {
-        if( namedDest->type()==NamedType::Type::SignedInteger )
-            return namedSource->size() < namedDest->size();
-
-        if( namedDest->type()==NamedType::Type::UnsignedInteger ) {
-            return namedSource->size() <= namedDest->size();
-        }
-    }
-
-    ABORT() << "Unreachable code reached";
-}
-
 } // Namespace AST

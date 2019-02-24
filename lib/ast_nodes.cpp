@@ -1,6 +1,7 @@
 #include "ast_nodes.h"
 
 #include "ast.h"
+#include "casts.h"
 #include "practical-errors.h"
 
 #include "asserts.h"
@@ -142,8 +143,7 @@ ExpressionId CompoundExpression::codeGenLiteral(
     StaticType resType( AST::AST::deductLiteralRange(res) );
     bool useExpected = false;
     if( expectedResult!=nullptr ) {
-        if( !implicitCastAllowed(resType, *expectedResult, AST::getGlobalCtx()) )
-            throw ImplicitCastNotAllowed(&resType, expectedResult, literal->token.line, literal->token.col);
+        checkImplicitCastAllowed(id, resType, *expectedResult, literal->token);
 
         useExpected = true;
     }
@@ -169,10 +169,8 @@ ExpressionId CompoundExpression::codeGenIdentifierLookup(
             ExpressionId expId = expressionIdAllocator.allocate();
             codeGen->dereferencePointer( expId, localVar.type, localVar.lvalueId );
 
-            /* TODO implement
             if( expectedResult!=nullptr )
-                expId = codeGenImplicitCast( expId, localVar.type, *expectedResult, identifier );
-            */
+                expId = codeGenCast( codeGen, expId, localVar.type, *expectedResult, *identifier, true );
 
             return expId;
         }

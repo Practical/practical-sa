@@ -64,9 +64,9 @@ public:
     }
 };
 
-class ImplicitCastNotAllowed : public compile_error {
+class CastNotAllowed : public compile_error {
 public:
-    ImplicitCastNotAllowed(const StaticType *src, const StaticType *dst, size_t line, size_t col);
+    CastNotAllowed(const StaticType &src, const StaticType &dst, size_t line, size_t col);
 };
 
 class SymbolRedefined : public compile_error {

@@ -78,6 +78,13 @@ namespace PracticalSemanticAnalyzer {
         virtual void allocateStackVar(ExpressionId id, const StaticType &type, String name) = 0;
         virtual void assign( ExpressionId lvalue, ExpressionId rvalue ) = 0;
         virtual void dereferencePointer( ExpressionId id, const StaticType &type, ExpressionId addr ) = 0;
+
+        virtual void truncateInteger(
+                ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) = 0;
+        virtual void expandIntegerSigned(
+                ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) = 0;
+        virtual void expandIntegerUnsigned(
+                ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) = 0;
     };
 
     class ModuleGen {
