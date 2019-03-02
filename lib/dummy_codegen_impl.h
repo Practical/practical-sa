@@ -10,8 +10,9 @@ using PracticalSemanticAnalyzer::StaticType;
 
 class DummyFunctionGen : public PracticalSemanticAnalyzer::FunctionGen {
     void functionEnter(
-            IdentifierId id, String name, const StaticType& returnType, Slice<ArgumentDeclaration> arguments,
-            String file, size_t line, size_t col) override {}
+            IdentifierId id, String name, const StaticType& returnType, Slice<const ArgumentDeclaration> arguments,
+            String file, size_t line, size_t col) override
+    {}
     void functionLeave(IdentifierId id) override {}
 
     void returnValue(ExpressionId id) override {}

@@ -5,6 +5,33 @@
 
 namespace NonTerminals {
 
+#if VERBOSE_PARSING
+static size_t RECURSION_DEPTH;
+
+#define RULE_ENTER(source) \
+    size_t RECURSION_CURRENT_DEPTH = RECURSION_DEPTH++; \
+    for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
+    std::cout<<"Processing " << __PRETTY_FUNCTION__ << " of " << source[0].token << " at " << source[0].line << ":" << source[0].col << "\n"
+
+#define RULE_LEAVE(tokensConsumed) \
+    RECURSION_DEPTH = RECURSION_CURRENT_DEPTH; \
+    for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
+    std::cout<<"Leaving " << __PRETTY_FUNCTION__ << " consumed " << tokensConsumed << "\n"; \
+    return tokensConsumed
+
+#define EXCEPTION_CAUGHT(ex) \
+    RECURSION_DEPTH = RECURSION_CURRENT_DEPTH + 1; \
+    for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
+    std::cout<< __PRETTY_FUNCTION__ << " caught " << ex.what() << "\n"
+
+#else
+
+#define RULE_ENTER(source)
+#define RULE_LEAVE(tokensConsumed) return tokensConsumed
+#define EXCEPTION_CAUGHT(ex)
+
+#endif
+
 static bool skipWS(Slice<const Tokenizer::Token> source, size_t &index) {
     bool moved = false;
 
@@ -59,16 +86,24 @@ bool wishForToken(Tokenizer::Tokens expected, Slice<const Tokenizer::Token> sour
     return false;
 }
 
-size_t Type::parse(Slice<const Tokenizer::Token> source) {
+size_t Identifier::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
+
     size_t tokensConsumed = 0;
 
-    type = expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected type",
-            "EOF while parsing type" );
+    identifier = &expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected an identifier",
+            "EOF while parsing an identifier" );
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
+}
+
+size_t Type::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
+    return type.parse(source);
 }
 
 size_t Literal::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     nextToken(source, tokensConsumed, "EOF while parsing literal");
@@ -88,10 +123,11 @@ size_t Literal::parse(Slice<const Tokenizer::Token> source) {
 
     token = *currentToken;
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t Expression::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     try {
@@ -99,8 +135,9 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source) {
         tokensConsumed += compound.parse(source);
         value = safenew<::NonTerminals::CompoundExpression>(std::move(compound));
 
-        return tokensConsumed;
+        RULE_LEAVE(tokensConsumed);
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
     }
 
     ASSERT(tokensConsumed==0);
@@ -110,31 +147,31 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source) {
         value.emplace<Literal>();
         tokensConsumed += std::get<Literal>(value).parse(source);
 
-        return tokensConsumed;
+        RULE_LEAVE(tokensConsumed);
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
     }
 
     ASSERT(tokensConsumed==0);
 
-    value = &expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expecting an identifier", "EOF mid expression");
+    tokensConsumed += value.emplace<Identifier>().parse( source.subslice(tokensConsumed) );
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t VariableDeclBody::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
-    name = &expectToken(
-            Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Variable declaration does not start with variable name",
-            "Unexpected EOF" );
-
+    tokensConsumed += name.parse(source);
     expectToken( Tokenizer::Tokens::OP_COLON, source, tokensConsumed, "Expected \":\" after variable name", "Unexpected EOF" );
     tokensConsumed += type.parse( source.subslice(tokensConsumed) );
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t VariableDefinition::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     expectToken( Tokenizer::Tokens::RESERVED_DEF, source, tokensConsumed, "Variable definition does not start with def keyword",
@@ -154,12 +191,14 @@ size_t VariableDefinition::parse(Slice<const Tokenizer::Token> source) {
         this->initValue = safenew<Expression>( std::move(initValue) );
         tokensConsumed = provisionalConsumed;
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
     }
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t Statement::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     try {
         Expression expression;
         size_t tokensConsumed = expression.parse(source);
@@ -169,8 +208,9 @@ size_t Statement::parse(Slice<const Tokenizer::Token> source) {
 
         content = std::move(expression);
 
-        return tokensConsumed;
+        RULE_LEAVE(tokensConsumed);
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
     }
 
     size_t tokensConsumed = 0;
@@ -182,10 +222,11 @@ size_t Statement::parse(Slice<const Tokenizer::Token> source) {
             "Unexpected EOF" );
 
     content = std::move(def);
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t StatementList::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     try {
@@ -197,12 +238,14 @@ size_t StatementList::parse(Slice<const Tokenizer::Token> source) {
             statements.emplace_back( std::move(statement) );
         }
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
     }
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t CompoundExpression::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     expectToken( Tokenizer::Tokens::BRACKET_CURLY_OPEN, source, tokensConsumed, "Expected {",
@@ -213,15 +256,17 @@ size_t CompoundExpression::parse(Slice<const Tokenizer::Token> source) {
     try {
         tokensConsumed += expression.parse(source.subslice(tokensConsumed));
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
     }
 
     expectToken( Tokenizer::Tokens::BRACKET_CURLY_CLOSE, source, tokensConsumed, "Expected }",
             "Unmatched {" );
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t FuncDeclRet::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     try {
@@ -232,25 +277,29 @@ size_t FuncDeclRet::parse(Slice<const Tokenizer::Token> source) {
 
         tokensConsumed += type.parse(source.subslice(tokensConsumed));
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
         // Match ϵ
         return 0;
     }
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t FuncDeclArg::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
-    tokensConsumed += type.parse(source);
-    name = expectToken(
-            Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected argument name",
-            "EOF while parsing function arguments" );
+    tokensConsumed += name.parse( source.subslice(tokensConsumed) );
+    expectToken(
+            Tokenizer::Tokens::OP_COLON, source, tokensConsumed, "Expected colon in argument declaration",
+            "EOF while parsing function declaration" );
+    tokensConsumed += type.parse( source.subslice(tokensConsumed) );
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t FuncDeclArgsNonEmpty::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     bool done = false;
@@ -270,10 +319,11 @@ size_t FuncDeclArgsNonEmpty::parse(Slice<const Tokenizer::Token> source) {
         }
     } while( !done );
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t FuncDeclArgs::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     try {
@@ -281,20 +331,20 @@ size_t FuncDeclArgs::parse(Slice<const Tokenizer::Token> source) {
         tokensConsumed += args.parse(source);
         arguments = std::move(args.arguments);
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
         // That didn't match - use the empty match rule
     }
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t FuncDeclBody::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     nextToken(source, tokensConsumed, "EOF while parsing function declaration");
 
-    name = expectToken(
-            Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected function name",
-            "EOF while parsing function declaration" );
+    tokensConsumed += name.parse( source  );
 
     expectToken( Tokenizer::Tokens::BRACKET_ROUND_OPEN, source, tokensConsumed, "Expected '('",
             "EOF while parsing function declaration" );
@@ -306,10 +356,11 @@ size_t FuncDeclBody::parse(Slice<const Tokenizer::Token> source) {
 
     tokensConsumed += returnType.parse( source.subslice(tokensConsumed) );
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 size_t FuncDef::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     nextToken(source, tokensConsumed, "EOF while looking for function definition");
@@ -329,7 +380,7 @@ size_t FuncDef::parse(Slice<const Tokenizer::Token> source) {
 
     tokensConsumed += body.parse( source.subslice(tokensConsumed) );
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 void Module::parse(String source) {
@@ -338,6 +389,7 @@ void Module::parse(String source) {
 }
 
 size_t Module::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     while( tokensConsumed<source.size() ) {
@@ -351,7 +403,7 @@ size_t Module::parse(Slice<const Tokenizer::Token> source) {
         functionDefinitions.emplace_back( std::move(func) );
     }
 
-    return tokensConsumed;
+    RULE_LEAVE(tokensConsumed);
 }
 
 } // namespace NonTerminals

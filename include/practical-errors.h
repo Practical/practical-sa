@@ -4,7 +4,7 @@
 #include <practical-sa.h>
 
 namespace Tokenizer {
-    class Token;
+    struct Token;
 }
 
 namespace PracticalSemanticAnalyzer {

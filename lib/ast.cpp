@@ -2,6 +2,7 @@
 
 #include "asserts.h"
 
+#include <string>
 #include <sstream>
 
 ExpressionId::Allocator<> expressionIdAllocator;
@@ -57,8 +58,8 @@ StaticType AST::deductLiteralRange(LongEnoughInt value) {
 
 class BuiltInTypeToken : public Tokenizer::Token {
 public:
-    constexpr BuiltInTypeToken(const char *name) {
-        text = String( name, strlen(name) );
+    constexpr BuiltInTypeToken(String name) {
+        text = name;
         token = Tokenizer::Tokens::IDENTIFIER;
     }
 };
@@ -67,7 +68,7 @@ void AST::prepare()
 {
     // Register the built-in types
 #define RegisterBuiltInType( name, type, size ) \
-    static constexpr BuiltInTypeToken name##Identifier(#name); \
+    static constexpr BuiltInTypeToken name##Identifier{String(#name, std::char_traits<char>::length(#name))}; \
     globalCtx.registerType( &name##Identifier, NamedType::Type::type, size )
 
     RegisterBuiltInType( Void, Void, 0 );

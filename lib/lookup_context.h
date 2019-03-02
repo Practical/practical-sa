@@ -34,7 +34,7 @@ public:
             return _type;
         }
 
-        PracticalSemanticAnalyzer::TypeId id() const {
+        PracticalSemanticAnalyzer::TypeId id() const override {
             return _id;
         }
     };
@@ -74,6 +74,8 @@ private:
 public:
     LookupContext( const LookupContext *parent );
     ~LookupContext();
+
+    const LookupContext *getParent() const { return parent; }
 
     PracticalSemanticAnalyzer::TypeId registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size );
     PracticalSemanticAnalyzer::IdentifierId registerFunctionPass1( const Tokenizer::Token *name );

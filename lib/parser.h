@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "asserts.h"
 #include "defines.h"
 #include "lookup_context.h"
 #include "practical-sa.h"
@@ -16,24 +17,43 @@ using namespace PracticalSemanticAnalyzer;
 namespace NonTerminals {
     // Base class for all non-terminals.
     struct NonTerminal {
-        Slice<const char> text;
-        size_t line=0, col=0;
-
         // This function is not really virtual. It's used this way to force all children to have the same signature
         // Returns how many tokens were consumed
         // Throws parser_error if fails to parse
         virtual size_t parse(Slice<const Tokenizer::Token> source) = 0;
+
+        virtual ~NonTerminal() {}
+    };
+
+    struct Identifier : public NonTerminal {
+        const Tokenizer::Token *identifier = nullptr;
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+
+        String getName() const {
+            return identifier->text;
+        }
+
+        size_t getLine() const {
+            ASSERT(identifier != nullptr) << "Dereferencing an unparsed identifier";
+            return identifier->line;
+        }
+
+        size_t getCol() const {
+            ASSERT(identifier != nullptr) << "Dereferencing an unparsed identifier";
+            return identifier->col;
+        }
     };
 
     struct Type : public NonTerminal {
-        Tokenizer::Token type;
+        Identifier type;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
         size_t getLine() const {
-            return type.line;
+            return type.getLine();
         }
         size_t getCol() const {
-            return type.col;
+            return type.getCol();
         }
     };
 
@@ -50,14 +70,14 @@ namespace NonTerminals {
                 std::monostate,
                 std::unique_ptr<::NonTerminals::CompoundExpression>,
                 ::NonTerminals::Literal,
-                const Tokenizer::Token *
+                Identifier
             > value;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct VariableDeclBody : public NonTerminal {
-        const Tokenizer::Token *name;
+        Identifier name;
         Type type;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
@@ -99,7 +119,7 @@ namespace NonTerminals {
     };
 
     struct FuncDeclArg : public NonTerminal {
-        Tokenizer::Token name;
+        Identifier name;
         Type type;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
@@ -118,7 +138,7 @@ namespace NonTerminals {
     };
 
     struct FuncDeclBody : public NonTerminal {
-        Tokenizer::Token name;
+        Identifier name;
         FuncDeclArgs arguments;
         FuncDeclRet returnType;
 
@@ -135,7 +155,7 @@ namespace NonTerminals {
         size_t parse(Slice<const Tokenizer::Token> source) override final;
 
         String getName() const {
-            return decl.name.text;
+            return decl.name.getName();
         }
     };
 

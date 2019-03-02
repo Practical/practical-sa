@@ -13,8 +13,8 @@ namespace AST {
 Type::Type(const NonTerminals::Type *nt) : parseType(nt) {
 }
 
-void Type::symbolsPass2(LookupContext *ctx) {
-    auto type = ctx->lookupType(parseType->type.text);
+void Type::symbolsPass2(const LookupContext *ctx) {
+    auto type = ctx->lookupType(parseType->type.getName());
     if( type==nullptr )
         throw pass2_error("Type name expected", parseType->getLine(), parseType->getCol());
 
@@ -90,8 +90,8 @@ ExpressionId CompoundExpression::codeGenExpression(
             return _this->codeGenLiteral( codeGen, expectedResult, &literal );
         }
 
-        ExpressionId operator()( const Tokenizer::Token *identifier ) {
-            return _this->codeGenIdentifierLookup(codeGen, expectedResult, identifier);
+        ExpressionId operator()( const NonTerminals::Identifier &identifier ) const {
+            return _this->codeGenIdentifierLookup(codeGen, expectedResult, identifier.identifier);
         }
     };
 
@@ -105,7 +105,7 @@ void CompoundExpression::codeGenVarDef(FunctionGen *codeGen, const NonTerminals:
     Type varType( &definition->body.type );
     varType.symbolsPass2( &ctx );
     const LookupContext::LocalVariable *namedVar = ctx.registerVariable( LookupContext::LocalVariable(
-			    definition->body.name, std::move(varType).removeType(), expressionIdAllocator.allocate() ) );
+			    definition->body.name.identifier, std::move(varType).removeType(), expressionIdAllocator.allocate() ) );
     codeGen->allocateStackVar( namedVar->lvalueId, namedVar->type, namedVar->name->text );
 
     if( definition->initValue ) {
@@ -196,7 +196,18 @@ void FuncDecl::symbolsPass1(LookupContext *ctx) {
 void FuncDecl::symbolsPass2(LookupContext *ctx) {
     retType.symbolsPass2(ctx);
 
-    // TODO parse the arguments
+    ASSERT(arguments.size() == 0) << "Function argument vector not empty before symbols pass 2";
+    arguments.reserve( parserFuncDecl->arguments.arguments.size() );
+    for( const auto &parserArg : parserFuncDecl->arguments.arguments ) {
+        Type argumentType(&parserArg.type);
+        // Function argument types are looked up in the context of the function's parent
+        argumentType.symbolsPass2( ctx->getParent() );
+        ExpressionId lvalueExpression = expressionIdAllocator.allocate();
+        const LookupContext::LocalVariable *localVariable = ctx->registerVariable(
+                LookupContext::LocalVariable(
+                    parserArg.name.identifier, std::move(argumentType).removeType(), lvalueExpression ) );
+        arguments.emplace_back( localVariable->type, localVariable->name->text, localVariable->lvalueId );
+    }
 }
 
 FuncDef::FuncDef(const NonTerminals::FuncDef *nt, LookupContext *ctx)
@@ -236,7 +247,7 @@ void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
             id,
             declaration.getName(),
             declaration.getRetType(),
-            Slice<ArgumentDeclaration>(),
+            declaration.getArguments(),
             toSlice("No file"), declaration.getLine(), declaration.getCol());
 
     ExpressionId result = body.codeGen( functionGen.get(), &declaration.getRetType() );
@@ -255,7 +266,7 @@ void Module::symbolsPass1() {
 
         auto previousDefinition = ctx.lookupIdentifier(symbol.getName());
         if( previousDefinition == nullptr ) {
-            ctx.registerFunctionPass1( &symbol.decl.name );
+            ctx.registerFunctionPass1( symbol.decl.name.identifier );
         } else {
             ABORT() << "TODO Overloads not yet implemented";
         }

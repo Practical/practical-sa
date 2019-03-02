@@ -59,15 +59,18 @@ namespace PracticalSemanticAnalyzer {
     struct ArgumentDeclaration {
         const StaticType &type;
         String name;
+        ExpressionId lvalueId;
 
-        ArgumentDeclaration(const StaticType &_type, String _name) : type(_type), name(_name) {}
+        ArgumentDeclaration(const StaticType &_type, String _name, ExpressionId _lvalueId)
+                : type(_type), name(_name), lvalueId(_lvalueId)
+        {}
     };
 
     /// Callbacks used by the semantic analyzer to allow the SA user to actually generate code
     class FunctionGen {
     public:
         virtual void functionEnter(
-                IdentifierId id, String name, const StaticType& returnType, Slice<ArgumentDeclaration> arguments,
+                IdentifierId id, String name, const StaticType& returnType, Slice<const ArgumentDeclaration> arguments,
                 String file, size_t line, size_t col) = 0;
         virtual void functionLeave(IdentifierId id) = 0;
 

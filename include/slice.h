@@ -13,12 +13,11 @@ class Slice {
     T *ptr = nullptr;
     size_t len = 0;
 
-    typedef typename std::conditional<
+    using vector_type = std::conditional_t<
             std::is_const<T>::value,
-            const std::vector<
-                    typename std::remove_const<T>::type>,
+            const std::vector< std::remove_const_t<T> >,
             std::vector<T>
-        >::type vector_type;
+        >;
 public:
     // No ownership, default copy ctr is fine
     Slice(const Slice &rhs) = default;

@@ -18,7 +18,7 @@ public:
         return staticType;
     }
 
-    void symbolsPass2(LookupContext *ctx);
+    void symbolsPass2(const LookupContext *ctx);
 
     StaticType removeType() && {
         return std::move(staticType);
@@ -46,31 +46,32 @@ private:
             FunctionGen *codeGen, const StaticType *expectedResult, const Tokenizer::Token *identifier);
 };
 
-class FuncDeclArgs : NoCopy {
-};
-
 class FuncDecl : NoCopy {
     const NonTerminals::FuncDeclBody *parserFuncDecl;
 
     Type retType;
-    std::vector<FuncDeclArgs> arguments;
+    std::vector<PracticalSemanticAnalyzer::ArgumentDeclaration> arguments;
 public:
     FuncDecl(const NonTerminals::FuncDeclBody *nt);
 
     String getName() const {
-        return parserFuncDecl->name.text;
+        return parserFuncDecl->name.getName();
     }
 
     size_t getLine() const {
-        return parserFuncDecl->name.line;
+        return parserFuncDecl->name.getLine();
     }
 
     size_t getCol() const {
-        return parserFuncDecl->name.col;
+        return parserFuncDecl->name.getCol();
     }
 
     const StaticType &getRetType() const {
         return retType.getType();
+    }
+
+    Slice<const ArgumentDeclaration> getArguments() const {
+        return Slice<const ArgumentDeclaration>( arguments );
     }
 
     void symbolsPass1(LookupContext *ctx);
