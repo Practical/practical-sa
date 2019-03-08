@@ -1,3 +1,7 @@
+# Wrong Repository?
+If you're looking for the actual Practical compiler, this is the wrong repository. Check out the
+[Practicomp](https://github.com/Practical/practicomp) project (of which this is a subproject) for the stand-alone compiler.
+
 # Practical: Semantic Analyzer
 This is the repository for the semantic analyzer library for the Practical programming language.
 
