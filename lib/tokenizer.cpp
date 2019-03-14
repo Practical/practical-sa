@@ -49,6 +49,9 @@ bool Tokenizer::next() {
     } else if(currentChar==';') {
         nextChar();
         token = Tokens::SEMICOLON;
+    } else if(currentChar==',') {
+        nextChar();
+        token = Tokens::COMMA;
     } else if(currentChar=='(') {
         nextChar();
         token = Tokens::BRACKET_ROUND_OPEN;

@@ -71,14 +71,15 @@ static const Tokenizer::Token &expectToken(
 }
 
 bool wishForToken(Tokenizer::Tokens expected, Slice<const Tokenizer::Token> source, size_t &index) {
-    skipWS( source, index );
+    size_t indexCopy = index;
+    skipWS( source, indexCopy );
 
-    if( index>=source.size() ) {
+    if( indexCopy>=source.size() ) {
         return false;
     }
 
-    if( source[index].token == expected ) {
-        index++;
+    if( source[indexCopy].token == expected ) {
+        index = indexCopy + 1;
 
         return true;
     }
@@ -126,11 +127,55 @@ size_t Literal::parse(Slice<const Tokenizer::Token> source) {
     RULE_LEAVE(tokensConsumed);
 }
 
+size_t FunctionArguments::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
+    size_t tokensConsumed = 0;
+
+    bool firstArgument = true;
+    while( !wishForToken(Tokenizer::Tokens::BRACKET_ROUND_CLOSE, source, tokensConsumed) ) {
+        if( firstArgument ) {
+            firstArgument = false;
+        } else {
+            expectToken(
+                    Tokenizer::Tokens::COMMA, source, tokensConsumed, "Function argument list needs to be delimited by commas",
+                    "EOF while scanning arguments list" );
+        }
+
+        Expression *argument = &arguments.emplace_back();
+        tokensConsumed += argument->parse( source.subslice(tokensConsumed) );
+    }
+
+    RULE_LEAVE(tokensConsumed);
+}
+
 size_t Expression::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
+    size_t tokensConsumed = actualParse(source);
+
+    try {
+        while( wishForToken( Tokenizer::Tokens::BRACKET_ROUND_OPEN, source, tokensConsumed ) ) {
+            FunctionArguments arguments;
+
+            tokensConsumed += arguments.parse( source.subslice(tokensConsumed) );
+
+            FunctionCall funcCall = { .expression = safenew<Expression>(), .arguments = std::move(arguments) };
+            *funcCall.expression = std::move( *this );
+
+            value = std::move( funcCall );
+        }
+    } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
+    }
+
+    RULE_LEAVE(tokensConsumed);
+}
+
+size_t Expression::actualParse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
     try {
+        // Is this a compound expression?
         ::NonTerminals::CompoundExpression compound;
         tokensConsumed += compound.parse(source);
         value = safenew<::NonTerminals::CompoundExpression>(std::move(compound));

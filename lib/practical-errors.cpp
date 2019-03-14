@@ -46,4 +46,14 @@ CannotTakeValueOfFunction::CannotTakeValueOfFunction(const Tokenizer::Token *ide
     setMsg( buf.str().c_str() );
 }
 
+TryToCallNonCallable::TryToCallNonCallable(const Tokenizer::Token *identifier) :
+    compile_error(identifier->line, identifier->col)
+{
+    std::stringstream buf;
+
+    buf<<"Trying to call "<<identifier->text<<" which is not of a callable type";
+
+    setMsg( buf.str().c_str() );
+}
+
 } // namespace PracticalSemanticAnalyzer

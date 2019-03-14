@@ -84,6 +84,11 @@ public:
     CannotTakeValueOfFunction(const Tokenizer::Token *identifier);
 };
 
+class TryToCallNonCallable : public compile_error {
+public:
+    TryToCallNonCallable(const Tokenizer::Token *identifier);
+};
+
 } // PracticalSemanticAnalyzer
 
 #endif // PRACTICAL_ERRORS_H

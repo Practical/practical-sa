@@ -38,6 +38,8 @@ namespace PracticalSemanticAnalyzer {
             that.id = TypeId(0);
         }
 
+        StaticType &operator=( StaticType &&that );
+
         TypeId getId() const {
             return id;
         }
@@ -88,6 +90,8 @@ namespace PracticalSemanticAnalyzer {
                 ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) = 0;
         virtual void expandIntegerUnsigned(
                 ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) = 0;
+        virtual void callFunctionDirect(
+                ExpressionId id, String name, Slice<const ExpressionId> arguments, const StaticType &returnType ) = 0;
     };
 
     class ModuleGen {

@@ -44,15 +44,16 @@ private:
     ExpressionId codeGenLiteral(FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Literal *literal);
     ExpressionId codeGenIdentifierLookup(
             FunctionGen *codeGen, const StaticType *expectedResult, const Tokenizer::Token *identifier);
+    ExpressionId codeGenFunctionCall(
+            FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::FunctionCall *functionCall);
+
 };
 
 class FuncDecl : NoCopy {
     const NonTerminals::FuncDeclBody *parserFuncDecl;
-
-    Type retType;
-    std::vector<PracticalSemanticAnalyzer::ArgumentDeclaration> arguments;
+    LookupContext::Function *ctxFunction;
 public:
-    FuncDecl(const NonTerminals::FuncDeclBody *nt);
+    FuncDecl(const NonTerminals::FuncDeclBody *nt, LookupContext::Function *function);
 
     String getName() const {
         return parserFuncDecl->name.getName();
@@ -67,11 +68,11 @@ public:
     }
 
     const StaticType &getRetType() const {
-        return retType.getType();
+        return ctxFunction->returnType;
     }
 
     Slice<const ArgumentDeclaration> getArguments() const {
-        return Slice<const ArgumentDeclaration>( arguments );
+        return Slice<const ArgumentDeclaration>( ctxFunction->arguments );
     }
 
     void symbolsPass1(LookupContext *ctx);
@@ -85,7 +86,7 @@ class FuncDef : NoCopy {
     FuncDecl declaration;
     CompoundExpression body;
 public:
-    FuncDef(const NonTerminals::FuncDef *nt, LookupContext *ctx);
+    FuncDef(const NonTerminals::FuncDef *nt, LookupContext *ctx, LookupContext::Function *ctxFunction);
 
     String getName() const;
     IdentifierId getId() const;

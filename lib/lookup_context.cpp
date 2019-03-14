@@ -58,13 +58,29 @@ TypeId LookupContext::registerType( const Tokenizer::Token *name, NamedType::Typ
     return namedType->id();
 }
 
-IdentifierId LookupContext::registerFunctionPass1( const Tokenizer::Token *name )
+LookupContext::Function *LookupContext::registerFunctionPass1( const Tokenizer::Token *name )
 {
     auto emplaceResult = symbols.emplace( name->text, NamedObject( std::in_place_type<LookupContext::Function>, Function(name) ) );
     if( !emplaceResult.second )
         throw SymbolRedefined( name->text, name->line, name->col );
 
-    return std::get<LookupContext::Function>( emplaceResult.first->second ).id;
+    return &std::get<LookupContext::Function>( emplaceResult.first->second );
+}
+
+void LookupContext::registerFunctionPass2(
+        String name,
+        PracticalSemanticAnalyzer::StaticType &&returnType,
+        std::vector<PracticalSemanticAnalyzer::ArgumentDeclaration> &&arguments)
+{
+    auto namedObject = symbols.find( name );
+    ASSERT( namedObject != symbols.end() ) << "registerFunctionPass2 called with argument " << name << " that is not registered";
+    Function *functionObject = std::get_if< Function >( & namedObject->second );
+    ASSERT( functionObject != nullptr ) << "registerFunctionPass2 called with argument " << name << " which isn't a function";
+
+    functionObject->returnType = std::move( returnType );
+    ASSERT( functionObject->arguments.size()==0 ) <<
+            "Function " << name << " already has " << functionObject->arguments.size() << " arguments defined at start of pass2";
+    functionObject->arguments = std::move( arguments );
 }
 
 const LookupContext::LocalVariable *LookupContext::registerVariable( LocalVariable &&var ) {

@@ -63,17 +63,33 @@ namespace NonTerminals {
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
+    struct Expression;
+    struct FunctionArguments : public NonTerminal {
+        std::vector<Expression> arguments;
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+    };
+
     struct CompoundExpression;
 
     struct Expression : public NonTerminal {
+        struct FunctionCall {
+            std::unique_ptr<Expression> expression;
+            FunctionArguments arguments;
+        };
+
         std::variant<
                 std::monostate,
                 std::unique_ptr<::NonTerminals::CompoundExpression>,
                 ::NonTerminals::Literal,
-                Identifier
+                Identifier,
+                FunctionCall
             > value;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
+
+    private:
+        size_t actualParse(Slice<const Tokenizer::Token> source);
     };
 
     struct VariableDeclBody : public NonTerminal {

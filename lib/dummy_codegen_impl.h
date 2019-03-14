@@ -29,6 +29,8 @@ class DummyFunctionGen : public PracticalSemanticAnalyzer::FunctionGen {
             ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) override {}
     void expandIntegerUnsigned(
             ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) override {}
+    void callFunctionDirect(
+            ExpressionId id, String name, Slice<const ExpressionId> arguments, const StaticType &returnType ) override {}
 };
 
 extern DummyFunctionGen dummyFunctionGen;

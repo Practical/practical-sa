@@ -93,12 +93,14 @@ ExpressionId CompoundExpression::codeGenExpression(
         ExpressionId operator()( const NonTerminals::Identifier &identifier ) const {
             return _this->codeGenIdentifierLookup(codeGen, expectedResult, identifier.identifier);
         }
+
+        ExpressionId operator()( const NonTerminals::Expression::FunctionCall &functionCall ) const {
+            return _this->codeGenFunctionCall(codeGen, expectedResult, &functionCall);
+        }
     };
 
     Visitor visitor = { this, codeGen, expectedResult };
     return std::visit( visitor, expression->value );
-
-    // return voidExpressionId;
 }
 
 void CompoundExpression::codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition) {
@@ -184,8 +186,43 @@ ExpressionId CompoundExpression::codeGenIdentifierLookup(
             Visitor{ .identifier=identifier, .codeGen=codeGen, .expectedResult=expectedResult }, *referencedObject );
 }
 
-FuncDecl::FuncDecl(const NonTerminals::FuncDeclBody *nt)
-    : parserFuncDecl(nt), retType(&nt->returnType.type)
+ExpressionId CompoundExpression::codeGenFunctionCall(
+        FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::FunctionCall *functionCall)
+{
+    const NonTerminals::Identifier *functionName = std::get_if<NonTerminals::Identifier>( & functionCall->expression->value );
+    ASSERT( functionName != nullptr ) << "TODO support function calls not by means of direct call";
+
+    const LookupContext::NamedObject *functionObject = ctx.lookupIdentifier( functionName->identifier->text );
+    if( functionObject==nullptr ) {
+        throw SymbolNotFound(
+                functionName->identifier->text, functionName->identifier->line, functionName->identifier->col);
+    }
+
+    const LookupContext::Function *function = std::get_if< LookupContext::Function >( functionObject );
+    if( function==nullptr ) {
+        throw TryToCallNonCallable( functionName->identifier );
+    }
+
+    std::vector<ExpressionId> arguments;
+    arguments.reserve( function->arguments.size() );
+
+    for( unsigned int argNum=0; argNum<function->arguments.size(); ++argNum ) {
+        arguments.emplace_back( codeGenExpression(
+                    codeGen, &function->arguments[argNum].type, &functionCall->arguments.arguments[argNum] ) );
+    }
+
+    ExpressionId functionRet = expressionIdAllocator.allocate();
+    codeGen->callFunctionDirect(
+            functionRet, functionName->identifier->text, Slice<const ExpressionId>(arguments), function->returnType );
+
+    if( expectedResult==nullptr )
+        return functionRet;
+
+    return codeGenCast( codeGen, functionRet, function->returnType, *expectedResult, *functionName->identifier, true );
+}
+
+FuncDecl::FuncDecl(const NonTerminals::FuncDeclBody *nt, LookupContext::Function *function)
+    : parserFuncDecl(nt), ctxFunction(function)
 {
 }
 
@@ -194,10 +231,11 @@ void FuncDecl::symbolsPass1(LookupContext *ctx) {
 }
 
 void FuncDecl::symbolsPass2(LookupContext *ctx) {
+    Type retType(&parserFuncDecl->returnType.type);
     retType.symbolsPass2(ctx);
+    ctxFunction->returnType = std::move(retType).removeType();
 
-    ASSERT(arguments.size() == 0) << "Function argument vector not empty before symbols pass 2";
-    arguments.reserve( parserFuncDecl->arguments.arguments.size() );
+    ctxFunction->arguments.reserve( parserFuncDecl->arguments.arguments.size() );
     for( const auto &parserArg : parserFuncDecl->arguments.arguments ) {
         Type argumentType(&parserArg.type);
         // Function argument types are looked up in the context of the function's parent
@@ -206,12 +244,12 @@ void FuncDecl::symbolsPass2(LookupContext *ctx) {
         const LookupContext::LocalVariable *localVariable = ctx->registerVariable(
                 LookupContext::LocalVariable(
                     parserArg.name.identifier, std::move(argumentType).removeType(), lvalueExpression ) );
-        arguments.emplace_back( localVariable->type, localVariable->name->text, localVariable->lvalueId );
+        ctxFunction->arguments.emplace_back( localVariable->type, localVariable->name->text, localVariable->lvalueId );
     }
 }
 
-FuncDef::FuncDef(const NonTerminals::FuncDef *nt, LookupContext *ctx)
-    : parserFuncDef(nt), declaration(&nt->decl), body(ctx, &nt->body)
+FuncDef::FuncDef(const NonTerminals::FuncDef *nt, LookupContext *ctx, LookupContext::Function *ctxFunction)
+    : parserFuncDef(nt), declaration(&nt->decl, ctxFunction), body(ctx, &nt->body)
 {
 }
 
@@ -262,11 +300,12 @@ Module::Module( NonTerminals::Module *parseModule, LookupContext *parentSymbolsT
 
 void Module::symbolsPass1() {
     for( auto &symbol : parseModule->functionDefinitions ) {
-        FuncDef *funcDef = &functionDefinitions.emplace_back(&symbol, &ctx);
+        FuncDef *funcDef = nullptr;
 
         auto previousDefinition = ctx.lookupIdentifier(symbol.getName());
         if( previousDefinition == nullptr ) {
-            ctx.registerFunctionPass1( symbol.decl.name.identifier );
+            funcDef = &functionDefinitions.emplace_back(
+                    &symbol, &ctx, ctx.registerFunctionPass1( symbol.decl.name.identifier ));
         } else {
             ABORT() << "TODO Overloads not yet implemented";
         }

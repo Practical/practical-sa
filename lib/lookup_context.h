@@ -57,6 +57,7 @@ public:
         const Tokenizer::Token *name;
         PracticalSemanticAnalyzer::IdentifierId id;
         PracticalSemanticAnalyzer::StaticType returnType;
+        std::vector<PracticalSemanticAnalyzer::ArgumentDeclaration> arguments;
 
         Function( const Tokenizer::Token *name );
     };
@@ -78,7 +79,11 @@ public:
     const LookupContext *getParent() const { return parent; }
 
     PracticalSemanticAnalyzer::TypeId registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size );
-    PracticalSemanticAnalyzer::IdentifierId registerFunctionPass1( const Tokenizer::Token *name );
+    Function *registerFunctionPass1( const Tokenizer::Token *name );
+    void registerFunctionPass2(
+            String name,
+            PracticalSemanticAnalyzer::StaticType &&returnType,
+            std::vector<PracticalSemanticAnalyzer::ArgumentDeclaration> &&arguments);
     const LocalVariable *registerVariable( LocalVariable &&variable );
 
     const NamedObject *lookupIdentifier(String name) const;

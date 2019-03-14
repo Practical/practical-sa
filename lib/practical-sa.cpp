@@ -9,6 +9,13 @@
 #include "defines.h"
 
 namespace PracticalSemanticAnalyzer {
+
+StaticType &StaticType::operator=( StaticType &&that ) {
+    ASSERT( id==TypeId(0) ) << "StaticType move operator called on initialized type";
+    std::swap( id, that.id );
+
+    return *this;
+}
 std::ostream &operator<<(std::ostream &out, const StaticType &type) {
     auto namedType = lookupTypeId(type.getId());
 
