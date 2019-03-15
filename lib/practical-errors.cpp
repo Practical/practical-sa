@@ -6,12 +6,15 @@
 
 namespace PracticalSemanticAnalyzer {
 
-CastNotAllowed::CastNotAllowed(const StaticType &src, const StaticType &dst, size_t line, size_t col)
+CastNotAllowed::CastNotAllowed(const StaticType &src, const StaticType &dst, bool implicit, size_t line, size_t col)
         : compile_error(line, col)
 {
     std::stringstream buf;
 
-    buf<<"Cannot cast from "<<src<<" to "<<dst;
+    if( implicit )
+        buf<<"Cannot implicitly convert from "<<src<<" to "<<dst;
+    else
+        buf<<"Cannot cast from "<<src<<" to "<<dst;
 
     setMsg( buf.str().c_str() );
 }

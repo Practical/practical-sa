@@ -18,7 +18,7 @@ static ExpressionId codeGenCast_SignedIntSource(
         FunctionGen *codeGen, ExpressionId sourceExpression, const NamedType *sourceType, const NamedType *destType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
-#define REPORT_ERROR() throw CastNotAllowed(StaticType(sourceType->id()), StaticType(destType->id()), expressionSource.line, expressionSource.col)
+#define REPORT_ERROR() throw CastNotAllowed(StaticType(sourceType->id()), StaticType(destType->id()), implicitOnly, expressionSource.line, expressionSource.col)
     if( destType->type()!=NamedType::Type::SignedInteger )
         REPORT_ERROR();
 
@@ -40,7 +40,7 @@ static ExpressionId codeGenCast_UnsignedIntSource(
         FunctionGen *codeGen, ExpressionId sourceExpression, const NamedType *sourceType, const NamedType *destType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
-#define REPORT_ERROR() throw CastNotAllowed(StaticType(sourceType->id()), StaticType(destType->id()), expressionSource.line, expressionSource.col)
+#define REPORT_ERROR() throw CastNotAllowed(StaticType(sourceType->id()), StaticType(destType->id()), implicitOnly, expressionSource.line, expressionSource.col)
     ExpressionId castResult = expressionIdAllocator.allocate();
 
     if( destType->type()==NamedType::Type::SignedInteger ) {
