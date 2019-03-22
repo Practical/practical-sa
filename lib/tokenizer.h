@@ -13,7 +13,8 @@ namespace Tokenizer {
 enum class Tokens {
     ERR, // Error in parsing
     WS, // White space
-    COMMENT,
+    COMMENT_LINE_END,
+    COMMENT_MULTILINE,
     // Syntax separators
     SEMICOLON,
     COMMA,
@@ -25,23 +26,48 @@ enum class Tokens {
     BRACKET_CURLY_OPEN,
     BRACKET_CURLY_CLOSE,
     // Operators
+    OP_AMPERSAND,
+    OP_ARROW,                                   // ->
+    OP_ASSIGN,
+    OP_ASSIGN_BIT_AND,
+    OP_ASSIGN_BIT_OR,
+    OP_ASSIGN_BIT_XOR,
+    OP_ASSIGN_DIVIDE,
+    OP_ASSIGN_LEFT_SHIFT,
+    OP_ASSIGN_MINUS,
+    OP_ASSIGN_MODULOUS,
+    OP_ASSIGN_MULTIPLY,
+    OP_ASSIGN_PLUS,
+    OP_ASSIGN_RIGHT_SHIFT,
+    OP_ASSIGN_RIGHT_SHIFT_LOGICAL,
     OP_ASTERISK,
-    OP_ARROW,                       // ->
+    OP_BIT_AND,
+    OP_BIT_NOT,
+    OP_BIT_OR,
+    OP_BIT_XOR,
     OP_COLON,
-    OP_LOGIC_NOT,
+    OP_DIVIDE,
+    OP_DOT,
+    OP_DOUBLE_COLON,
+    OP_PAAMAYIM_NEKUDATAYIM = OP_DOUBLE_COLON,  // Nekudotayim is a misspelling
+    OP_EQUALS,
+    OP_GREATER_THAN,
+    OP_GREATER_THAN_EQ,
+    OP_LESS_THAN,
+    OP_LESS_THAN_EQ,
     OP_LOGIC_AND,
+    OP_LOGIC_NOT,
     OP_LOGIC_OR,
-    OP_MODULOUS,
     OP_MINUS,
     OP_MINUS_MINUS,
+    OP_MODULOUS,
+    OP_NOT_EQUALS,
     OP_PLUS,
     OP_PLUS_PLUS,
-    OP_BIT_AND,
-    OP_BIT_OR,
-    OP_BIT_NOT,
-    OP_ASSIGN,
-    OP_ASSIGN_MINUS,
-    OP_ASSIGN_PLUS,
+    OP_SHIFT_LEFT,
+    OP_SHIFT_RIGHT,
+    OP_SHIFT_RIGHT_LOGICAL,
+    OP_RUNON_ERROR,
     // Literals
     LITERAL_INT_2,
     LITERAL_INT_8,
@@ -130,7 +156,6 @@ private:
     void consumeNumericLiteral();
     void consumeIdentifier();
 
-    void consumePossibleComment();
     void consumeLineComment();
     void consumeNestableComment(SavedPoint startPoint);
 

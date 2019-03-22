@@ -36,7 +36,8 @@ static bool skipWS(Slice<const Tokenizer::Token> source, size_t &index) {
     bool moved = false;
 
     while( index<source.size() &&
-            (source[index].token == Tokenizer::Tokens::WS || source[index].token == Tokenizer::Tokens::COMMENT) )
+            (source[index].token == Tokenizer::Tokens::WS || source[index].token == Tokenizer::Tokens::COMMENT_LINE_END ||
+             source[index].token == Tokenizer::Tokens::COMMENT_MULTILINE) )
     {
         index++;
         moved = true;

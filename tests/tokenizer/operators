@@ -1,0 +1,17 @@
+/***
+ * This is a multiline comment
+ /*
+   With nesting
+   /*
+     On multiple levels
+    */
+   and some text
+  */
+
+ def main() -> S32 {} This line is ignored
+*/
+// Line end comment
+// Line end comment with /* multi line comment beginning character
+def function( arg1 : SomeType ) -> SomeOtherType {
+    def var: U64 mut = 23 + 12 * 45;
+}

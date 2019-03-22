@@ -118,7 +118,17 @@ std::ostream &operator<<( std::ostream &out, const Slice<T> &data ) {
     return out;
 }
 
-typedef Slice<const char> String;
+class String : public Slice<const char> {
+public:
+    using Slice::Slice;
+
+    /* implicit */ String( Slice<const char> slice ) : Slice(slice) {}
+    String( const char *string ) : Slice( string, strlen(string) ) {}
+
+    operator Slice() const {
+        return static_cast<Slice>(*this);
+    }
+};
 
 static inline std::string sliceToString( const String &src ) {
     if( src.size()==0 )
@@ -146,6 +156,15 @@ namespace std {
             }
 
             return result;
+        }
+    };
+
+    template <>
+    struct hash< String > {
+        constexpr size_t operator()( const String &string ) const {
+            hash< Slice<const char> > realHasher;
+
+            return realHasher( string );
         }
     };
 }

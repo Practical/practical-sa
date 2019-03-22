@@ -14,18 +14,68 @@ namespace Tokenizer {
 
 static const std::unordered_set<char> operatorChars = {
     '~', '!', '#', '/', '$', '%', '^', '&', '*', '-', '=', '+', '<', '>', '.', '|', ':' };
-static const std::unordered_map<std::string, Tokens> operators {
-    { "=", Tokens::OP_ASSIGN },
-    { "!", Tokens::OP_LOGIC_NOT },
-    { "%", Tokens::OP_MODULOUS },
-    { "&", Tokens::OP_BIT_AND },
-    { "&&", Tokens::OP_LOGIC_AND },
-    { "*", Tokens::OP_ASTERISK },
-    { "-", Tokens::OP_MINUS },
+static const std::unordered_map<String, Tokens> operators {
+    // Precedence 1
+    { "::", Tokens::OP_DOUBLE_COLON },
+    // Precedence 2
+    { "++", Tokens::OP_PLUS_PLUS },
     { "--", Tokens::OP_MINUS_MINUS },
-    { "-=", Tokens::OP_ASSIGN_MINUS },
+    { "(", Tokens::BRACKET_ROUND_OPEN },
+    { ")", Tokens::BRACKET_ROUND_CLOSE },
+    { "[", Tokens::BRACKET_SQUARE_OPEN },
+    { "]", Tokens::BRACKET_SQUARE_CLOSE },
+    { ".", Tokens::OP_DOT },
     { "->", Tokens::OP_ARROW },
+    // Precedence 3
+    { "+", Tokens::OP_PLUS },
+    { "-", Tokens::OP_MINUS },
+    { "~", Tokens::OP_BIT_NOT },
+    { "!", Tokens::OP_LOGIC_NOT },
+    { "*", Tokens::OP_ASTERISK },
+    { "&", Tokens::OP_AMPERSAND },
+    // Precedence 5
+    { "/", Tokens::OP_DIVIDE },
+    { "%", Tokens::OP_MODULOUS },
+    // Precedence 6
+    { "|", Tokens::OP_BIT_OR },
+    { "^", Tokens::OP_BIT_XOR },
+    // Precedence 8
+    { "<<", Tokens::OP_SHIFT_LEFT },
+    { ">>", Tokens::OP_SHIFT_RIGHT },
+    { ">>>", Tokens::OP_SHIFT_RIGHT_LOGICAL },
+    // Precedence 9
+    { "<", Tokens::OP_LESS_THAN },
+    { "<=", Tokens::OP_LESS_THAN_EQ },
+    { ">", Tokens::OP_GREATER_THAN },
+    { ">=", Tokens::OP_GREATER_THAN_EQ },
+    // Precedence 10
+    { "==", Tokens::OP_EQUALS },
+    { "!=", Tokens::OP_NOT_EQUALS },
+    // Precedence 11
+    { "&&", Tokens::OP_LOGIC_AND },
+    // Precedence 12
+    { "||", Tokens::OP_LOGIC_OR },
+    // Precedence 13
+    { "=", Tokens::OP_ASSIGN },
+    { "+=", Tokens::OP_ASSIGN_PLUS },
+    { "-=", Tokens::OP_ASSIGN_MINUS },
+    { "*=", Tokens::OP_ASSIGN_MULTIPLY },
+    { "/=", Tokens::OP_ASSIGN_DIVIDE },
+    { "%=", Tokens::OP_ASSIGN_MODULOUS },
+    { "<<=", Tokens::OP_ASSIGN_LEFT_SHIFT },
+    { ">>=", Tokens::OP_ASSIGN_RIGHT_SHIFT },
+    { ">>>=", Tokens::OP_ASSIGN_RIGHT_SHIFT_LOGICAL },
+    { "&=", Tokens::OP_ASSIGN_BIT_AND },
+    { "^=", Tokens::OP_ASSIGN_BIT_XOR },
+    { "|=", Tokens::OP_ASSIGN_BIT_OR },
+
+    // Miscellany
+    { "+++", Tokens::OP_RUNON_ERROR },
+    { "---", Tokens::OP_RUNON_ERROR },
+    { "&=", Tokens::OP_ASSIGN_BIT_AND },
     { ":", Tokens::OP_COLON },
+    { "//", Tokens::COMMENT_LINE_END },
+    { "/*", Tokens::COMMENT_MULTILINE },
 };
 static const std::unordered_map<std::string, Tokens> reservedWords { { "def", Tokens::RESERVED_DEF } };
 
@@ -70,8 +120,6 @@ bool Tokenizer::next() {
     } else if(currentChar=='}') {
         nextChar();
         token = Tokens::BRACKET_CURLY_CLOSE;
-    } else if(currentChar=='/') {
-        consumePossibleComment();
     } else if(operatorChars.find(currentChar) != operatorChars.end()) {
         consumeOp();
     } else if(currentChar=='"') {
@@ -113,16 +161,58 @@ void Tokenizer::consumeWS() {
 void Tokenizer::consumeOp() {
     auto startPosition = position;
     auto startLine = line, startCol = col;
-    while( nextChar() && operatorChars.find(file[position])!=operatorChars.end() )
-        ;
 
-    auto op = file.subslice(startPosition, position);
-    auto tokenIt = operators.find( sliceToString(op) );
-    if( tokenIt != operators.end() ) {
-        token = tokenIt->second;
-    } else {
+    auto lastIdentified = savePosition();
+    bool found = false;
+    bool foundLastRound = false;
+
+    do {
+        if( foundLastRound ) {
+            lastIdentified = savePosition();
+            foundLastRound = false;
+        }
+
+        auto op = file.subslice(startPosition, position+1);
+
+        auto opIter = operators.find(op);
+        if( opIter != operators.end() ) {
+            token = opIter->second;
+            found = true;
+            foundLastRound = true;
+        }
+    } while( nextChar() && operatorChars.find(file[position])!=operatorChars.end() );
+
+    if( foundLastRound ) {
+        lastIdentified = savePosition();
+        foundLastRound = false;
+    }
+
+    if( !found ) {
         // Man am I going to regret this error message
         throw tokenizer_error("Practical does not support inventing weird operators", startLine, startCol);
+    }
+
+    restorePosition( lastIdentified );
+
+    switch( token ) {
+    case Tokens::ERR:
+        ABORT() << "consumeOp found operator \"" << file.subslice(startPosition, position) << "\" at " << startLine << ":" <<
+                startCol << " but token returned was ERR";
+        break;
+    case Tokens::OP_RUNON_ERROR:
+        throw tokenizer_error(
+                "The compiler refuses to guess which combination of operators you meant. Disambiguate the code with spaces",
+                startLine, startCol);
+        break;
+    case Tokens::COMMENT_LINE_END:
+        consumeLineComment();
+        break;
+    case Tokens::COMMENT_MULTILINE:
+        consumeNestableComment( SavedPoint{ .line=startLine, .col=startCol, .position=startPosition } );
+        break;
+    default:
+        // Successful matching, nothing else to do
+        break;
     }
 }
 
@@ -190,37 +280,12 @@ void Tokenizer::consumeIdentifier() {
     }
 }
 
-void Tokenizer::consumePossibleComment() {
-    auto savedPosition = savePosition();
-
-    if( !nextChar() ) {
-        // EOF - Not a comment
-        restorePosition(savedPosition);
-        return consumeOp();
-    }
-
-    switch( file[position] ) {
-    case '/':
-        consumeLineComment();
-        break;
-    case '*':
-        consumeNestableComment(savedPosition);
-        break;
-    default:
-        restorePosition(savedPosition);
-        consumeOp();
-    }
-}
-
 void Tokenizer::consumeLineComment() {
-    token = Tokens::COMMENT;
     while( nextChar() && file[position]!='\n' )
         ;
 }
 
 void Tokenizer::consumeNestableComment(SavedPoint startPoint) {
-    token = Tokens::COMMENT;
-
     while( nextChar() ) {
         SavedPoint recursiveStartPoint = savePosition();
 
@@ -269,7 +334,8 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
     switch(token) {
         CASE(ERR);
         CASE(WS);
-        CASE(COMMENT);
+        CASE(COMMENT_MULTILINE);
+        CASE(COMMENT_LINE_END);
         CASE(SEMICOLON);
         CASE(COMMA);
         CASE(BRACKET_ROUND_OPEN);
@@ -278,23 +344,47 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
         CASE(BRACKET_SQUARE_CLOSE);
         CASE(BRACKET_CURLY_OPEN);
         CASE(BRACKET_CURLY_CLOSE);
-        CASE(OP_ASTERISK);
+        CASE(OP_AMPERSAND);
         CASE(OP_ARROW);
-        CASE(OP_LOGIC_NOT);
+        CASE(OP_ASSIGN);
+        CASE(OP_ASSIGN_BIT_AND);
+        CASE(OP_ASSIGN_BIT_OR);
+        CASE(OP_ASSIGN_BIT_XOR);
+        CASE(OP_ASSIGN_DIVIDE);
+        CASE(OP_ASSIGN_LEFT_SHIFT);
+        CASE(OP_ASSIGN_MINUS);
+        CASE(OP_ASSIGN_MODULOUS);
+        CASE(OP_ASSIGN_MULTIPLY);
+        CASE(OP_ASSIGN_PLUS);
+        CASE(OP_ASSIGN_RIGHT_SHIFT);
+        CASE(OP_ASSIGN_RIGHT_SHIFT_LOGICAL);
+        CASE(OP_ASTERISK);
+        CASE(OP_BIT_AND);
+        CASE(OP_BIT_NOT);
+        CASE(OP_BIT_OR);
+        CASE(OP_BIT_XOR);
+        CASE(OP_COLON);
+        CASE(OP_DIVIDE);
+        CASE(OP_DOT);
+        CASE(OP_DOUBLE_COLON);
+        CASE(OP_EQUALS);
+        CASE(OP_GREATER_THAN);
+        CASE(OP_GREATER_THAN_EQ);
+        CASE(OP_LESS_THAN);
+        CASE(OP_LESS_THAN_EQ);
         CASE(OP_LOGIC_AND);
+        CASE(OP_LOGIC_NOT);
         CASE(OP_LOGIC_OR);
-        CASE(OP_MODULOUS);
         CASE(OP_MINUS);
         CASE(OP_MINUS_MINUS);
+        CASE(OP_MODULOUS);
+        CASE(OP_NOT_EQUALS);
         CASE(OP_PLUS);
         CASE(OP_PLUS_PLUS);
-        CASE(OP_BIT_AND);
-        CASE(OP_BIT_OR);
-        CASE(OP_BIT_NOT);
-        CASE(OP_ASSIGN);
-        CASE(OP_ASSIGN_MINUS);
-        CASE(OP_ASSIGN_PLUS);
-        CASE(OP_COLON);
+        CASE(OP_SHIFT_LEFT);
+        CASE(OP_SHIFT_RIGHT);
+        CASE(OP_SHIFT_RIGHT_LOGICAL);
+        CASE(OP_RUNON_ERROR);
         CASE(LITERAL_INT_2);
         CASE(LITERAL_INT_8);
         CASE(LITERAL_INT_10);
