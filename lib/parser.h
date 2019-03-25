@@ -4,6 +4,7 @@
 #include "asserts.h"
 #include "defines.h"
 #include "lookup_context.h"
+#include "operators.h"
 #include "practical-sa.h"
 #include "slice.h"
 #include "tokenizer.h"
@@ -78,18 +79,39 @@ namespace NonTerminals {
             FunctionArguments arguments;
         };
 
+        struct UnaryOperator {
+            const Tokenizer::Token *op;
+            std::unique_ptr<Expression> operand;
+        };
+
+        struct BinaryOperator {
+            const Tokenizer::Token *op;
+            std::unique_ptr<Expression> operand1, operand2;
+        };
+
         std::variant<
-                std::monostate,
                 std::unique_ptr<::NonTerminals::CompoundExpression>,
                 ::NonTerminals::Literal,
                 Identifier,
+                UnaryOperator,
+                BinaryOperator,
                 FunctionCall
             > value;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
 
     private:
-        size_t actualParse(Slice<const Tokenizer::Token> source);
+        size_t actualParse(Slice<const Tokenizer::Token> source, size_t level);
+        size_t basicParse(Slice<const Tokenizer::Token> source);
+
+        size_t parsePrefixOp(
+                Slice<const Tokenizer::Token> source, size_t level, const Operators::OperatorPriority::OperatorsMap &operators);
+        size_t parseInfixOp(
+                Slice<const Tokenizer::Token> source, size_t level, const Operators::OperatorPriority::OperatorsMap &operators);
+        size_t parseInfixR2LOp(
+                Slice<const Tokenizer::Token> source, size_t level, const Operators::OperatorPriority::OperatorsMap &operators);
+        size_t parsePostfixOp(
+                Slice<const Tokenizer::Token> source, size_t level, const Operators::OperatorPriority::OperatorsMap &operators);
     };
 
     struct VariableDeclBody : public NonTerminal {

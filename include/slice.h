@@ -124,10 +124,6 @@ public:
 
     /* implicit */ String( Slice<const char> slice ) : Slice(slice) {}
     String( const char *string ) : Slice( string, strlen(string) ) {}
-
-    operator Slice() const {
-        return static_cast<Slice>(*this);
-    }
 };
 
 static inline std::string sliceToString( const String &src ) {

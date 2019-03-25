@@ -248,7 +248,9 @@ void Tokenizer::consumeNumericLiteral() {
     static std::regex re2("^0[bB]([01_]+)");
     static std::regex re8("^0[o]([01_]+)");
 
-    const char *start = &file[startPos], *end = &file[position];
+    const char *start = &file[startPos];
+    // The strange math is to avoid violating bounds checks in case this is the last thing in the file
+    const char *end = file.get() + position;
     if( std::regex_match( start, end, re10 ) ) {
         token = Tokens::LITERAL_INT_10;
     } else if( std::regex_match( start, end, reFp ) ) {

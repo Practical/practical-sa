@@ -44,6 +44,10 @@ private:
     ExpressionId codeGenLiteral(FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Literal *literal);
     ExpressionId codeGenIdentifierLookup(
             FunctionGen *codeGen, const StaticType *expectedResult, const Tokenizer::Token *identifier);
+    ExpressionId codeGenUnaryOperator(
+            FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::UnaryOperator &op);
+    ExpressionId codeGenBinaryOperator(
+            FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::BinaryOperator &op);
     ExpressionId codeGenFunctionCall(
             FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::FunctionCall *functionCall);
 

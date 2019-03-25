@@ -94,6 +94,14 @@ ExpressionId CompoundExpression::codeGenExpression(
             return _this->codeGenIdentifierLookup(codeGen, expectedResult, identifier.identifier);
         }
 
+        ExpressionId operator()( const NonTerminals::Expression::UnaryOperator &op ) const {
+            return _this->codeGenUnaryOperator(codeGen, expectedResult, op );
+        }
+
+        ExpressionId operator()( const NonTerminals::Expression::BinaryOperator &op ) const {
+            return _this->codeGenBinaryOperator(codeGen, expectedResult, op );
+        }
+
         ExpressionId operator()( const NonTerminals::Expression::FunctionCall &functionCall ) const {
             return _this->codeGenFunctionCall(codeGen, expectedResult, &functionCall);
         }
@@ -184,6 +192,32 @@ ExpressionId CompoundExpression::codeGenIdentifierLookup(
 
     return std::visit(
             Visitor{ .identifier=identifier, .codeGen=codeGen, .expectedResult=expectedResult }, *referencedObject );
+}
+
+ExpressionId CompoundExpression::codeGenUnaryOperator(
+        FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::UnaryOperator &op)
+{
+    ASSERT( op.op!=nullptr ) << "Operator codegen called with no operator";
+
+    using namespace Tokenizer;
+    switch( op.op->token ) {
+    case Tokens::OP_PLUS:
+        return codeGenExpression(codeGen, expectedResult, op.operand.get());
+    default:
+        ABORT() << "Code generation for unimplemented unary operator "<<op.op->token<<" at "<<op.op->line<<":"<<op.op->col<<"\n";
+    }
+}
+
+ExpressionId CompoundExpression::codeGenBinaryOperator(
+        FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::BinaryOperator &op)
+{
+    ASSERT( op.op!=nullptr ) << "Operator codegen called with no operator";
+
+    using namespace Tokenizer;
+    switch( op.op->token ) {
+    default:
+        ABORT() << "Code generation for unimplemented binary operator "<<op.op->token<<" at "<<op.op->line<<":"<<op.op->col<<"\n";
+    }
 }
 
 ExpressionId CompoundExpression::codeGenFunctionCall(
