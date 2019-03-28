@@ -46,27 +46,31 @@ static bool skipWS(Slice<const Tokenizer::Token> source, size_t &index) {
     return moved;
 }
 
-// Sets the index to the next token, verifying EOF and skipping WS if necessary
-static void nextToken(Slice<const Tokenizer::Token> source, size_t &index, const char *msg, bool skipWS = true) {
-    if( skipWS )
-        NonTerminals::skipWS(source, index);
+// Consumes the next token, optionally reporting EOF
+static const Tokenizer::Token *nextToken(Slice<const Tokenizer::Token> source, size_t &index, const char *msg) {
+    skipWS(source, index);
 
-    if( index==source.size() )
-        throw parser_error(msg, 0, 0);
+    if( index==source.size() ) {
+        if( msg==nullptr )
+            return nullptr;
+        else
+            throw parser_error(msg, 0, 0);
+    }
+
+    return &source[index++];
 }
 
 static const Tokenizer::Token &expectToken(
         Tokenizer::Tokens expected, Slice<const Tokenizer::Token> source, size_t &index, const char *mismatchMsg,
         const char *eofMsg)
 {
-    nextToken( source, index, eofMsg );
+    const Tokenizer::Token *currentToken = nextToken( source, index, eofMsg );
+    ASSERT( currentToken!=nullptr ) << "Unexpected EOF condition when searching for token";
 
-    const Tokenizer::Token *currentToken = &source[index];
     if( currentToken->token!=expected ) {
+        index--;
         throw parser_error(mismatchMsg, currentToken->line, currentToken->col);
     }
-
-    index++;
 
     return *currentToken;
 }
@@ -108,8 +112,7 @@ size_t Literal::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
-    nextToken(source, tokensConsumed, "EOF while parsing literal");
-    const Tokenizer::Token *currentToken = &source[tokensConsumed++];
+    const Tokenizer::Token *currentToken = nextToken(source, tokensConsumed, "EOF while parsing literal");
 
     switch( currentToken->token ) {
     case Tokenizer::Tokens::LITERAL_INT_2:
@@ -350,8 +353,6 @@ size_t FuncDeclArgsNonEmpty::parse(Slice<const Tokenizer::Token> source) {
 
     bool done = false;
     do {
-        nextToken(source, tokensConsumed, "EOF while parsing function arguments");
-
         FuncDeclArg arg;
         tokensConsumed += arg.parse(source);
         arguments.emplace_back(arg);
@@ -388,8 +389,6 @@ size_t FuncDeclBody::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
-    nextToken(source, tokensConsumed, "EOF while parsing function declaration");
-
     tokensConsumed += name.parse( source  );
 
     expectToken( Tokenizer::Tokens::BRACKET_ROUND_OPEN, source, tokensConsumed, "Expected '('",
@@ -409,21 +408,12 @@ size_t FuncDef::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
     size_t tokensConsumed = 0;
 
-    nextToken(source, tokensConsumed, "EOF while looking for function definition");
-
-    const Tokenizer::Token *currentToken = &source[tokensConsumed];
+    const Tokenizer::Token *currentToken = nextToken(source, tokensConsumed, "EOF while looking for function definition");
     if( currentToken->token!=Tokenizer::Tokens::RESERVED_DEF ) {
         throw parser_error("Function definition should start with \"def\"", currentToken->line, currentToken->col);
     }
 
-    tokensConsumed++;
-
-    nextToken(source, tokensConsumed, "EOF while looking for function definition");
-
     tokensConsumed += decl.parse( source.subslice(tokensConsumed) );
-
-    nextToken(source, tokensConsumed, "EOF while looking for function definition");
-
     tokensConsumed += body.parse( source.subslice(tokensConsumed) );
 
     RULE_LEAVE(tokensConsumed);
