@@ -14,8 +14,10 @@
 #include "parser.h"
 #include "mmap.h"
 
+size_t indentWidth = 3;
+
 std::ostream &indent( std::ostream &out, size_t depth ) {
-    for( unsigned i=0; i<depth; ++i )
+    for( unsigned i=0; i<depth*indentWidth; ++i )
         out<<" ";
 
     return out;
@@ -29,7 +31,10 @@ using namespace NonTerminals;
 
 void dumpParseTree( const Expression &node, size_t depth=0 );
 
-void dumpParseTree( const FunctionArguments &node, size_t depth=0 ) {
+void dumpParseTree( const FunctionArguments &args, size_t depth=0 ) {
+    for( const auto &i : args.arguments ) {
+        dumpParseTree( i, depth+1 );
+    }
 }
 
 void dumpParseTree( const Expression &node, size_t depth ) {
@@ -78,28 +83,33 @@ void help() {
             "Usage: practiparse filename\n"
             "Options:\n"
             "-c\tArgument is the actual program source, instead of the file name\n"
-            "-E\tSource is a single expression, rather than the whole program\n";
+            "-W\tSource is the whole program, rather than a single expression\n"
+            "-i<num>\tSet the per-level indent mount\n";
 }
 
 int main(int argc, char *argv[]) {
-    bool singleExpression;
-    bool argumentSource;
+    bool singleExpression = true;
+    bool argumentSource = false;
     int opt;
 
-    while( (opt=getopt(argc, argv, "Ech")) != -1 ) {
+    while( (opt=getopt(argc, argv, "Wchi:?")) != -1 ) {
         switch( opt ) {
-        case 'E':
-            singleExpression = true;
+        case 'W':
+            singleExpression = false;
             break;
         case 'c':
             argumentSource = true;
             break;
+        case 'i':
+            indentWidth = strtoul( optarg, nullptr, 10 );
+            break;
         case '?':
             help();
-            return 1;
+            return 0;
         default:
-            std::cerr << "Invalid branch of case reached with option '" << opt << "'. Aborting" << std::endl;
-            abort();
+            std::cerr << "Invalid option '-" << static_cast<char>(opt) << "'. Use -? for help." << std::endl;
+            help();
+            return 1;
         }
     }
 
