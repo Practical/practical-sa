@@ -147,6 +147,8 @@ ExpressionId CompoundExpression::codeGenLiteral(
     case Tokenizer::Tokens::LITERAL_INT_10:
         for( char c: text ) {
             // TODO check range and assign type
+            if( c=='_' )
+                continue;
 
             ASSERT( c>='0' && c<='9' ) << "Decimal literal has character '"<<c<<"' out of allowed range";
             res *= 10;
