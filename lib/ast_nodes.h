@@ -9,6 +9,7 @@
 #ifndef AST_NODES_H
 #define AST_NODES_H
 
+#include "expected_type.h"
 #include "parser.h"
 
 #include <deque>
@@ -42,22 +43,22 @@ public:
 
     void symbolsPass1();
     void symbolsPass2();
-    ExpressionId codeGen(FunctionGen *codeGen, const StaticType *expectedResult);
+    ExpressionId codeGen(FunctionGen *codeGen, ExpectedType expectedResult);
 
 private:
     void codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement);
     ExpressionId codeGenExpression(
-            FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression *expression);
+            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression *expression);
     void codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition);
-    ExpressionId codeGenLiteral(FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Literal *literal);
+    ExpressionId codeGenLiteral(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
     ExpressionId codeGenIdentifierLookup(
-            FunctionGen *codeGen, const StaticType *expectedResult, const Tokenizer::Token *identifier);
+            FunctionGen *codeGen, ExpectedType expectedResult, const Tokenizer::Token *identifier);
     ExpressionId codeGenUnaryOperator(
-            FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::UnaryOperator &op);
+            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::UnaryOperator &op);
     ExpressionId codeGenBinaryOperator(
-            FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::BinaryOperator &op);
+            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::BinaryOperator &op);
     ExpressionId codeGenFunctionCall(
-            FunctionGen *codeGen, const StaticType *expectedResult, const NonTerminals::Expression::FunctionCall *functionCall);
+            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::FunctionCall *functionCall);
 
 };
 

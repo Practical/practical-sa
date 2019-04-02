@@ -16,10 +16,19 @@
 
 using namespace PracticalSemanticAnalyzer;
 
-void checkImplicitCastAllowed(
-        ExpressionId id, const StaticType &sourceType, const StaticType &destType, const Tokenizer::Token &expressionSource)
+bool checkImplicitCastAllowed(
+        ExpressionId id, const StaticType &sourceType, ExpectedType destType, const Tokenizer::Token &expressionSource)
 {
-    codeGenCast( &dummyFunctionGen, id, sourceType, destType, expressionSource, true );
+    try {
+        codeGenCast( &dummyFunctionGen, id, sourceType, destType, expressionSource, true );
+    } catch(CastNotAllowed &ex) {
+        if( destType.mandatory )
+            throw;
+
+        return false;
+    }
+
+    return true;
 }
 
 static ExpressionId codeGenCast_SignedIntSource(
@@ -77,6 +86,13 @@ static ExpressionId codeGenCast_UnsignedIntSource(
 
     return castResult;
 #undef REPORT_ERROR
+}
+
+ExpressionId codeGenCast(
+        FunctionGen *codeGen, ExpressionId sourceExpression, const StaticType &sourceType, ExpectedType destType,
+        const Tokenizer::Token &expressionSource, bool implicitOnly )
+{
+    return codeGenCast( codeGen, sourceExpression, sourceType, *destType.type, expressionSource, implicitOnly );
 }
 
 ExpressionId codeGenCast(
