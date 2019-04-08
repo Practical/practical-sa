@@ -12,11 +12,11 @@
 #include "practical-sa.h"
 
 struct ExpectedType {
-    const PracticalSemanticAnalyzer::StaticType *type = nullptr;
+    PracticalSemanticAnalyzer::StaticType::Ptr type = nullptr;
     bool mandatory = false;
 
     ExpectedType() {}
-    explicit ExpectedType( const PracticalSemanticAnalyzer::StaticType *type, bool mandatory = true ) :
+    explicit ExpectedType( PracticalSemanticAnalyzer::StaticType::Ptr type, bool mandatory = true ) :
         type(type), mandatory(mandatory)
     {}
 

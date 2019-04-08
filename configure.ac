@@ -26,6 +26,7 @@ PKG_CHECK_MODULES([CPPUNIT], [cppunit], , [AC_MSG_FAILURE([CppUnit module not fo
 
 # Checks for header files.
 AC_SUBST([AM_CPPFLAGS], [-I\$\(top_srcdir\)/include])
+AC_CHECK_HEADER([boost/intrusive_ptr.hpp],,[AC_ERROR([boost.intrusive_ptr has to be installed])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T

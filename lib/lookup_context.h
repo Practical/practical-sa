@@ -49,14 +49,14 @@ public:
 
     class LocalVariable {
     public:
-        PracticalSemanticAnalyzer::StaticType type;
+        PracticalSemanticAnalyzer::StaticType::Ptr type;
         const Tokenizer::Token *name;
         PracticalSemanticAnalyzer::IdentifierId id;
         PracticalSemanticAnalyzer::ExpressionId lvalueId;
 
         explicit LocalVariable( const Tokenizer::Token *name );
         LocalVariable(
-                const Tokenizer::Token *name, PracticalSemanticAnalyzer::StaticType &&type,
+                const Tokenizer::Token *name, PracticalSemanticAnalyzer::StaticType::Ptr &&type,
                 PracticalSemanticAnalyzer::ExpressionId lvalueId);
     };
 
@@ -64,7 +64,7 @@ public:
     public:
         const Tokenizer::Token *name;
         PracticalSemanticAnalyzer::IdentifierId id;
-        PracticalSemanticAnalyzer::StaticType returnType;
+        PracticalSemanticAnalyzer::StaticType::Ptr returnType;
         std::vector<PracticalSemanticAnalyzer::ArgumentDeclaration> arguments;
 
         Function( const Tokenizer::Token *name );
@@ -90,7 +90,7 @@ public:
     Function *registerFunctionPass1( const Tokenizer::Token *name );
     void registerFunctionPass2(
             String name,
-            PracticalSemanticAnalyzer::StaticType &&returnType,
+            PracticalSemanticAnalyzer::StaticType::Ptr &&returnType,
             std::vector<PracticalSemanticAnalyzer::ArgumentDeclaration> &&arguments);
     const LocalVariable *registerVariable( LocalVariable &&variable );
 

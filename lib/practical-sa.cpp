@@ -18,14 +18,8 @@
 
 namespace PracticalSemanticAnalyzer {
 
-StaticType &StaticType::operator=( StaticType &&that ) {
-    ASSERT( id==TypeId(0) ) << "StaticType move operator called on initialized type";
-    std::swap( id, that.id );
-
-    return *this;
-}
-std::ostream &operator<<(std::ostream &out, const StaticType &type) {
-    auto namedType = lookupTypeId(type.getId());
+std::ostream &operator<<(std::ostream &out, StaticType::Ptr type) {
+    auto namedType = lookupTypeId(type->getId());
 
     out << namedType->name();
 
@@ -54,6 +48,10 @@ int compile(std::string path, const CompilerArguments *arguments, ModuleGen *cod
 
 const NamedType *lookupTypeId(TypeId id) {
     return LookupContext::lookupType(id);
+}
+
+StaticType::Ptr StaticType::allocate(TypeId id) {
+    return new StaticType(id);
 }
 
 } // PracticalSemanticAnalyzer

@@ -13,6 +13,9 @@
 #include "typed.h"
 #include "slice.h"
 
+#include <boost/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -34,26 +37,15 @@ namespace PracticalSemanticAnalyzer {
     public:
     };
 
-    class StaticType : private NoCopy {
+    class StaticType : private NoCopy, public boost::intrusive_ref_counter<StaticType, boost::thread_unsafe_counter> {
     private:
         TypeId id;
 
     public:
-        StaticType() = default;
-        StaticType(TypeId _id) : id(_id) {
-        }
-        StaticType(StaticType &&that) : id(that.id) {
-            that.id = TypeId(0);
-        }
-
-        StaticType &operator=( StaticType &&that );
+        using Ptr = boost::intrusive_ptr<const StaticType>;
 
         TypeId getId() const {
             return id;
-        }
-
-        void setId( TypeId id ) {
-            this->id = id;
         }
 
         bool operator==( const StaticType &that ) const {
@@ -63,15 +55,21 @@ namespace PracticalSemanticAnalyzer {
         bool operator!=( const StaticType &that ) const {
             return !operator==( that );
         }
+
+        static Ptr allocate(TypeId id);
+
+    private:
+        StaticType(TypeId _id) : id(_id) {
+        }
     };
-    std::ostream &operator<<(std::ostream &out, const StaticType &type);
+    std::ostream &operator<<(std::ostream &out, StaticType::Ptr type);
 
     struct ArgumentDeclaration {
-        const StaticType &type;
+        StaticType::Ptr type;
         String name;
         ExpressionId lvalueId;
 
-        ArgumentDeclaration(const StaticType &_type, String _name, ExpressionId _lvalueId)
+        ArgumentDeclaration(StaticType::Ptr _type, String _name, ExpressionId _lvalueId)
                 : type(_type), name(_name), lvalueId(_lvalueId)
         {}
     };
@@ -80,26 +78,26 @@ namespace PracticalSemanticAnalyzer {
     class FunctionGen {
     public:
         virtual void functionEnter(
-                IdentifierId id, String name, const StaticType& returnType, Slice<const ArgumentDeclaration> arguments,
+                IdentifierId id, String name, StaticType::Ptr returnType, Slice<const ArgumentDeclaration> arguments,
                 String file, size_t line, size_t col) = 0;
         virtual void functionLeave(IdentifierId id) = 0;
 
         virtual void returnValue(ExpressionId id) = 0;
-        virtual void setLiteral(ExpressionId id, LongEnoughInt value, const StaticType &type) = 0;
+        virtual void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::Ptr type) = 0;
 
         // The ExpressionId refers to a pointer to the resulting allocated variable
-        virtual void allocateStackVar(ExpressionId id, const StaticType &type, String name) = 0;
+        virtual void allocateStackVar(ExpressionId id, StaticType::Ptr type, String name) = 0;
         virtual void assign( ExpressionId lvalue, ExpressionId rvalue ) = 0;
-        virtual void dereferencePointer( ExpressionId id, const StaticType &type, ExpressionId addr ) = 0;
+        virtual void dereferencePointer( ExpressionId id, StaticType::Ptr type, ExpressionId addr ) = 0;
 
         virtual void truncateInteger(
-                ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) = 0;
+                ExpressionId id, ExpressionId source, StaticType::Ptr sourceType, StaticType::Ptr destType ) = 0;
         virtual void expandIntegerSigned(
-                ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) = 0;
+                ExpressionId id, ExpressionId source, StaticType::Ptr sourceType, StaticType::Ptr destType ) = 0;
         virtual void expandIntegerUnsigned(
-                ExpressionId id, ExpressionId source, const StaticType &sourceType, const StaticType &destType ) = 0;
+                ExpressionId id, ExpressionId source, StaticType::Ptr sourceType, StaticType::Ptr destType ) = 0;
         virtual void callFunctionDirect(
-                ExpressionId id, String name, Slice<const ExpressionId> arguments, const StaticType &returnType ) = 0;
+                ExpressionId id, String name, Slice<const ExpressionId> arguments, StaticType::Ptr returnType ) = 0;
     };
 
     class ModuleGen {

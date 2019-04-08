@@ -18,18 +18,18 @@ namespace AST {
 
 class Type : NoCopy {
     const NonTerminals::Type *parseType;
-    StaticType staticType;
+    StaticType::Ptr staticType;
 
 public:
     Type(const NonTerminals::Type *nt);
 
-    const StaticType &getType() const {
+    StaticType::Ptr getType() const {
         return staticType;
     }
 
     void symbolsPass2(const LookupContext *ctx);
 
-    StaticType removeType() && {
+    StaticType::Ptr removeType() && {
         return std::move(staticType);
     }
 };
@@ -80,7 +80,7 @@ public:
         return parserFuncDecl->name.getCol();
     }
 
-    const StaticType &getRetType() const {
+    StaticType::Ptr getRetType() const {
         return ctxFunction->returnType;
     }
 

@@ -20,14 +20,14 @@ using PracticalSemanticAnalyzer::StaticType;
 using PracticalSemanticAnalyzer::ExpressionId;
 
 bool checkImplicitCastAllowed(
-        ExpressionId id, const StaticType &sourceType, ExpectedType destType, const Tokenizer::Token &expressionSource);
+        ExpressionId id, StaticType::Ptr sourceType, ExpectedType destType, const Tokenizer::Token &expressionSource);
 
 ExpressionId codeGenCast(
-        PracticalSemanticAnalyzer::FunctionGen *codeGen, ExpressionId sourceExpression, const StaticType &sourceType,
+        PracticalSemanticAnalyzer::FunctionGen *codeGen, ExpressionId sourceExpression, StaticType::Ptr sourceType,
         ExpectedType destType, const Tokenizer::Token &expressionSource, bool implicitOnly );
 
 ExpressionId codeGenCast(
-        PracticalSemanticAnalyzer::FunctionGen *codeGen, ExpressionId sourceExpression, const StaticType &sourceType,
-        const StaticType &destType, const Tokenizer::Token &expressionSource, bool implicitOnly );
+        PracticalSemanticAnalyzer::FunctionGen *codeGen, ExpressionId sourceExpression, StaticType::Ptr sourceType,
+        StaticType::Ptr destType, const Tokenizer::Token &expressionSource, bool implicitOnly );
 
 #endif // CASTS_H

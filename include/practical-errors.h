@@ -74,7 +74,7 @@ public:
 
 class CastNotAllowed : public compile_error {
 public:
-    CastNotAllowed(const StaticType &src, const StaticType &dst, bool implicit, size_t line, size_t col);
+    CastNotAllowed(StaticType::Ptr src, StaticType::Ptr dst, bool implicit, size_t line, size_t col);
 };
 
 class SymbolRedefined : public compile_error {

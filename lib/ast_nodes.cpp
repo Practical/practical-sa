@@ -26,7 +26,8 @@ void Type::symbolsPass2(const LookupContext *ctx) {
     if( type==nullptr )
         throw pass2_error("Type name expected", parseType->getLine(), parseType->getCol());
 
-    staticType.setId( type->id() );
+    ASSERT( !staticType );
+    staticType = StaticType::allocate( type->id() );
 }
 
 CompoundExpression::CompoundExpression(LookupContext *parentCtx, const NonTerminals::CompoundExpression *_parserExpresison)
@@ -127,7 +128,7 @@ void CompoundExpression::codeGenVarDef(FunctionGen *codeGen, const NonTerminals:
     codeGen->allocateStackVar( namedVar->lvalueId, namedVar->type, namedVar->name->text );
 
     if( definition->initValue ) {
-        ExpressionId initValueId = codeGenExpression(codeGen, ExpectedType( &namedVar->type ), definition->initValue.get());
+        ExpressionId initValueId = codeGenExpression(codeGen, ExpectedType( namedVar->type ), definition->initValue.get());
         codeGen->assign( namedVar->lvalueId, initValueId );
     } else {
         ABORT() << "TODO Type default values not yet implemented";
@@ -160,13 +161,13 @@ ExpressionId CompoundExpression::codeGenLiteral(
     }
 
     // XXX use value range propagation instead
-    StaticType resType( AST::AST::deductLiteralRange(res) );
+    StaticType::Ptr resType( AST::AST::deductLiteralRange(res) );
     bool useExpected = false;
     if( expectedResult ) {
         useExpected = checkImplicitCastAllowed(id, resType, expectedResult, literal->token);
     }
 
-    codeGen->setLiteral(id, res, useExpected ? *expectedResult.type : resType);
+    codeGen->setLiteral(id, res, useExpected ? expectedResult.type : resType);
 
     return id;
 }
@@ -250,7 +251,7 @@ ExpressionId CompoundExpression::codeGenFunctionCall(
 
     for( unsigned int argNum=0; argNum<function->arguments.size(); ++argNum ) {
         arguments.emplace_back( codeGenExpression(
-                    codeGen, ExpectedType( &function->arguments[argNum].type ), &functionCall->arguments.arguments[argNum] ) );
+                    codeGen, ExpectedType( function->arguments[argNum].type ), &functionCall->arguments.arguments[argNum] ) );
     }
 
     ExpressionId functionRet = expressionIdAllocator.allocate();
@@ -330,7 +331,7 @@ void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
             declaration.getArguments(),
             toSlice("No file"), declaration.getLine(), declaration.getCol());
 
-    ExpressionId result = body.codeGen( functionGen.get(), ExpectedType( &declaration.getRetType() ) );
+    ExpressionId result = body.codeGen( functionGen.get(), ExpectedType( declaration.getRetType() ) );
     functionGen->returnValue(result);
 
     functionGen->functionLeave(id);

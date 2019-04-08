@@ -21,7 +21,7 @@ namespace AST {
 
 LookupContext AST::globalCtx(nullptr);
 
-StaticType AST::deductLiteralRange(LongEnoughInt value) {
+StaticType::Ptr AST::deductLiteralRange(LongEnoughInt value) {
     String typeName;
 
     if( value<0 ) {
@@ -61,7 +61,7 @@ StaticType AST::deductLiteralRange(LongEnoughInt value) {
     auto type = globalCtx.lookupType(typeName);
     ASSERT(type != nullptr) << "Failed to look up built-in type \"" << typeName << "\"";
 
-    return StaticType( type->id() );
+    return StaticType::allocate( type->id() );
 }
 
 class BuiltInTypeToken : public Tokenizer::Token {

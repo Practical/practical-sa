@@ -36,7 +36,7 @@ LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name) : name
 {
 }
 
-LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, StaticType &&type, ExpressionId lvalueId)
+LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, StaticType::Ptr &&type, ExpressionId lvalueId)
     : type( std::move(type) ), name(name), id( idAllocator.allocate() ), lvalueId(lvalueId)
 {
 }
@@ -77,7 +77,7 @@ LookupContext::Function *LookupContext::registerFunctionPass1( const Tokenizer::
 
 void LookupContext::registerFunctionPass2(
         String name,
-        PracticalSemanticAnalyzer::StaticType &&returnType,
+        PracticalSemanticAnalyzer::StaticType::Ptr &&returnType,
         std::vector<PracticalSemanticAnalyzer::ArgumentDeclaration> &&arguments)
 {
     auto namedObject = symbols.find( name );

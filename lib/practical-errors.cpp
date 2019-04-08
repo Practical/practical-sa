@@ -14,7 +14,7 @@
 
 namespace PracticalSemanticAnalyzer {
 
-CastNotAllowed::CastNotAllowed(const StaticType &src, const StaticType &dst, bool implicit, size_t line, size_t col)
+CastNotAllowed::CastNotAllowed(StaticType::Ptr src, StaticType::Ptr dst, bool implicit, size_t line, size_t col)
         : compile_error(line, col)
 {
     std::stringstream buf;

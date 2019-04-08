@@ -35,7 +35,7 @@ public:
     static const LookupContext &getGlobalCtx() {
         return globalCtx;
     }
-    static StaticType deductLiteralRange(LongEnoughInt value);
+    static StaticType::Ptr deductLiteralRange(LongEnoughInt value);
 
     void prepare();
 
