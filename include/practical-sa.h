@@ -63,6 +63,9 @@ namespace PracticalSemanticAnalyzer {
         }
     };
     std::ostream &operator<<(std::ostream &out, StaticType::Ptr type);
+    inline bool operator==( const StaticType::Ptr &left, const StaticType::Ptr &right ) {
+        return (*left)==(*right);
+    }
 
     struct ArgumentDeclaration {
         StaticType::Ptr type;
@@ -128,6 +131,7 @@ namespace PracticalSemanticAnalyzer {
     };
 
     const NamedType *lookupTypeId(TypeId id);
+
 } // End namespace PracticalSemanticAnalyzer
 
 #endif // LIB_PRACTICAL_SA_H

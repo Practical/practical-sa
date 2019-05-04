@@ -11,8 +11,10 @@
 
 #include "practical-sa.h"
 
+using PracticalSemanticAnalyzer::StaticType;
+
 struct ExpectedType {
-    PracticalSemanticAnalyzer::StaticType::Ptr type = nullptr;
+    const StaticType::Ptr type;
     bool mandatory = false;
 
     ExpectedType() {}

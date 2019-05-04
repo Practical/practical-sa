@@ -10,6 +10,7 @@
 #define AST_NODES_H
 
 #include "expected_type.h"
+#include "expression.h"
 #include "parser.h"
 
 #include <deque>
@@ -43,21 +44,21 @@ public:
 
     void symbolsPass1();
     void symbolsPass2();
-    ExpressionId codeGen(FunctionGen *codeGen, ExpectedType expectedResult);
+    Expression codeGen(FunctionGen *codeGen, ExpectedType expectedResult);
 
 private:
     void codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement);
-    ExpressionId codeGenExpression(
+    Expression codeGenExpression(
             FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression *expression);
     void codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition);
-    ExpressionId codeGenLiteral(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
-    ExpressionId codeGenIdentifierLookup(
+    Expression codeGenLiteral(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
+    Expression codeGenIdentifierLookup(
             FunctionGen *codeGen, ExpectedType expectedResult, const Tokenizer::Token *identifier);
-    ExpressionId codeGenUnaryOperator(
+    Expression codeGenUnaryOperator(
             FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::UnaryOperator &op);
-    ExpressionId codeGenBinaryOperator(
+    Expression codeGenBinaryOperator(
             FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::BinaryOperator &op);
-    ExpressionId codeGenFunctionCall(
+    Expression codeGenFunctionCall(
             FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::FunctionCall *functionCall);
 
 };

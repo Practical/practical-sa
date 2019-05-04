@@ -17,10 +17,10 @@
 using namespace PracticalSemanticAnalyzer;
 
 bool checkImplicitCastAllowed(
-        ExpressionId id, StaticType::Ptr sourceType, ExpectedType destType, const Tokenizer::Token &expressionSource)
+        const Expression &sourceExpression, ExpectedType destType, const Tokenizer::Token &expressionSource)
 {
     try {
-        codeGenCast( &dummyFunctionGen, id, sourceType, destType, expressionSource, true );
+        codeGenCast( &dummyFunctionGen, sourceExpression, destType, expressionSource, true );
     } catch(CastNotAllowed &ex) {
         if( destType.mandatory )
             throw;
@@ -31,64 +31,54 @@ bool checkImplicitCastAllowed(
     return true;
 }
 
-static ExpressionId codeGenCast_SignedIntSource(
-        FunctionGen *codeGen, ExpressionId sourceExpression, const NamedType *sourceType, const NamedType *destType,
-        const Tokenizer::Token &expressionSource, bool implicitOnly )
+static Expression codeGenCast_SignedIntSource(
+        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *sourceType,
+        const NamedType *destNamedType, StaticType::Ptr destStaticType, const Tokenizer::Token &expressionSource,
+        bool implicitOnly )
 {
-#define REPORT_ERROR() throw CastNotAllowed(StaticType::allocate(sourceType->id()), StaticType::allocate(destType->id()), implicitOnly, expressionSource.line, expressionSource.col)
-    if( destType->type()!=NamedType::Type::SignedInteger )
+#define REPORT_ERROR() throw CastNotAllowed(sourceExpression.type, destStaticType, implicitOnly, expressionSource.line, expressionSource.col)
+    if( destNamedType->type()!=NamedType::Type::SignedInteger )
         REPORT_ERROR();
 
-    ExpressionId castResult = expressionIdAllocator.allocate();
-    if( sourceType->size()>destType->size() ) {
+    Expression castResult{ StaticType::Ptr(destStaticType) };
+    if( sourceType->size()>destNamedType->size() ) {
         if( implicitOnly )
             REPORT_ERROR();
 
-        codeGen->truncateInteger(
-                castResult, sourceExpression, StaticType::allocate(sourceType->id()),
-                StaticType::allocate(destType->id()) );
+        codeGen->truncateInteger( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
     } else {
-        codeGen->expandIntegerSigned(
-                castResult, sourceExpression, StaticType::allocate(sourceType->id()),
-                StaticType::allocate(destType->id()) );
+        codeGen->expandIntegerSigned( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
     }
 
     return castResult;
 #undef REPORT_ERROR
 }
 
-static ExpressionId codeGenCast_UnsignedIntSource(
-        FunctionGen *codeGen, ExpressionId sourceExpression, const NamedType *sourceType, const NamedType *destType,
-        const Tokenizer::Token &expressionSource, bool implicitOnly )
+static Expression codeGenCast_UnsignedIntSource(
+        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *sourceType,
+        const NamedType *destNamedType, StaticType::Ptr destStaticType, const Tokenizer::Token &expressionSource,
+        bool implicitOnly )
 {
-#define REPORT_ERROR() throw CastNotAllowed(StaticType::allocate(sourceType->id()), StaticType::allocate(destType->id()), implicitOnly, expressionSource.line, expressionSource.col)
-    ExpressionId castResult = expressionIdAllocator.allocate();
+#define REPORT_ERROR() throw CastNotAllowed(sourceExpression.type, destStaticType, implicitOnly, expressionSource.line, expressionSource.col)
+    Expression castResult{ StaticType::Ptr(destStaticType) };
 
-    if( destType->type()==NamedType::Type::SignedInteger ) {
-        if( sourceType->size()>=destType->size() ) {
+    if( destNamedType->type()==NamedType::Type::SignedInteger ) {
+        if( sourceType->size()>=destNamedType->size() ) {
             if( implicitOnly )
                 REPORT_ERROR();
 
-            codeGen->truncateInteger(
-                    castResult, sourceExpression, StaticType::allocate(sourceType->id()),
-                    StaticType::allocate(destType->id()) );
+            codeGen->truncateInteger( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
         } else {
-            codeGen->expandIntegerUnsigned(
-                    castResult, sourceExpression, StaticType::allocate(sourceType->id()),
-                    StaticType::allocate(destType->id()) );
+            codeGen->expandIntegerUnsigned( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
         }
-    } else if( destType->type()==NamedType::Type::UnsignedInteger ) {
-        if( sourceType->size()>destType->size() ) {
+    } else if( destNamedType->type()==NamedType::Type::UnsignedInteger ) {
+        if( sourceType->size()>destNamedType->size() ) {
             if( implicitOnly )
                 REPORT_ERROR();
 
-            codeGen->truncateInteger(
-                    castResult, sourceExpression, StaticType::allocate(sourceType->id()),
-                    StaticType::allocate(destType->id()) );
+            codeGen->truncateInteger( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
         } else {
-            codeGen->expandIntegerUnsigned(
-                    castResult, sourceExpression, StaticType::allocate(sourceType->id()),
-                    StaticType::allocate(destType->id()) );
+            codeGen->expandIntegerUnsigned( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
         }
     } else {
         ABORT() << "TODO implement";
@@ -98,32 +88,34 @@ static ExpressionId codeGenCast_UnsignedIntSource(
 #undef REPORT_ERROR
 }
 
-ExpressionId codeGenCast(
-        FunctionGen *codeGen, ExpressionId sourceExpression, StaticType::Ptr sourceType, ExpectedType destType,
+Expression codeGenCast(
+        FunctionGen *codeGen, const Expression &sourceExpression, ExpectedType destType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
-    return codeGenCast( codeGen, sourceExpression, sourceType, destType.type, expressionSource, implicitOnly );
+    return codeGenCast( codeGen, sourceExpression, destType.type, expressionSource, implicitOnly );
 }
 
-ExpressionId codeGenCast(
-        FunctionGen *codeGen, ExpressionId sourceExpression, StaticType::Ptr sourceType, StaticType::Ptr destType,
+Expression codeGenCast(
+        FunctionGen *codeGen, const Expression &sourceExpression, StaticType::Ptr destType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
     // Fastpath
-    if( sourceType==destType )
-        return sourceExpression;
+    if( sourceExpression.type==destType )
+        return sourceExpression.duplicate();
 
-    const NamedType *namedSource = LookupContext::lookupType( sourceType->getId() );
+    const NamedType *namedSource = LookupContext::lookupType( sourceExpression.type->getId() );
     const NamedType *namedDest = LookupContext::lookupType( destType->getId() );
 
     ASSERT( namedSource!=nullptr );
     ASSERT( namedDest!=nullptr );
 
     if( namedSource->type()==NamedType::Type::SignedInteger )
-        return codeGenCast_SignedIntSource(codeGen, sourceExpression, namedSource, namedDest, expressionSource, implicitOnly);
+        return codeGenCast_SignedIntSource(
+                codeGen, sourceExpression, namedSource, namedDest, destType, expressionSource, implicitOnly);
 
     if( namedSource->type()==NamedType::Type::UnsignedInteger ) {
-        return codeGenCast_UnsignedIntSource(codeGen, sourceExpression, namedSource, namedDest, expressionSource, implicitOnly);
+        return codeGenCast_UnsignedIntSource(
+                codeGen, sourceExpression, namedSource, namedDest, destType, expressionSource, implicitOnly);
     }
 
     ABORT() << "Unreachable code reached";

@@ -10,6 +10,7 @@
 #define CASTS_H
 
 #include "expected_type.h"
+#include "expression.h"
 #include "practical-sa.h"
 
 namespace Tokenizer {
@@ -20,14 +21,14 @@ using PracticalSemanticAnalyzer::StaticType;
 using PracticalSemanticAnalyzer::ExpressionId;
 
 bool checkImplicitCastAllowed(
-        ExpressionId id, StaticType::Ptr sourceType, ExpectedType destType, const Tokenizer::Token &expressionSource);
+        const Expression &sourceExpression, ExpectedType destType, const Tokenizer::Token &expressionSource);
 
-ExpressionId codeGenCast(
-        PracticalSemanticAnalyzer::FunctionGen *codeGen, ExpressionId sourceExpression, StaticType::Ptr sourceType,
+Expression codeGenCast(
+        PracticalSemanticAnalyzer::FunctionGen *codeGen, const Expression &sourceExpression,
         ExpectedType destType, const Tokenizer::Token &expressionSource, bool implicitOnly );
 
-ExpressionId codeGenCast(
-        PracticalSemanticAnalyzer::FunctionGen *codeGen, ExpressionId sourceExpression, StaticType::Ptr sourceType,
+Expression codeGenCast(
+        PracticalSemanticAnalyzer::FunctionGen *codeGen, const Expression &sourceExpression,
         StaticType::Ptr destType, const Tokenizer::Token &expressionSource, bool implicitOnly );
 
 #endif // CASTS_H

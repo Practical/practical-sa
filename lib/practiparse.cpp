@@ -29,7 +29,7 @@ std::ostream &operator<<( std::ostream &out, const Tokenizer::Token &token ) {
 }
 using namespace NonTerminals;
 
-void dumpParseTree( const Expression &node, size_t depth=0 );
+void dumpParseTree( const NonTerminals::Expression &node, size_t depth=0 );
 
 void dumpParseTree( const FunctionArguments &args, size_t depth=0 ) {
     for( const auto &i : args.arguments ) {
@@ -37,7 +37,7 @@ void dumpParseTree( const FunctionArguments &args, size_t depth=0 ) {
     }
 }
 
-void dumpParseTree( const Expression &node, size_t depth ) {
+void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
     struct Visitor {
         size_t depth;
         std::ostream &out;
@@ -53,12 +53,12 @@ void dumpParseTree( const Expression &node, size_t depth ) {
             indent(out, depth) << "Identifier "<<*id.identifier<<"\n";
         }
 
-        void operator()( const Expression::UnaryOperator &op ) {
+        void operator()( const NonTerminals::Expression::UnaryOperator &op ) {
             indent( out, depth )<<"Unary "<<*op.op<<"\n";
             dumpParseTree( *op.operand, depth+1 );
         }
 
-        void operator()( const Expression::BinaryOperator &op ) {
+        void operator()( const NonTerminals::Expression::BinaryOperator &op ) {
             indent( out, depth )<<"Binary "<<*op.op<<"\n";
             indent( out, depth )<<"Operand 1:\n";
             dumpParseTree( *op.operand1, depth+1 );
@@ -66,7 +66,7 @@ void dumpParseTree( const Expression &node, size_t depth ) {
             dumpParseTree( *op.operand2, depth+1 );
         }
 
-        void operator()( const Expression::FunctionCall &func ) {
+        void operator()( const NonTerminals::Expression::FunctionCall &func ) {
             indent(out, depth) << "Function call:\n";
             dumpParseTree( *func.expression, depth+1 );
             indent(out, depth) << "Arguments:\n";

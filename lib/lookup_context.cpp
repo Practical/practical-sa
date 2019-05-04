@@ -29,15 +29,17 @@ LookupContext::NamedType::NamedType(const Tokenizer::Token *name, LookupContext:
 {
 }
 
-LookupContext::NamedType::NamedType( NamedType &&that ) : _id(that._id), _size(that._size), _name(that._name), _type(that._type) {
+LookupContext::NamedType::NamedType( NamedType &&that )
+    : _id(that._id), _size(that._size), _name(that._name), _type(that._type)
+{
 }
 
 LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name) : name(name), id(idAllocator.allocate())
 {
 }
 
-LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, StaticType::Ptr &&type, ExpressionId lvalueId)
-    : type( std::move(type) ), name(name), id( idAllocator.allocate() ), lvalueId(lvalueId)
+LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, Expression &&lvalueExpression)
+    : name(name), lvalueExpression(std::move(lvalueExpression)), id( idAllocator.allocate() )
 {
 }
 

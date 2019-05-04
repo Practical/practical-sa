@@ -9,6 +9,7 @@
 #ifndef LOOKUP_CONTEXT_H
 #define LOOKUP_CONTEXT_H
 
+#include "expression.h"
 #include "nocopy.h"
 #include "tokenizer.h"
 
@@ -49,15 +50,12 @@ public:
 
     class LocalVariable {
     public:
-        PracticalSemanticAnalyzer::StaticType::Ptr type;
         const Tokenizer::Token *name;
+        Expression lvalueExpression; // Expression where variable was defined
         PracticalSemanticAnalyzer::IdentifierId id;
-        PracticalSemanticAnalyzer::ExpressionId lvalueId;
 
         explicit LocalVariable( const Tokenizer::Token *name );
-        LocalVariable(
-                const Tokenizer::Token *name, PracticalSemanticAnalyzer::StaticType::Ptr &&type,
-                PracticalSemanticAnalyzer::ExpressionId lvalueId);
+        LocalVariable( const Tokenizer::Token *name, Expression &&lvalueExpression );
     };
 
     class Function {

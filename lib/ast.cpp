@@ -13,8 +13,7 @@
 #include <string>
 #include <sstream>
 
-ExpressionId::Allocator<> expressionIdAllocator;
-ExpressionId voidExpressionId;
+Expression voidExpression;
 ModuleId::Allocator<> moduleIdAllocator;
 
 namespace AST {
@@ -80,7 +79,8 @@ void AST::prepare()
     globalCtx.registerType( &name##Identifier, NamedType::Type::type, size )
 
     RegisterBuiltInType( Void, Void, 0 );
-    voidExpressionId = expressionIdAllocator.allocate();
+    TypeId VoidTypeId = globalCtx.lookupType( "Void" )->id();
+    voidExpression = Expression( StaticType::allocate( VoidTypeId ) );
 
     RegisterBuiltInType( Bool, Boolean, 1 );
 

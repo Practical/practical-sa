@@ -16,8 +16,7 @@
 
 #include <memory>
 
-extern PracticalSemanticAnalyzer::ExpressionId::Allocator<> expressionIdAllocator;
-extern PracticalSemanticAnalyzer::ExpressionId voidExpressionId;
+extern Expression voidExpression;
 extern PracticalSemanticAnalyzer::ModuleId::Allocator<> moduleIdAllocator;
 
 namespace AST {
