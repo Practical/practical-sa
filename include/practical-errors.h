@@ -77,6 +77,11 @@ public:
     CastNotAllowed(StaticType::Ptr src, StaticType::Ptr dst, bool implicit, size_t line, size_t col);
 };
 
+class IncompatibleTypes : public compile_error {
+public:
+    IncompatibleTypes(StaticType::Ptr left, StaticType::Ptr right, size_t line, size_t col);
+};
+
 class SymbolRedefined : public compile_error {
 public:
     SymbolRedefined(String symbol, size_t line, size_t col);

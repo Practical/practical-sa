@@ -27,6 +27,16 @@ CastNotAllowed::CastNotAllowed(StaticType::Ptr src, StaticType::Ptr dst, bool im
     setMsg( buf.str().c_str() );
 }
 
+IncompatibleTypes::IncompatibleTypes(StaticType::Ptr left, StaticType::Ptr right, size_t line, size_t col)
+        : compile_error(line, col)
+{
+    std::stringstream buf;
+
+    buf<<"Cannot find common type for "<<left<<" and "<<right;
+
+    setMsg( buf.str().c_str() );
+}
+
 SymbolRedefined::SymbolRedefined(String symbol, size_t line, size_t col)
     : compile_error(line, col)
 {

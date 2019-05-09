@@ -46,18 +46,20 @@ public:
     void symbolsPass2();
     Expression codeGen(FunctionGen *codeGen, ExpectedType expectedResult);
 
-private:
-    void codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement);
     Expression codeGenExpression(
             FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression *expression);
+
+    const LookupContext &getContext() const {
+        return ctx;
+    }
+private:
+    void codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement);
     void codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition);
     Expression codeGenLiteral(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
     Expression codeGenIdentifierLookup(
             FunctionGen *codeGen, ExpectedType expectedResult, const Tokenizer::Token *identifier);
     Expression codeGenUnaryOperator(
             FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::UnaryOperator &op);
-    Expression codeGenBinaryOperator(
-            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::BinaryOperator &op);
     Expression codeGenFunctionCall(
             FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::FunctionCall *functionCall);
 

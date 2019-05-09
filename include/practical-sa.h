@@ -101,6 +101,9 @@ namespace PracticalSemanticAnalyzer {
                 ExpressionId id, ExpressionId source, StaticType::Ptr sourceType, StaticType::Ptr destType ) = 0;
         virtual void callFunctionDirect(
                 ExpressionId id, String name, Slice<const ExpressionId> arguments, StaticType::Ptr returnType ) = 0;
+
+        virtual void binaryOperatorPlus(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::Ptr resultType ) = 0;
     };
 
     class ModuleGen {

@@ -10,6 +10,7 @@
 
 #include "ast.h"
 #include "casts.h"
+#include "codegen_operators.h"
 #include "practical-errors.h"
 
 #include "asserts.h"
@@ -104,11 +105,11 @@ Expression CompoundExpression::codeGenExpression(
         }
 
         ::Expression operator()( const NonTerminals::Expression::UnaryOperator &op ) const {
-            return _this->codeGenUnaryOperator(codeGen, expectedResult, op );
+            return _this->codeGenUnaryOperator( codeGen, expectedResult, op );
         }
 
         ::Expression operator()( const NonTerminals::Expression::BinaryOperator &op ) const {
-            return _this->codeGenBinaryOperator(codeGen, expectedResult, op );
+            return codeGenBinaryOperator( _this, codeGen, expectedResult, op );
         }
 
         ::Expression operator()( const NonTerminals::Expression::FunctionCall &functionCall ) const {
@@ -212,18 +213,6 @@ Expression CompoundExpression::codeGenUnaryOperator(
         return codeGenExpression(codeGen, expectedResult, op.operand.get());
     default:
         ABORT() << "Code generation for unimplemented unary operator "<<op.op->token<<" at "<<op.op->line<<":"<<op.op->col<<"\n";
-    }
-}
-
-Expression CompoundExpression::codeGenBinaryOperator(
-        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::BinaryOperator &op)
-{
-    ASSERT( op.op!=nullptr ) << "Operator codegen called with no operator";
-
-    using namespace Tokenizer;
-    switch( op.op->token ) {
-    default:
-        ABORT() << "Code generation for unimplemented binary operator "<<op.op->token<<" at "<<op.op->line<<":"<<op.op->col<<"\n";
     }
 }
 

@@ -14,7 +14,7 @@
 using PracticalSemanticAnalyzer::StaticType;
 
 struct ExpectedType {
-    const StaticType::Ptr type;
+    StaticType::Ptr type;
     bool mandatory = false;
 
     ExpectedType() {}
@@ -26,6 +26,7 @@ struct ExpectedType {
         return type!=nullptr;
     }
 private:
+    // Delete the conversion to short, so that the conversion to bool doesn't implicitly convert to int types
     operator unsigned short() const;
 };
 
