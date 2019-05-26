@@ -22,7 +22,8 @@
 #include <variant>
 
 // An unsigned int type long enough to be castable to any int type without losing precision
-typedef unsigned long long LongEnoughInt;
+using LongEnoughInt = std::uintmax_t;
+using LongEnoughIntSigned = std::intmax_t;
 
 namespace PracticalSemanticAnalyzer {
     // Hopefully unique module ID for our typed ids
