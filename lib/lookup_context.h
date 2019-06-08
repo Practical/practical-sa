@@ -9,6 +9,7 @@
 #ifndef LOOKUP_CONTEXT_H
 #define LOOKUP_CONTEXT_H
 
+#include "asserts.h"
 #include "expression.h"
 #include "nocopy.h"
 #include "tokenizer.h"
@@ -25,11 +26,13 @@ public:
         size_t _size;
         const Tokenizer::Token *_name;
         Type _type;
+        std::unique_ptr<ValueRange> _range;
 
     public:
         NamedType(const Tokenizer::Token *name, NamedType::Type type, size_t size);
         NamedType(NamedType &&other);
         NamedType &operator=(NamedType &&other);
+
 
         size_t size() const override {
             return _size;
@@ -45,6 +48,16 @@ public:
 
         PracticalSemanticAnalyzer::TypeId id() const override {
             return _id;
+        }
+
+        ValueRange *range() const {
+            return _range.get();
+        }
+
+        void setRange(FullRangeInt min, FullRangeInt max) {
+            ASSERT( !_range )<<"Trying to set range when range is already set to "<<*_range;
+
+            _range = safenew<ValueRange>( min, max );
         }
     };
 
@@ -84,7 +97,9 @@ public:
 
     const LookupContext *getParent() const { return parent; }
 
-    PracticalSemanticAnalyzer::TypeId registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size );
+    NamedType *registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size );
+    NamedType *registerType(
+            const Tokenizer::Token *name, NamedType::Type type, size_t size, FullRangeInt min, FullRangeInt max );
     Function *registerFunctionPass1( const Tokenizer::Token *name );
     void registerFunctionPass2(
             String name,

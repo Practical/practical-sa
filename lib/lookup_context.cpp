@@ -54,18 +54,29 @@ LookupContext::~LookupContext() {
     }
 }
 
-TypeId LookupContext::registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size ) {
+LookupContext::NamedType *LookupContext::registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size )
+{
     ASSERT( size>0 || type==NamedType::Type::Void );
 
     auto emplaceResultName = types.emplace( name->text, NamedType(name, type, size) );
     if( !emplaceResultName.second )
         throw SymbolRedefined( name->text, name->line, name->col );
 
-    const LookupContext::NamedType *namedType = &(emplaceResultName.first->second);
+    LookupContext::NamedType *namedType = &(emplaceResultName.first->second);
     auto emplaceResultId = typeRepository.emplace( namedType->id(), namedType );
-    ASSERT( emplaceResultId.second ) << "Type " << name->text << " has same ID " << namedType->id() << " as an existing type";
+    ASSERT( emplaceResultId.second ) <<
+            "Type " << name->text << " has same ID " << namedType->id() << " as an existing type";
 
-    return namedType->id();
+    return namedType;
+}
+
+LookupContext::NamedType *LookupContext::registerType(
+            const Tokenizer::Token *name, NamedType::Type type, size_t size, FullRangeInt min, FullRangeInt max )
+{
+    NamedType *ret = registerType( name, type, size );
+    ret->setRange( min, max );
+
+    return ret;
 }
 
 LookupContext::Function *LookupContext::registerFunctionPass1( const Tokenizer::Token *name )

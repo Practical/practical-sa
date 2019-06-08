@@ -160,8 +160,8 @@ Expression CompoundExpression::codeGenLiteral(
         ABORT() << "TODO implement";
     }
 
-    // XXX use value range propagation
     Expression result( AST::AST::deductLiteralRange(resultValue) );
+    result.valueRange = ValueRange::allocate( resultValue, resultValue );
     if( expectedResult && checkImplicitCastAllowed(result, expectedResult, literal->token) ) {
         result.type = expectedResult.type;
     }

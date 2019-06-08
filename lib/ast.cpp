@@ -36,20 +36,12 @@ StaticType::Ptr AST::deductLiteralRange(LongEnoughInt value) {
             ABORT() << "TODO implement";
         }
     } else {
-        if( value<=INT8_MAX ) {
-            typeName = toSlice("__U7");
-        } else if( value<=UINT8_MAX ) {
+        if( value<=UINT8_MAX ) {
             typeName = toSlice("U8");
-        } else if( value<=INT16_MAX ) {
-            typeName = toSlice("__U15");
         } else if( value<=UINT16_MAX ) {
             typeName = toSlice("U16");
-        } else if( value<=INT32_MAX ) {
-            typeName = toSlice("__U31");
         } else if( value<=UINT32_MAX ) {
             typeName = toSlice("U32");
-        } else if( value<=INT64_MAX ) {
-            typeName = toSlice("__U63");
         } else if( value<=UINT64_MAX ) {
             typeName = toSlice("U64");
         } else {
@@ -77,6 +69,9 @@ void AST::prepare()
 #define RegisterBuiltInType( name, type, size ) \
     static const BuiltInTypeToken name##Identifier{String(#name, std::char_traits<char>::length(#name))}; \
     globalCtx.registerType( &name##Identifier, NamedType::Type::type, size )
+#define RegisterBuiltInTypeWithRange( name, type, size, minvalue, maxvalue ) \
+    static const BuiltInTypeToken name##Identifier{String(#name, std::char_traits<char>::length(#name))}; \
+    globalCtx.registerType( &name##Identifier, NamedType::Type::type, size, minvalue, maxvalue )
 
     RegisterBuiltInType( Void, Void, 0 );
     TypeId VoidTypeId = globalCtx.lookupType( "Void" )->id();
@@ -84,26 +79,20 @@ void AST::prepare()
 
     RegisterBuiltInType( Bool, Boolean, 1 );
 
-    RegisterBuiltInType( S8, SignedInteger, 8 );
-    RegisterBuiltInType( S16, SignedInteger, 16 );
-    RegisterBuiltInType( S32, SignedInteger, 32 );
-    RegisterBuiltInType( S64, SignedInteger, 64 );
-    RegisterBuiltInType( S128, SignedInteger, 128 );
+    RegisterBuiltInTypeWithRange( S8, SignedInteger, 8, INT8_MIN, INT8_MAX );
+    RegisterBuiltInTypeWithRange( S16, SignedInteger, 16, INT16_MIN, INT16_MAX );
+    RegisterBuiltInTypeWithRange( S32, SignedInteger, 32, INT32_MIN, INT32_MAX );
+    RegisterBuiltInTypeWithRange( S64, SignedInteger, 64, INT64_MIN, INT64_MAX );
+    //RegisterBuiltInTypeWithRange( S128, SignedInteger, 128 );
 
-    RegisterBuiltInType( U8, UnsignedInteger, 8 );
-    RegisterBuiltInType( U16, UnsignedInteger, 16 );
-    RegisterBuiltInType( U32, UnsignedInteger, 32 );
-    RegisterBuiltInType( U64, UnsignedInteger, 64 );
-    RegisterBuiltInType( U128, UnsignedInteger, 128 );
-
-    // Types for internal use only
-    RegisterBuiltInType( __U7, UnsignedInteger, 7 );
-    RegisterBuiltInType( __U15, UnsignedInteger, 15 );
-    RegisterBuiltInType( __U31, UnsignedInteger, 31 );
-    RegisterBuiltInType( __U63, UnsignedInteger, 63 );
-    RegisterBuiltInType( __U127, UnsignedInteger, 127 );
+    RegisterBuiltInTypeWithRange( U8, UnsignedInteger, 8, 0, UINT8_MAX );
+    RegisterBuiltInTypeWithRange( U16, UnsignedInteger, 16, 0, UINT16_MAX );
+    RegisterBuiltInTypeWithRange( U32, UnsignedInteger, 32, 0, UINT32_MAX );
+    RegisterBuiltInTypeWithRange( U64, UnsignedInteger, 64, 0, UINT64_MAX );
+    //RegisterBuiltInTypeWithRange( U128, UnsignedInteger, 128 );
 
 #undef RegisterBuiltInType
+#undef RegisterBuiltInTypeWithRange
 }
 
 void AST::parseModule(String moduleSource) {

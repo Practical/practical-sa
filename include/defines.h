@@ -18,13 +18,7 @@
 
 template <typename T, typename... ARGS>
 std::unique_ptr<T> safenew(ARGS&&... args) {
-    return std::unique_ptr<T>( new T(std::forward<ARGS...>(args...)) );
-}
-
-// std::forward does not handle the empty case well
-template <typename T>
-std::unique_ptr<T> safenew() {
-    return std::unique_ptr<T>( new T() );
+    return std::unique_ptr<T>( new T(std::forward<ARGS>(args)...) );
 }
 
 // static constexpr double GoldenRatio = (1 + sqrt(5.0)) / 2;

@@ -16,6 +16,12 @@
 
 using namespace PracticalSemanticAnalyzer;
 
+// Forward declaration
+static Expression codeGenCast(
+        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *namedSource,
+        const NamedType *namedDest, StaticType::Ptr destType, const Tokenizer::Token &expressionSource,
+        bool implicitOnly );
+
 bool checkImplicitCastAllowed(
         const Expression &sourceExpression, ExpectedType destType, const Tokenizer::Token &expressionSource)
 {
@@ -29,6 +35,30 @@ bool checkImplicitCastAllowed(
     }
 
     return true;
+}
+
+static Expression codeGenCast_ValueRange(
+        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *sourceType,
+        const NamedType *destNamedType, StaticType::Ptr destStaticType,
+        const Tokenizer::Token &expressionSource )
+{
+#define REPORT_ERROR() throw CastNotAllowed(sourceExpression.type, destStaticType, true, expressionSource.line, expressionSource.col)
+    ASSERT( sourceExpression.valueRange )<<"Called value range based cast on expression with no value range";
+    auto realDestNamedType = dynamic_cast<const LookupContext::NamedType *>(destNamedType);
+    ASSERT( realDestNamedType )<<"destNamedType not of type LookupContext::NamedType";
+    ASSERT( realDestNamedType->range() )<<
+            "Asked to convert to "<<destNamedType->name()<<
+            " based on value range, but type doesn't have range information";
+    if(
+            sourceExpression.valueRange->maximum > realDestNamedType->range()->maximum ||
+            sourceExpression.valueRange->minimum < realDestNamedType->range()->minimum )
+    {
+        REPORT_ERROR();
+    }
+
+    // The range matches. Use explicit cast to perform the actual conversion
+    return codeGenCast( codeGen, sourceExpression, sourceType, destNamedType, destStaticType, expressionSource, false); 
+#undef REPORT_ERROR
 }
 
 static Expression codeGenCast_SignedIntSource(
@@ -88,6 +118,27 @@ static Expression codeGenCast_UnsignedIntSource(
 #undef REPORT_ERROR
 }
 
+static Expression codeGenCast(
+        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *namedSource,
+        const NamedType *namedDest, StaticType::Ptr destType, const Tokenizer::Token &expressionSource,
+        bool implicitOnly )
+{
+    if( implicitOnly && sourceExpression.valueRange ) {
+        return codeGenCast_ValueRange( codeGen, sourceExpression, namedSource, namedDest, destType, expressionSource );
+    }
+
+    if( namedSource->type()==NamedType::Type::SignedInteger )
+        return codeGenCast_SignedIntSource(
+                codeGen, sourceExpression, namedSource, namedDest, destType, expressionSource, implicitOnly);
+
+    if( namedSource->type()==NamedType::Type::UnsignedInteger ) {
+        return codeGenCast_UnsignedIntSource(
+                codeGen, sourceExpression, namedSource, namedDest, destType, expressionSource, implicitOnly);
+    }
+
+    ABORT() << "Unreachable code reached";
+}
+
 Expression codeGenCast(
         FunctionGen *codeGen, const Expression &sourceExpression, ExpectedType destType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
@@ -109,14 +160,5 @@ Expression codeGenCast(
     ASSERT( namedSource!=nullptr );
     ASSERT( namedDest!=nullptr );
 
-    if( namedSource->type()==NamedType::Type::SignedInteger )
-        return codeGenCast_SignedIntSource(
-                codeGen, sourceExpression, namedSource, namedDest, destType, expressionSource, implicitOnly);
-
-    if( namedSource->type()==NamedType::Type::UnsignedInteger ) {
-        return codeGenCast_UnsignedIntSource(
-                codeGen, sourceExpression, namedSource, namedDest, destType, expressionSource, implicitOnly);
-    }
-
-    ABORT() << "Unreachable code reached";
+    return codeGenCast( codeGen, sourceExpression, namedSource, namedDest, destType, expressionSource, implicitOnly );
 }
