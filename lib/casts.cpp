@@ -18,8 +18,8 @@ using namespace PracticalSemanticAnalyzer;
 
 // Forward declaration
 static Expression codeGenCast(
-        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *namedSource,
-        const NamedType *namedDest, StaticType::Ptr destType, const Tokenizer::Token &expressionSource,
+        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *namedSource,
+        const LookupContext::NamedType *namedDest, StaticType::Ptr destType, const Tokenizer::Token &expressionSource,
         bool implicitOnly );
 
 bool checkImplicitCastAllowed(
@@ -38,20 +38,16 @@ bool checkImplicitCastAllowed(
 }
 
 static Expression codeGenCast_ValueRange(
-        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *sourceType,
-        const NamedType *destNamedType, StaticType::Ptr destStaticType,
+        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *sourceType,
+        const LookupContext::NamedType *destNamedType, StaticType::Ptr destStaticType,
         const Tokenizer::Token &expressionSource )
 {
 #define REPORT_ERROR() throw CastNotAllowed(sourceExpression.type, destStaticType, true, expressionSource.line, expressionSource.col)
     ASSERT( sourceExpression.valueRange )<<"Called value range based cast on expression with no value range";
-    auto realDestNamedType = dynamic_cast<const LookupContext::NamedType *>(destNamedType);
-    ASSERT( realDestNamedType )<<"destNamedType not of type LookupContext::NamedType";
-    ASSERT( realDestNamedType->range() )<<
+    ASSERT( destNamedType->range() )<<
             "Asked to convert to "<<destNamedType->name()<<
             " based on value range, but type doesn't have range information";
-    if(
-            sourceExpression.valueRange->maximum > realDestNamedType->range()->maximum ||
-            sourceExpression.valueRange->minimum < realDestNamedType->range()->minimum )
+    if( not sourceExpression.valueRange->containedIn(* destNamedType->range()) )
     {
         REPORT_ERROR();
     }
@@ -62,9 +58,9 @@ static Expression codeGenCast_ValueRange(
 }
 
 static Expression codeGenCast_SignedIntSource(
-        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *sourceType,
-        const NamedType *destNamedType, StaticType::Ptr destStaticType, const Tokenizer::Token &expressionSource,
-        bool implicitOnly )
+        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *sourceType,
+        const LookupContext::NamedType *destNamedType, StaticType::Ptr destStaticType,
+        const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
 #define REPORT_ERROR() throw CastNotAllowed(sourceExpression.type, destStaticType, implicitOnly, expressionSource.line, expressionSource.col)
     if( destNamedType->type()!=NamedType::Type::SignedInteger )
@@ -76,8 +72,15 @@ static Expression codeGenCast_SignedIntSource(
             REPORT_ERROR();
 
         codeGen->truncateInteger( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
+
+        ASSERT( ! castResult.valueRange )<<"Cast result value range not known but set to "<<*castResult.valueRange;
     } else {
         codeGen->expandIntegerSigned( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
+
+        if( sourceExpression.valueRange )
+            castResult.valueRange = sourceExpression.valueRange;
+        else
+            castResult.valueRange = sourceType->range();
     }
 
     return castResult;
@@ -85,9 +88,9 @@ static Expression codeGenCast_SignedIntSource(
 }
 
 static Expression codeGenCast_UnsignedIntSource(
-        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *sourceType,
-        const NamedType *destNamedType, StaticType::Ptr destStaticType, const Tokenizer::Token &expressionSource,
-        bool implicitOnly )
+        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *sourceType,
+        const LookupContext::NamedType *destNamedType, StaticType::Ptr destStaticType,
+        const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
 #define REPORT_ERROR() throw CastNotAllowed(sourceExpression.type, destStaticType, implicitOnly, expressionSource.line, expressionSource.col)
     Expression castResult{ StaticType::Ptr(destStaticType) };
@@ -98,8 +101,15 @@ static Expression codeGenCast_UnsignedIntSource(
                 REPORT_ERROR();
 
             codeGen->truncateInteger( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
+
+            ASSERT( ! castResult.valueRange )<<"Cast result value range not known but set to "<<*castResult.valueRange;
         } else {
             codeGen->expandIntegerUnsigned( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
+
+            if( sourceExpression.valueRange )
+                castResult.valueRange = sourceExpression.valueRange;
+            else
+                castResult.valueRange = sourceType->range();
         }
     } else if( destNamedType->type()==NamedType::Type::UnsignedInteger ) {
         if( sourceType->size()>destNamedType->size() ) {
@@ -107,8 +117,15 @@ static Expression codeGenCast_UnsignedIntSource(
                 REPORT_ERROR();
 
             codeGen->truncateInteger( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
+
+            ASSERT( ! castResult.valueRange )<<"Cast result value range not known but set to "<<*castResult.valueRange;
         } else {
             codeGen->expandIntegerUnsigned( castResult.id, sourceExpression.id, sourceExpression.type, destStaticType );
+
+            if( sourceExpression.valueRange )
+                castResult.valueRange = sourceExpression.valueRange;
+            else
+                castResult.valueRange = sourceType->range();
         }
     } else {
         ABORT() << "TODO implement";
@@ -119,8 +136,8 @@ static Expression codeGenCast_UnsignedIntSource(
 }
 
 static Expression codeGenCast(
-        FunctionGen *codeGen, const Expression &sourceExpression, const NamedType *namedSource,
-        const NamedType *namedDest, StaticType::Ptr destType, const Tokenizer::Token &expressionSource,
+        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *namedSource,
+        const LookupContext::NamedType *namedDest, StaticType::Ptr destType, const Tokenizer::Token &expressionSource,
         bool implicitOnly )
 {
     if( implicitOnly && sourceExpression.valueRange ) {
@@ -154,8 +171,8 @@ Expression codeGenCast(
     if( sourceExpression.type==destType )
         return sourceExpression.duplicate();
 
-    const NamedType *namedSource = LookupContext::lookupType( sourceExpression.type->getId() );
-    const NamedType *namedDest = LookupContext::lookupType( destType->getId() );
+    const LookupContext::NamedType *namedSource = LookupContext::lookupType( sourceExpression.type->getId() );
+    const LookupContext::NamedType *namedDest = LookupContext::lookupType( destType->getId() );
 
     ASSERT( namedSource!=nullptr );
     ASSERT( namedDest!=nullptr );

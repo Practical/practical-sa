@@ -17,6 +17,10 @@ struct ValueRange : private NoCopy, public boost::intrusive_ref_counter<ValueRan
     static boost::intrusive_ptr<const ValueRange> allocate( FullRangeInt min, FullRangeInt max ) {
         return new ValueRange(min, max);
     }
+
+    bool containedIn( const ValueRange &that ) const {
+        return minimum>=that.minimum && maximum<=that.maximum;
+    }
 };
 
 inline std::ostream &operator<<( std::ostream &out, const ValueRange &range ) {

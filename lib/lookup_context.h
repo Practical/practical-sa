@@ -26,7 +26,7 @@ public:
         size_t _size;
         const Tokenizer::Token *_name;
         Type _type;
-        std::unique_ptr<ValueRange> _range;
+        boost::intrusive_ptr<const ValueRange> _range;
 
     public:
         NamedType(const Tokenizer::Token *name, NamedType::Type type, size_t size);
@@ -50,14 +50,14 @@ public:
             return _id;
         }
 
-        ValueRange *range() const {
-            return _range.get();
+        boost::intrusive_ptr<const ValueRange> range() const {
+            return _range;
         }
 
         void setRange(FullRangeInt min, FullRangeInt max) {
             ASSERT( !_range )<<"Trying to set range when range is already set to "<<*_range;
 
-            _range = safenew<ValueRange>( min, max );
+            _range = new ValueRange( min, max );
         }
     };
 
@@ -110,7 +110,7 @@ public:
     const NamedObject *lookupIdentifier(String name) const;
     const NamedType *lookupType(String name) const;
 
-    static const PracticalSemanticAnalyzer::NamedType *lookupType(PracticalSemanticAnalyzer::TypeId id);
+    static const NamedType *lookupType(PracticalSemanticAnalyzer::TypeId id);
 };
 
 #endif // LOOKUP_CONTEXT_H

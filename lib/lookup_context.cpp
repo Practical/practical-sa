@@ -137,7 +137,7 @@ const LookupContext::NamedType *LookupContext::lookupType(String name) const {
     return parent->lookupType(name);
 }
 
-const PracticalSemanticAnalyzer::NamedType *LookupContext::lookupType(TypeId id) {
+const LookupContext::NamedType *LookupContext::lookupType(TypeId id) {
     auto iterator = typeRepository.find(id);
     ASSERT( iterator!=typeRepository.end() ) << "Tried to look up type ID " << id << " which is no (longer?) defined.";
     return iterator->second;
