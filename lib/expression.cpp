@@ -36,8 +36,13 @@ Expression Expression::duplicate() const {
     Expression ret;
     ret.id = id;
     ret.type = type;
+    ret.valueRange = valueRange;
 
     return ret;
+}
+
+boost::intrusive_ptr<const ValueRange> Expression::getRange() const {
+    return valueRange;
 }
 
 std::ostream &operator<<( std::ostream &out, const Expression &expr ) {

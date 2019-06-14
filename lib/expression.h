@@ -49,6 +49,8 @@ struct Expression : private NoCopy {
     Expression &operator=( Expression &&that );
 
     Expression duplicate() const;
+
+    boost::intrusive_ptr<const ValueRange> getRange() const;
 };
 
 std::ostream &operator<<( std::ostream &out, const Expression &expr );

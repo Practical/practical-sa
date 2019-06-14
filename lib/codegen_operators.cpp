@@ -98,6 +98,15 @@ static Expression codeGenBinaryPlus(
 
     ASSERT( leftOperand.type == rightOperand.type );
     Expression result( StaticType::Ptr(leftOperand.type) );
+    try {
+        auto leftValueRange = leftOperand.getRange(), rightValueRange = rightOperand.getRange();
+        if( leftValueRange && rightValueRange )
+            result.valueRange = new ValueRange(
+                    leftValueRange->minimum + rightValueRange->minimum,
+                    leftValueRange->maximum + rightValueRange->maximum );
+    } catch( std::overflow_error &err ) {
+        // In case of overflow, leave the range blank (i.e. - maximal)
+    }
     codeGen->binaryOperatorPlus( result.id, leftOperand.id, rightOperand.id, result.type );
 
     return result;

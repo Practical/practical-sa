@@ -11,6 +11,7 @@
 #include "asserts.h"
 
 #include <iostream>
+#include <stdexcept>
 
 std::ostream &operator<<( std::ostream &out, const std::variant< LongEnoughInt, LongEnoughIntSigned > &value ) {
     struct Visitor {
@@ -92,7 +93,7 @@ FullRangeInt &FullRangeInt::operator+=( const FullRangeInt &rhs ) {
         static SignedUnsignedValue operation( LongEnoughInt left, LongEnoughInt right ) {
             LongEnoughInt result;
             if( __builtin_add_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during addition");
             }
 
             return result;
@@ -128,7 +129,7 @@ FullRangeInt &FullRangeInt::operator+=( const FullRangeInt &rhs ) {
 
             LongEnoughIntSigned result;
             if( __builtin_add_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during addition");
             }
 
             return result;
@@ -147,7 +148,7 @@ FullRangeInt &FullRangeInt::operator-=( const FullRangeInt &rhs ) {
             if( right>left ) {
                 LongEnoughIntSigned result;
                 if( __builtin_sub_overflow( left, right, &result ) ) {
-                    ABORT() << "TODO implement overflow behavior";
+                    throw std::overflow_error("Overflow during subtraction");
                 }
 
                 return result;
@@ -163,7 +164,7 @@ FullRangeInt &FullRangeInt::operator-=( const FullRangeInt &rhs ) {
 
             LongEnoughIntSigned result;
             if( __builtin_sub_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during subtraction");
             }
 
             return result;
@@ -174,7 +175,7 @@ FullRangeInt &FullRangeInt::operator-=( const FullRangeInt &rhs ) {
 
             LongEnoughInt result;
             if( __builtin_sub_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during subtraction");
             }
 
             return result;
@@ -190,7 +191,7 @@ FullRangeInt &FullRangeInt::operator-=( const FullRangeInt &rhs ) {
 
             LongEnoughIntSigned result;
             if( __builtin_sub_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during subtraction");
             }
 
             return result;
@@ -209,7 +210,7 @@ FullRangeInt &FullRangeInt::operator*=( const FullRangeInt &rhs ) {
             LongEnoughInt result;
 
             if( __builtin_mul_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during multiplication");
             }
 
             return result;
@@ -219,7 +220,7 @@ FullRangeInt &FullRangeInt::operator*=( const FullRangeInt &rhs ) {
             LongEnoughIntSigned result;
 
             if( __builtin_mul_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during multiplication");
             }
 
             return result;
@@ -229,7 +230,7 @@ FullRangeInt &FullRangeInt::operator*=( const FullRangeInt &rhs ) {
             LongEnoughIntSigned result;
 
             if( __builtin_mul_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during multiplication");
             }
 
             return result;
@@ -239,7 +240,7 @@ FullRangeInt &FullRangeInt::operator*=( const FullRangeInt &rhs ) {
             LongEnoughInt result;
 
             if( __builtin_mul_overflow( left, right, &result ) ) {
-                ABORT() << "TODO implement overflow behavior";
+                throw std::overflow_error("Overflow during multiplication");
             }
 
             return result;
