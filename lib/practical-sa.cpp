@@ -18,6 +18,11 @@
 
 namespace PracticalSemanticAnalyzer {
 
+DEF_TYPED( ModuleId );
+DEF_TYPED( IdentifierId );
+DEF_TYPED( TypeId );
+DEF_TYPED( ExpressionId );
+
 std::ostream &operator<<(std::ostream &out, StaticType::Ptr type) {
     auto namedType = lookupTypeId(type->getId());
 

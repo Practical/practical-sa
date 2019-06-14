@@ -29,10 +29,10 @@ namespace PracticalSemanticAnalyzer {
     // Hopefully unique module ID for our typed ids
     static constexpr size_t PracticalSAModuleId = 0xc5489da402dc5a84;
 
-    typedef Typed<unsigned long, 0, PracticalSAModuleId, __LINE__> ModuleId;
-    typedef Typed<unsigned long, 0, PracticalSAModuleId, __LINE__> IdentifierId;
-    typedef Typed<unsigned long, 0, PracticalSAModuleId, __LINE__> TypeId;
-    typedef Typed<unsigned long, 0, PracticalSAModuleId, __LINE__> ExpressionId;
+    DECL_TYPED( ModuleId, unsigned long, 0, PracticalSAModuleId );
+    DECL_TYPED( IdentifierId, unsigned long, 0, PracticalSAModuleId );
+    DECL_TYPED( TypeId, unsigned long, 0, PracticalSAModuleId );
+    DECL_TYPED( ExpressionId, unsigned long, 0, PracticalSAModuleId );
 
     class CompilerArguments {
     public:

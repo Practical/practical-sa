@@ -18,6 +18,7 @@ template <typename Type, Type initValue, size_t module, size_t id>
 class Typed {
     static_assert( std::is_integral<Type>::value, "Typed only works with integral types" );
     Type val = initValue;
+    static const char * const typeName;
 
 public:
     typedef Type UnderlyingType;
@@ -50,7 +51,14 @@ public:
             return Typed(++index);
         }
     };
-};
+
+    static const char *getName() {
+        return typeName;
+    }
+} __attribute__((packed));
+
+#define DECL_TYPED( name, T, init, moduleId ) using name = Typed< T, init, moduleId, __LINE__ >
+#define DEF_TYPED( name ) template<> const char * const name::typeName = #name
 
 namespace std {
     template <typename Type, Type initValue, size_t module, size_t id>
@@ -67,7 +75,18 @@ namespace std {
 
 template<typename T, T init, size_t mod, size_t id>
 std::ostream &operator<<(std::ostream &out, Typed<T, init, mod, id> t) {
-    return out << "Typed(" << t.get() << ")";
+    return out << Typed<T, init, mod, id>::getName() << "(" << t.get() << ")";
+}
+
+// F$(&!@# C++ can't tell uint8_t from char, calls wrong operator<<
+template<uint8_t init, size_t mod, size_t id>
+std::ostream &operator<<(std::ostream &out, Typed<uint8_t, init, mod, id> t) {
+    return out << Typed<uint8_t, init, mod, id>::getName() << "(" << (int)t.get() << ")";
+}
+
+template<int8_t init, size_t mod, size_t id>
+std::ostream &operator<<(std::ostream &out, Typed<int8_t, init, mod, id> t) {
+    return out << Typed<int8_t, init, mod, id>::getName() << "(" << (int)t.get() << ")";
 }
 
 #endif // TYPED_H

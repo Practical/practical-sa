@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstddef>
 #include <iostream>
+#include <type_traits>
 #include <vector>
 
 template <class T>
@@ -108,6 +109,10 @@ public:
         return get();
     }
 
+    T* end() {
+        return get() + size();
+    }
+
     const T* begin() const {
         return get();
     }
@@ -116,6 +121,74 @@ public:
         return get() + size();
     }
 };
+
+template <>
+class Slice<const void> {
+    const void *ptr = nullptr;
+    size_t len = 0;
+
+public:
+    // No ownership, default copy ctr is fine
+    Slice(const Slice &rhs) = default;
+    Slice &operator=(const Slice &rhs) = default;
+    Slice() = default;
+
+    constexpr Slice(const void *ptr, size_t length) : ptr(ptr), len(length) {
+    }
+
+    Slice( const Slice<void> &rhs );
+
+    /* implicit conversion */
+    template<typename T>
+    Slice( const Slice<T> &rhs) : ptr(rhs.get()), len(rhs.size()*sizeof(T)) {
+    }
+
+    // Accessors
+    size_t size() const {
+        return len;
+    }
+
+    const void *get() const {
+        return ptr;
+    }
+};
+
+template <>
+class Slice<void> {
+    void *ptr = nullptr;
+    size_t len = 0;
+
+public:
+    // No ownership, default copy ctr is fine
+    Slice(const Slice &rhs) = default;
+    Slice &operator=(const Slice &rhs) = default;
+    Slice() = default;
+
+    constexpr Slice(void *ptr, size_t length) : ptr(ptr), len(length) {
+    }
+
+    /* implicit conversion */
+    template<typename T>
+    Slice( std::enable_if_t< std::negation_v< std::is_const<T> >, Slice<T> > &rhs) : ptr(rhs.get()), len(rhs.size()*sizeof(T)) {
+    }
+
+    // Accessors
+    size_t size() const {
+        return len;
+    }
+
+    void *get() {
+        return ptr;
+    }
+
+    const void *get() const {
+        return ptr;
+    }
+};
+
+// Slice<const void> constructor can only be fully defined after definition of Slice<void>
+inline Slice<const void>::Slice( const Slice<void> &rhs ) : ptr(rhs.get()), len(rhs.size()) {
+}
 
 template <typename T>
 std::ostream &operator<<( std::ostream &out, const Slice<T> &data ) {
