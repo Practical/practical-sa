@@ -15,4 +15,8 @@ Expression codeGenBinaryOperator(
         AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op);
 
+Expression codeGenUnaryOperator(
+        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        const NonTerminals::Expression::UnaryOperator &op);
+
 #endif // CODEGEN_OPERATORS_H

@@ -58,8 +58,6 @@ private:
     Expression codeGenLiteral(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
     Expression codeGenIdentifierLookup(
             FunctionGen *codeGen, ExpectedType expectedResult, const Tokenizer::Token *identifier);
-    Expression codeGenUnaryOperator(
-            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::UnaryOperator &op);
     Expression codeGenFunctionCall(
             FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::FunctionCall *functionCall);
 

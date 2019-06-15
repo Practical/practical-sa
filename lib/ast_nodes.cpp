@@ -105,7 +105,7 @@ Expression CompoundExpression::codeGenExpression(
         }
 
         ::Expression operator()( const NonTerminals::Expression::UnaryOperator &op ) const {
-            return _this->codeGenUnaryOperator( codeGen, expectedResult, op );
+            return codeGenUnaryOperator( _this, codeGen, expectedResult, op );
         }
 
         ::Expression operator()( const NonTerminals::Expression::BinaryOperator &op ) const {
@@ -200,20 +200,6 @@ Expression CompoundExpression::codeGenIdentifierLookup(
 
     return std::visit(
             Visitor{ .identifier=identifier, .codeGen=codeGen, .expectedResult=expectedResult }, *referencedObject );
-}
-
-Expression CompoundExpression::codeGenUnaryOperator(
-        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::UnaryOperator &op)
-{
-    ASSERT( op.op!=nullptr ) << "Operator codegen called with no operator";
-
-    using namespace Tokenizer;
-    switch( op.op->token ) {
-    case Tokens::OP_PLUS:
-        return codeGenExpression(codeGen, expectedResult, op.operand.get());
-    default:
-        ABORT() << "Code generation for unimplemented unary operator "<<op.op->token<<" at "<<op.op->line<<":"<<op.op->col<<"\n";
-    }
 }
 
 Expression CompoundExpression::codeGenFunctionCall(

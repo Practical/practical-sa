@@ -14,6 +14,38 @@
 
 #include "practical-errors.h"
 
+using Tokenizer::Tokens;
+
+Expression codeGenUnaryPlus(
+        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        const NonTerminals::Expression::UnaryOperator &op)
+{
+    return astExpression->codeGenExpression( codeGen, expectedResult, op.operand.get() );
+}
+
+static const std::unordered_map<
+    Tokens,
+    Expression (*)(
+            AST::CompoundExpression *, FunctionGen *, ExpectedType, const NonTerminals::Expression::UnaryOperator &
+    )
+> unaryOperatorsMap {
+    { Tokens::OP_PLUS, codeGenUnaryPlus },
+};
+
+Expression codeGenUnaryOperator(
+        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        const NonTerminals::Expression::UnaryOperator &op)
+{
+    ASSERT( op.op!=nullptr ) << "Operator codegen called with no operator";
+
+    auto opHandler = unaryOperatorsMap.find( op.op->token );
+    ASSERT( opHandler!=unaryOperatorsMap.end() ) <<
+            "Code generation for unimplemented unary operator "<<op.op->token<<" at "<<op.op->line<<":"<<op.op->col<<
+            "\n";
+
+    return opHandler->second( astExpression, codeGen, expectedResult, op );
+}
+
 static StaticType::Ptr findCommonType(
         const PracticalSemanticAnalyzer::NamedType *type1,
         const PracticalSemanticAnalyzer::NamedType *type2 )
@@ -111,8 +143,6 @@ static Expression codeGenBinaryPlus(
 
     return result;
 }
-
-using Tokenizer::Tokens;
 
 static const std::unordered_map<
     Tokens,
