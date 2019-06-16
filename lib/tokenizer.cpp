@@ -408,3 +408,8 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
     return out;
 #undef CASE
 }
+
+std::ostream &operator<<(std::ostream &out, const Tokenizer::Token &token) {
+    out<<token.token<<" ("<<token.text<<") at "<<token.line<<":"<<token.col;
+    return out;
+}

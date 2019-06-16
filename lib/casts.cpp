@@ -160,6 +160,8 @@ Expression codeGenCast(
         FunctionGen *codeGen, const Expression &sourceExpression, ExpectedType destType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
+    ASSERT( destType )<<"codeGenCast called with no expected result set at "<<expressionSource;
+
     return codeGenCast( codeGen, sourceExpression, destType.type, expressionSource, implicitOnly );
 }
 

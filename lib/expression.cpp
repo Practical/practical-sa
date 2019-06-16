@@ -21,13 +21,16 @@ Expression::Expression( PracticalSemanticAnalyzer::StaticType::Ptr && type ) :
 {
 }
 
-Expression::Expression( Expression && that ) : id(that.id), type( std::move(that.type) ) {
+Expression::Expression( Expression && that ) :
+    id(that.id), type( std::move(that.type) ), valueRange( std::move(that.valueRange) )
+{
     that.id=PracticalSemanticAnalyzer::ExpressionId();
 }
 
 Expression &Expression::operator=( Expression &&that ) {
     id = that.id;
     type = std::move( that.type );
+    valueRange = std::move( that.valueRange );
 
     return *this;
 }

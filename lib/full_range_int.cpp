@@ -457,11 +457,11 @@ bool operator!=( const FullRangeInt &lhs, const FullRangeInt &rhs ) {
 }
 
 bool operator>( const FullRangeInt &lhs, const FullRangeInt &rhs ) {
-    return rhs<=lhs;
+    return rhs<lhs;
 }
 
 bool operator>=( const FullRangeInt &lhs, const FullRangeInt &rhs ) {
-    return rhs<lhs;
+    return rhs<=lhs;
 }
 
 std::ostream &operator<<(std::ostream &out, FullRangeInt i) {

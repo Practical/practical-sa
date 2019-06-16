@@ -105,6 +105,8 @@ namespace PracticalSemanticAnalyzer {
 
         virtual void binaryOperatorPlus(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::Ptr resultType ) = 0;
+        virtual void binaryOperatorMinus(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::Ptr resultType ) = 0;
     };
 
     class ModuleGen {

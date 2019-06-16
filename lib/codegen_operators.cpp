@@ -9,6 +9,7 @@
 #include "codegen_operators.h"
 
 #include "ast.h"
+#include "casts.h"
 #include "dummy_codegen_impl.h"
 #include "tokenizer.h"
 
@@ -144,6 +145,37 @@ static Expression codeGenBinaryPlus(
     return result;
 }
 
+static Expression codeGenBinaryMinus(
+        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        const NonTerminals::Expression::BinaryOperator &op)
+{
+    ExpectedType operandExpectedType( expectedResult );
+    operandExpectedType.mandatory = false;
+
+    Expression leftOperand, rightOperand;
+    binaryOpFindCommonType(astExpression, codeGen, operandExpectedType, op, leftOperand, rightOperand);
+
+    ASSERT( leftOperand.type == rightOperand.type );
+    Expression result( StaticType::Ptr(leftOperand.type) );
+    try {
+        auto leftValueRange = leftOperand.getRange(), rightValueRange = rightOperand.getRange();
+        if( leftValueRange && rightValueRange )
+            result.valueRange = new ValueRange(
+                    leftValueRange->minimum - rightValueRange->maximum,
+                    leftValueRange->maximum - rightValueRange->minimum );
+    } catch( std::overflow_error &err ) {
+        // In case of overflow, leave the range blank (i.e. - maximal)
+    }
+
+    codeGen->binaryOperatorMinus( result.id, leftOperand.id, rightOperand.id, result.type );
+
+    if( expectedResult ) {
+        result = codeGenCast( codeGen, result, expectedResult, *op.op, true );
+    }
+
+    return result;
+}
+
 static const std::unordered_map<
     Tokens,
     Expression (*)(
@@ -151,6 +183,7 @@ static const std::unordered_map<
     )
 > binaryOperatorsMap{
     { Tokens::OP_PLUS, codeGenBinaryPlus },
+    { Tokens::OP_MINUS, codeGenBinaryMinus },
 };
 
 Expression codeGenBinaryOperator(

@@ -175,5 +175,6 @@ private:
 } // namespace Tokenizer
 
 std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token);
+std::ostream &operator<<(std::ostream &out, const Tokenizer::Token &token);
 
 #endif // TOKENIZER_H

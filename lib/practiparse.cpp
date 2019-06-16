@@ -23,10 +23,6 @@ std::ostream &indent( std::ostream &out, size_t depth ) {
     return out;
 }
 
-std::ostream &operator<<( std::ostream &out, const Tokenizer::Token &token ) {
-    out<<token.token<<" ("<<token.text<<") at "<<token.line<<":"<<token.col;
-    return out;
-}
 using namespace NonTerminals;
 
 void dumpParseTree( const NonTerminals::Expression &node, size_t depth=0 );

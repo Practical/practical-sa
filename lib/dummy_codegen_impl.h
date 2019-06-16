@@ -42,6 +42,8 @@ class DummyFunctionGen : public PracticalSemanticAnalyzer::FunctionGen {
 
     virtual void binaryOperatorPlus(
             ExpressionId id, ExpressionId left, ExpressionId right, StaticType::Ptr resultType ) override {}
+    virtual void binaryOperatorMinus(
+            ExpressionId id, ExpressionId left, ExpressionId right, StaticType::Ptr resultType ) override {}
 };
 
 extern DummyFunctionGen dummyFunctionGen;
