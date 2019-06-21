@@ -16,12 +16,12 @@
 
 #include "defines.h"
 
-namespace PracticalSemanticAnalyzer {
+DEF_TYPED_NS( PracticalSemanticAnalyzer, ModuleId );
+DEF_TYPED_NS( PracticalSemanticAnalyzer, IdentifierId );
+DEF_TYPED_NS( PracticalSemanticAnalyzer, TypeId );
+DEF_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId );
 
-DEF_TYPED( ModuleId );
-DEF_TYPED( IdentifierId );
-DEF_TYPED( TypeId );
-DEF_TYPED( ExpressionId );
+namespace PracticalSemanticAnalyzer {
 
 std::ostream &operator<<(std::ostream &out, StaticType::Ptr type) {
     auto namedType = lookupTypeId(type->getId());

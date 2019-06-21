@@ -25,15 +25,14 @@
 using LongEnoughInt = std::uintmax_t;
 using LongEnoughIntSigned = std::intmax_t;
 
+// Hopefully unique module ID for our typed ids
+static constexpr size_t PracticalSAModuleId = 0xc5489da402dc5a84;
+DECL_TYPED_NS( PracticalSemanticAnalyzer, ModuleId, unsigned long, 0, PracticalSAModuleId );
+DECL_TYPED_NS( PracticalSemanticAnalyzer, IdentifierId, unsigned long, 0, PracticalSAModuleId );
+DECL_TYPED_NS( PracticalSemanticAnalyzer, TypeId, unsigned long, 0, PracticalSAModuleId );
+DECL_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId, unsigned long, 0, PracticalSAModuleId );
+
 namespace PracticalSemanticAnalyzer {
-    // Hopefully unique module ID for our typed ids
-    static constexpr size_t PracticalSAModuleId = 0xc5489da402dc5a84;
-
-    DECL_TYPED( ModuleId, unsigned long, 0, PracticalSAModuleId );
-    DECL_TYPED( IdentifierId, unsigned long, 0, PracticalSAModuleId );
-    DECL_TYPED( TypeId, unsigned long, 0, PracticalSAModuleId );
-    DECL_TYPED( ExpressionId, unsigned long, 0, PracticalSAModuleId );
-
     class CompilerArguments {
     public:
     };

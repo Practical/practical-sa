@@ -55,10 +55,26 @@ public:
     static const char *getName() {
         return typeName;
     }
-} __attribute__((packed));
+};
 
-#define DECL_TYPED( name, T, init, moduleId ) using name = Typed< T, init, moduleId, __LINE__ >
+// If declaring the type in the global namespace, use these two macros:
+// In h file:
+#define DECL_TYPED( name, T, init, moduleId ) \
+        using name = Typed< T, init, moduleId, __LINE__ >; \
+        template <> const char * const name::typeName
+// In cpp file:
 #define DEF_TYPED( name ) template<> const char * const name::typeName = #name
+
+// If declaring the type to be a member of the namespace:
+// In h file, outside namespace:
+#define DECL_TYPED_NS( name_space, name, T, init, moduleId ) \
+        namespace name_space { \
+            using name = Typed< T, init, moduleId, __LINE__ >; \
+        } \
+        template <> const char * const name_space::name::typeName
+
+// In cpp file, outside namespace:
+#define DEF_TYPED_NS( name_space, name ) template<> const char * const name_space::name::typeName = #name
 
 namespace std {
     template <typename Type, Type initValue, size_t module, size_t id>
