@@ -26,3 +26,8 @@ Practical is currently in preliminary the implementation effort stage. It does n
 # What's Planned?
 For specifics on the plans for the language, syntax and features, please check out the
 [language's wiki](https://github.com/Practical/practical-sa/wiki).
+
+# Tracking Progress and Community
+You can watch this repository to get minute updates on minor improvements to the language. Announcements on more significant
+milestones will be posted to the announcement forum at https://forum.practical-pl.org. This is also the place to ask questions
+about the language and its details.
