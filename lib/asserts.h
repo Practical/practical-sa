@@ -24,7 +24,7 @@ public:
 
 }
 
-#define ASSERT(cond) if( !(cond) ) (Asserts::LoggerCleanup(std::cerr), std::cerr)<<"Compiler assert failure for " #cond " at " __FILE__ ":" << __LINE__ << " "
-#define ABORT() (Asserts::LoggerCleanup(std::cerr), std::cerr)<<"Compiler aborted at " __FILE__ ":" << __LINE__ << " "
+#define ASSERT(cond) if( !(cond) ) (Asserts::LoggerCleanup(std::cerr), std::cerr)<<"ASSERT failure for " #cond " at " __FILE__ ":" << __LINE__ << " "
+#define ABORT() (Asserts::LoggerCleanup(std::cerr), std::cerr)<<"ABORT at " __FILE__ ":" << __LINE__ << " "
 
 #endif // ASSERTS_H

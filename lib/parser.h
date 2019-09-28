@@ -26,12 +26,20 @@ using namespace PracticalSemanticAnalyzer;
 namespace NonTerminals {
     // Base class for all non-terminals.
     struct NonTerminal {
+    protected:
+        Slice<const Tokenizer::Token> parsedSlice;
+
+    public:
         // This function is not really virtual. It's used this way to force all children to have the same signature
         // Returns how many tokens were consumed
         // Throws parser_error if fails to parse
         virtual size_t parse(Slice<const Tokenizer::Token> source) = 0;
 
         virtual ~NonTerminal() {}
+
+        Slice<const Tokenizer::Token> getNTTokens() const {
+            return parsedSlice;
+        }
     };
 
     struct Identifier : public NonTerminal {
@@ -103,10 +111,15 @@ namespace NonTerminals {
                 Identifier,
                 UnaryOperator,
                 BinaryOperator,
-                FunctionCall
+                FunctionCall,
+                Type
             > value;
+    private:
+        mutable std::unique_ptr<Type> altTypeParse;
 
+    public:
         size_t parse(Slice<const Tokenizer::Token> source) override final;
+        const Type *reparseAsType() const;
 
     private:
         size_t actualParse(Slice<const Tokenizer::Token> source, size_t level);

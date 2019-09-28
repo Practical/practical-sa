@@ -46,6 +46,7 @@ const std::vector< OperatorPriority > operators = {
             { Tokens::OP_LOGIC_NOT, OperatorType::Regular },
             { Tokens::OP_ASTERISK, OperatorType::Regular },    // Pointer dereference
             { Tokens::OP_AMPERSAND, OperatorType::Regular },   // Address of
+            { Tokens::RESERVED_EXPECT, OperatorType::Cast },
         }
     },
     {

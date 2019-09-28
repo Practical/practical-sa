@@ -18,11 +18,12 @@
 namespace AST {
 
 class Type : NoCopy {
-    const NonTerminals::Type *parseType;
+    const NonTerminals::Type *parseType = nullptr;
     StaticType::Ptr staticType;
 
 public:
-    Type(const NonTerminals::Type *nt);
+    explicit Type(const NonTerminals::Type *nt);
+    explicit Type(const NonTerminals::Expression *nt);
 
     StaticType::Ptr getType() const {
         return staticType;

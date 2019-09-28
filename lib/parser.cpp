@@ -29,6 +29,7 @@ static size_t RECURSION_DEPTH;
     RECURSION_DEPTH = RECURSION_CURRENT_DEPTH; \
     for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
     std::cout<<"Leaving " << __PRETTY_FUNCTION__ << " consumed " << tokensConsumed << "\n"; \
+    this->parsedSlice = source.subSlice(0, tokensConsumed); \
     return tokensConsumed
 
 #define EXCEPTION_CAUGHT(ex) \
@@ -39,7 +40,9 @@ static size_t RECURSION_DEPTH;
 #else
 
 #define RULE_ENTER(source) size_t tokensConsumed = 0
-#define RULE_LEAVE() return tokensConsumed
+#define RULE_LEAVE() \
+    this->parsedSlice = source.subslice(0, tokensConsumed); \
+    return tokensConsumed
 #define EXCEPTION_CAUGHT(ex)
 
 #endif
@@ -164,9 +167,45 @@ size_t FunctionArguments::parse(Slice<const Tokenizer::Token> source) {
 size_t Expression::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
-    tokensConsumed = actualParse(source, Operators::operators.size());
+    std::exception_ptr expressionParseError;
+    try {
+        tokensConsumed = actualParse(source, Operators::operators.size());
+        RULE_LEAVE();
+    } catch( parser_error &error ) {
+        expressionParseError = std::current_exception();
+    }
+
+    try {
+        Type *type = &value.emplace<Type>();
+        tokensConsumed = type->parse(source);
+    } catch( parser_error &error ) {
+        // We only tried to parse as type as a hail Mary. If it failed, we want the original error
+        std::rethrow_exception(expressionParseError);
+    }
 
     RULE_LEAVE();
+}
+
+const Type *Expression::reparseAsType() const {
+    const Type *ret = std::get_if<NonTerminals::Type>( &value );
+
+    if( ret!=nullptr ) {
+        return ret;
+    }
+
+    if( !altTypeParse ) {
+        altTypeParse = safenew<NonTerminals::Type>();
+
+        size_t tokensConsumed = altTypeParse->parse( getNTTokens() );
+        if( tokensConsumed != getNTTokens().size() ) {
+            ASSERT( tokensConsumed < getNTTokens().size() ) <<
+                    "Undetected range error during parse: " << tokensConsumed << "<" << getNTTokens().size();
+            const Tokenizer::Token *currentToken = &getNTTokens()[ tokensConsumed ];
+            throw parser_error("Type parsing did not consume entire range", currentToken->line, currentToken->col);
+        }
+    }
+
+    return altTypeParse.get();
 }
 
 size_t Expression::actualParse(Slice<const Tokenizer::Token> source, size_t level) {
@@ -231,16 +270,55 @@ size_t Expression::parsePrefixOp(
 {
     RULE_ENTER(source);
 
-    UnaryOperator &op = value.emplace< UnaryOperator >();
-    op.op = nextToken( source, tokensConsumed, "End of file while looking for operator" );
-    auto operatorInfo = operators.find( op.op->token );
+    const Tokenizer::Token *op =nextToken( source, tokensConsumed, "End of file while looking for operator" );
+
+    auto operatorInfo = operators.find( op->token );
 
     if( operatorInfo!=operators.end() ) {
-        ASSERT( operatorInfo->second==Operators::OperatorType::Regular );
-        // The operator we found is a valid prefix operator for this level
-        op.operand = safenew< Expression >();
-        tokensConsumed += op.operand->parsePrefixOp( source.subslice(tokensConsumed), level, operators );
-        RULE_LEAVE();
+        switch( operatorInfo->second ) {
+        case Operators::OperatorType::Regular:
+            {
+                UnaryOperator &op1 = value.emplace< UnaryOperator >();
+                op1.op = op;
+                // The operator we found is a valid prefix operator for this level
+                op1.operand = safenew< Expression >();
+                tokensConsumed += op1.operand->parsePrefixOp( source.subslice(tokensConsumed), level, operators );
+            }
+            RULE_LEAVE();
+        case Operators::OperatorType::Cast:
+            {
+                BinaryOperator &op2 = value.emplace< BinaryOperator >();
+                op2.op = op;
+                expectToken(
+                        Tokenizer::Tokens::OP_TEMPLATE_EXPAND,
+                        source,
+                        tokensConsumed,
+                        "Cast operator must be followed by `!`",
+                        "End of file looking for cast expression"
+                );
+                op2.operand1 = safenew< Expression >();
+                tokensConsumed += op2.operand1->basicParse( source.subslice(tokensConsumed) );
+                expectToken(
+                        Tokenizer::Tokens::BRACKET_ROUND_OPEN,
+                        source,
+                        tokensConsumed,
+                        "Expected `(` after cast type",
+                        "End of file looking for cast expression"
+                );
+                op2.operand2 = safenew< Expression >();
+                tokensConsumed += op2.operand2->parse( source.subslice( tokensConsumed ) );
+                expectToken(
+                        Tokenizer::Tokens::BRACKET_ROUND_CLOSE,
+                        source,
+                        tokensConsumed,
+                        "Expected ')'",
+                        "End of file looking for terminating ')'"
+                );
+            }
+            RULE_LEAVE();
+        default:
+            ;
+        }
     }
 
     // The use of = instead of += undoes the call to "nextToken" above, as does the use of "source" with no subslicing
@@ -384,6 +462,8 @@ size_t Expression::parsePostfixOp(
             break;
         case Operators::OperatorType::SliceSubscript:
             ABORT() << "TODO implement";
+        case Operators::OperatorType::Cast:
+            ABORT() << "Cast is not a postfix operator";
         }
 
         provisionalTokensConsumed = tokensConsumed;

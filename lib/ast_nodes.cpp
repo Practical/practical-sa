@@ -22,6 +22,9 @@ namespace AST {
 Type::Type(const NonTerminals::Type *nt) : parseType(nt) {
 }
 
+Type::Type(const NonTerminals::Expression *nt) : parseType( nt->reparseAsType() ) {
+}
+
 void Type::symbolsPass2(const LookupContext *ctx) {
     auto type = ctx->lookupType(parseType->type.getName());
     if( type==nullptr )
@@ -114,6 +117,16 @@ Expression CompoundExpression::codeGenExpression(
 
         ::Expression operator()( const NonTerminals::Expression::FunctionCall &functionCall ) const {
             return _this->codeGenFunctionCall(codeGen, expectedResult, &functionCall);
+        }
+
+        ::Expression operator()( const NonTerminals::Type &parseType ) const {
+            ABORT()<<"TODO untested code";
+            auto result = ::Expression( StaticType::Ptr(typeType) );
+            ::AST::Type semanticType( &parseType );
+
+            result.compileTimeValue = semanticType.getType();
+
+            return result;
         }
     };
 

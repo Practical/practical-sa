@@ -149,11 +149,8 @@ static Expression codeGenBinaryMinus(
         AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {
-    ExpectedType operandExpectedType( expectedResult );
-    operandExpectedType.mandatory = false;
-
     Expression leftOperand, rightOperand;
-    binaryOpFindCommonType(astExpression, codeGen, operandExpectedType, op, leftOperand, rightOperand);
+    binaryOpFindCommonType(astExpression, codeGen, expectedResult, op, leftOperand, rightOperand);
 
     ASSERT( leftOperand.type == rightOperand.type );
     Expression result( StaticType::Ptr(leftOperand.type) );
@@ -176,6 +173,21 @@ static Expression codeGenBinaryMinus(
     return result;
 }
 
+static Expression codeGenSafeCast(
+        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        const NonTerminals::Expression::BinaryOperator &op)
+{
+    AST::Type expectedType( op.operand1.get() );
+    expectedType.symbolsPass2( &astExpression->getContext() );
+    ExpectedType castExpectedResult( expectedType.getType(), true );
+
+    // First code-gen the expression with mandatory result in our cast type
+    Expression interimResult = astExpression->codeGenExpression( codeGen, castExpectedResult, op.operand2.get() );
+
+    // Next, implicit cast it to our expected result
+    return codeGenCast( codeGen, interimResult, expectedResult, *op.op, true );
+}
+
 static const std::unordered_map<
     Tokens,
     Expression (*)(
@@ -184,6 +196,7 @@ static const std::unordered_map<
 > binaryOperatorsMap{
     { Tokens::OP_PLUS, codeGenBinaryPlus },
     { Tokens::OP_MINUS, codeGenBinaryMinus },
+    { Tokens::RESERVED_EXPECT, codeGenSafeCast },
 };
 
 Expression codeGenBinaryOperator(

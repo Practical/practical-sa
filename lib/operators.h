@@ -17,7 +17,7 @@
 
 namespace Operators {
 
-enum class OperatorType { Regular, Function, SliceSubscript };
+enum class OperatorType { Regular, Function, SliceSubscript, Cast };
 
 struct OperatorPriority {
     enum class OpKind { Prefix, Infix, InfixRight2Left, Postfix } kind;

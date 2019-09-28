@@ -14,6 +14,7 @@
 #include <sstream>
 
 Expression voidExpression;
+StaticType::Ptr typeType;
 ModuleId::Allocator<> moduleIdAllocator;
 
 namespace AST {
@@ -76,6 +77,10 @@ void AST::prepare()
     RegisterBuiltInType( Void, Void, 0 );
     TypeId VoidTypeId = globalCtx.lookupType( "Void" )->id();
     voidExpression = Expression( StaticType::allocate( VoidTypeId ) );
+
+    RegisterBuiltInType( Type, Type, 0 );
+    TypeId TypeTypeId = globalCtx.lookupType( "Type" )->id();
+    typeType = StaticType::allocate( TypeTypeId );
 
     RegisterBuiltInType( Bool, Boolean, 1 );
 

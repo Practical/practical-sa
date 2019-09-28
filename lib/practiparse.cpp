@@ -25,6 +25,14 @@ std::ostream &indent( std::ostream &out, size_t depth ) {
 
 using namespace NonTerminals;
 
+void dumpIdentifier( const NonTerminals::Identifier &id, size_t depth ) {
+    indent(std::cout, depth) << "Identifier "<<*id.identifier<<"\n";
+}
+
+void dumpType( const NonTerminals::Type &type, size_t depth ) {
+    dumpIdentifier(type.type, depth);
+}
+
 void dumpParseTree( const NonTerminals::Expression &node, size_t depth=0 );
 
 void dumpParseTree( const FunctionArguments &args, size_t depth=0 ) {
@@ -46,7 +54,7 @@ void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
         }
 
         void operator()( const Identifier &id ) {
-            indent(out, depth) << "Identifier "<<*id.identifier<<"\n";
+            dumpIdentifier( id, depth );
         }
 
         void operator()( const NonTerminals::Expression::UnaryOperator &op ) {
@@ -67,6 +75,11 @@ void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
             dumpParseTree( *func.expression, depth+1 );
             indent(out, depth) << "Arguments:\n";
             dumpParseTree( func.arguments, depth+1 );
+        }
+
+        void operator()( const NonTerminals::Type &type ) {
+            indent(out, depth) << "Type:\n";
+            dumpType( type, depth+1 );
         }
     };
 

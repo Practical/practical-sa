@@ -123,7 +123,7 @@ namespace PracticalSemanticAnalyzer {
 
     class NamedType {
     public:
-        enum class Type { Void, Char, UnsignedInteger, SignedInteger, Boolean };
+        enum class Type { Void, Type, Char, UnsignedInteger, SignedInteger, Boolean };
 
         virtual size_t size() const = 0;
         virtual String name() const = 0;

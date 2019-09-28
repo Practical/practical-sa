@@ -65,6 +65,7 @@ enum class Tokens {
     OP_LESS_THAN_EQ,
     OP_LOGIC_AND,
     OP_LOGIC_NOT,
+    OP_TEMPLATE_EXPAND = OP_LOGIC_NOT,
     OP_LOGIC_OR,
     OP_MINUS,
     OP_MINUS_MINUS,
@@ -86,6 +87,7 @@ enum class Tokens {
     // Identifier like
     IDENTIFIER,
     RESERVED_DEF,
+    RESERVED_EXPECT,
 };
 
 struct Token {

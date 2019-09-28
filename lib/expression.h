@@ -41,6 +41,7 @@ struct Expression : private NoCopy {
     PracticalSemanticAnalyzer::ExpressionId id;
     PracticalSemanticAnalyzer::StaticType::Ptr type;
     boost::intrusive_ptr<const ValueRange> valueRange;
+    std::variant<std::monostate, PracticalSemanticAnalyzer::StaticType::Ptr> compileTimeValue;
 
     Expression();
     Expression( PracticalSemanticAnalyzer::StaticType::Ptr && type );

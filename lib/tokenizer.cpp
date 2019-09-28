@@ -85,7 +85,10 @@ static const std::unordered_map<String, Tokens> operators {
     { "//", Tokens::COMMENT_LINE_END },
     { "/*", Tokens::COMMENT_MULTILINE },
 };
-static const std::unordered_map<std::string, Tokens> reservedWords { { "def", Tokens::RESERVED_DEF } };
+static const std::unordered_map<std::string, Tokens> reservedWords {
+    { "def", Tokens::RESERVED_DEF },
+    { "expect", Tokens::RESERVED_EXPECT },
+};
 
 
 bool Tokenizer::next() {
@@ -340,7 +343,7 @@ void Tokenizer::restorePosition(Tokenizer::SavedPoint position) {
 } // namespace Tokenizer
 
 std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
-#define CASE(name) case Tokenizer::Tokens::name: out<<#name; break
+#define CASE(name) case Tokenizer::Tokens::name: out<<#name; return out
     switch(token) {
         CASE(ERR);
         CASE(WS);
@@ -403,7 +406,10 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
         CASE(LITERAL_STRING);
         CASE(IDENTIFIER);
         CASE(RESERVED_DEF);
+        CASE(RESERVED_EXPECT);
     }
+
+    out<<"Tokens("<<static_cast<int>(token)<<")";
 
     return out;
 #undef CASE

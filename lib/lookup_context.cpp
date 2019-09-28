@@ -56,7 +56,7 @@ LookupContext::~LookupContext() {
 
 LookupContext::NamedType *LookupContext::registerType( const Tokenizer::Token *name, NamedType::Type type, size_t size )
 {
-    ASSERT( size>0 || type==NamedType::Type::Void );
+    ASSERT( size>0 || type==NamedType::Type::Void || type==NamedType::Type::Type );
 
     auto emplaceResultName = types.emplace( name->text, NamedType(name, type, size) );
     if( !emplaceResultName.second )
