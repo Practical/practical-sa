@@ -56,6 +56,9 @@ public:
 private:
     void codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement);
     void codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition);
+    Expression codeGenLiteralInt(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
+    Expression codeGenLiteralBool(
+            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal, bool value);
     Expression codeGenLiteral(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
     Expression codeGenIdentifierLookup(
             FunctionGen *codeGen, ExpectedType expectedResult, const Tokenizer::Token *identifier);

@@ -150,7 +150,7 @@ void CompoundExpression::codeGenVarDef(FunctionGen *codeGen, const NonTerminals:
     }
 }
 
-Expression CompoundExpression::codeGenLiteral(
+Expression CompoundExpression::codeGenLiteralInt(
         FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal)
 {
     String text = literal->token.text;
@@ -182,6 +182,44 @@ Expression CompoundExpression::codeGenLiteral(
     codeGen->setLiteral(result.id, resultValue, result.type);
 
     return Expression( std::move(result) );
+}
+
+Expression CompoundExpression::codeGenLiteralBool(
+        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal, bool value)
+{
+    auto boolType = AST::getGlobalCtx().lookupType("Bool");
+    Expression result( StaticType::allocate(boolType->id()) );
+
+    codeGen->setLiteral(result.id, value);
+
+    return Expression( std::move(result) );
+}
+
+Expression CompoundExpression::codeGenLiteral(
+        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal)
+{
+    Expression expression;
+
+    switch( literal->token.token ) {
+    case Tokenizer::Tokens::LITERAL_INT_10:
+    case Tokenizer::Tokens::LITERAL_INT_16:
+    case Tokenizer::Tokens::LITERAL_INT_2:
+        expression = codeGenLiteralInt(codeGen, expectedResult, literal);
+        break;
+    case Tokenizer::Tokens::RESERVED_TRUE:
+        expression = codeGenLiteralBool(codeGen, expectedResult, literal, true);
+        break;
+    case Tokenizer::Tokens::RESERVED_FALSE:
+        expression = codeGenLiteralBool(codeGen, expectedResult, literal, false);
+        break;
+    default:
+        ABORT() << "TODO implement";
+    }
+
+    if( expectedResult )
+        expression = codeGenCast( codeGen, expression, expectedResult, literal->token, true );
+
+    return expression;
 }
 
 Expression CompoundExpression::codeGenIdentifierLookup(

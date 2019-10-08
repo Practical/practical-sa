@@ -25,6 +25,7 @@ class DummyFunctionGen : public PracticalSemanticAnalyzer::FunctionGen {
 
     void returnValue(ExpressionId id) override {}
     void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::Ptr type) override {}
+    void setLiteral(ExpressionId id, bool value) override {}
 
     // The ExpressionId refers to a pointer to the resulting allocated variable
     void allocateStackVar(ExpressionId id, StaticType::Ptr type, String name) override {}

@@ -134,6 +134,8 @@ size_t Literal::parse(Slice<const Tokenizer::Token> source) {
     case Tokenizer::Tokens::LITERAL_INT_16:
     case Tokenizer::Tokens::LITERAL_FP:
     case Tokenizer::Tokens::LITERAL_STRING:
+    case Tokenizer::Tokens::RESERVED_TRUE:
+    case Tokenizer::Tokens::RESERVED_FALSE:
         break;
     default:
         throw parser_error("Invalid expression", currentToken->line, currentToken->col);

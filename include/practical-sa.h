@@ -87,6 +87,7 @@ namespace PracticalSemanticAnalyzer {
 
         virtual void returnValue(ExpressionId id) = 0;
         virtual void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::Ptr type) = 0;
+        virtual void setLiteral(ExpressionId id, bool value) = 0;
 
         // The ExpressionId refers to a pointer to the resulting allocated variable
         virtual void allocateStackVar(ExpressionId id, StaticType::Ptr type, String name) = 0;
