@@ -239,7 +239,7 @@ namespace std {
     template <>
     struct hash< String > {
         constexpr size_t operator()( const String &string ) const {
-            hash< Slice<const char> > realHasher;
+            hash< Slice<const char> > realHasher{};
 
             return realHasher( string );
         }

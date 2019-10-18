@@ -72,6 +72,10 @@ void CompoundExpression::codeGenStatement(FunctionGen *codeGen, const NonTermina
         void operator()(std::monostate mono) {
             ABORT() << "Codegen called on unparsed expression";
         }
+
+        void operator()(const NonTerminals::Statement::ConditionalStatement &condition) {
+            ABORT() << "TODO implement";
+        }
     } visitor = { this, codeGen };
 
     std::visit( visitor, statement->content );

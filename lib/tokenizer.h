@@ -90,6 +90,8 @@ enum class Tokens {
     RESERVED_EXPECT,
     RESERVED_TRUE,
     RESERVED_FALSE,
+    RESERVED_IF,
+    RESERVED_ELSE,
 };
 
 struct Token {

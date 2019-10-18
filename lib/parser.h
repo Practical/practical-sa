@@ -150,7 +150,12 @@ namespace NonTerminals {
     };
 
     struct Statement : public NonTerminal {
-        std::variant<std::monostate, Expression, VariableDefinition> content;
+        struct ConditionalStatement {
+            Expression condition;
+            std::unique_ptr<Statement> ifClause, elseClause;
+        };
+
+        std::variant<std::monostate, Expression, VariableDefinition, ConditionalStatement> content;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };

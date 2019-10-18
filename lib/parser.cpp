@@ -29,7 +29,7 @@ static size_t RECURSION_DEPTH;
     RECURSION_DEPTH = RECURSION_CURRENT_DEPTH; \
     for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
     std::cout<<"Leaving " << __PRETTY_FUNCTION__ << " consumed " << tokensConsumed << "\n"; \
-    this->parsedSlice = source.subSlice(0, tokensConsumed); \
+    this->parsedSlice = source.subslice(0, tokensConsumed); \
     return tokensConsumed
 
 #define EXCEPTION_CAUGHT(ex) \
@@ -77,8 +77,11 @@ static const Tokenizer::Token *nextToken(Slice<const Tokenizer::Token> source, s
 
 static const Tokenizer::Token &expectToken(
         Tokenizer::Tokens expected, Slice<const Tokenizer::Token> source, size_t &index, const char *mismatchMsg,
-        const char *eofMsg)
+        const char *eofMsg = nullptr)
 {
+    if( eofMsg==nullptr )
+        eofMsg=mismatchMsg;
+
     const Tokenizer::Token *currentToken = nextToken( source, index, eofMsg );
     ASSERT( currentToken!=nullptr ) << "Unexpected EOF condition when searching for token";
 
@@ -174,6 +177,7 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source) {
         tokensConsumed = actualParse(source, Operators::operators.size());
         RULE_LEAVE();
     } catch( parser_error &error ) {
+        EXCEPTION_CAUGHT(error);
         expressionParseError = std::current_exception();
     }
 
@@ -181,6 +185,7 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source) {
         Type *type = &value.emplace<Type>();
         tokensConsumed = type->parse(source);
     } catch( parser_error &error ) {
+        EXCEPTION_CAUGHT(error);
         // We only tried to parse as type as a hail Mary. If it failed, we want the original error
         std::rethrow_exception(expressionParseError);
     }
@@ -259,6 +264,7 @@ size_t Expression::basicParse(Slice<const Tokenizer::Token> source) {
 
         RULE_LEAVE();
     } catch( parser_error &err ) {
+        EXCEPTION_CAUGHT(err);
     }
 
     // Or maybe a Literal
@@ -516,6 +522,27 @@ size_t VariableDefinition::parse(Slice<const Tokenizer::Token> source) {
 
 size_t Statement::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
+
+    if( wishForToken(Tokenizer::Tokens::RESERVED_IF, source, tokensConsumed) ) {
+        ConditionalStatement condition;
+
+        expectToken( Tokenizer::Tokens::BRACKET_ROUND_OPEN, source, tokensConsumed, "Expecting '(' after if" );
+        tokensConsumed += condition.condition.parse( source.subslice(tokensConsumed) );
+        expectToken( Tokenizer::Tokens::BRACKET_ROUND_CLOSE, source, tokensConsumed, "Expecting ')' at end of condition" );
+
+        condition.ifClause = safenew<Statement>();
+        tokensConsumed += condition.ifClause->parse( source.subslice(tokensConsumed) );
+
+        if( wishForToken(Tokenizer::Tokens::RESERVED_ELSE, source, tokensConsumed) ) {
+            condition.elseClause = safenew<Statement>();
+            tokensConsumed += condition.elseClause->parse( source.subslice(tokensConsumed) );
+        }
+
+        content = std::move( condition );
+
+        RULE_LEAVE();
+    }
+
     try {
         Expression expression;
         tokensConsumed = expression.parse(source);
