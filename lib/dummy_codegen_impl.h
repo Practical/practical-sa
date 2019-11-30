@@ -15,6 +15,7 @@ using PracticalSemanticAnalyzer::ArgumentDeclaration;
 using PracticalSemanticAnalyzer::ExpressionId;
 using PracticalSemanticAnalyzer::IdentifierId;
 using PracticalSemanticAnalyzer::StaticType;
+using PracticalSemanticAnalyzer::JumpPointId;
 
 class DummyFunctionGen : public PracticalSemanticAnalyzer::FunctionGen {
     void functionEnter(
@@ -24,6 +25,11 @@ class DummyFunctionGen : public PracticalSemanticAnalyzer::FunctionGen {
     void functionLeave(IdentifierId id) override {}
 
     void returnValue(ExpressionId id) override {}
+    virtual void branch(
+            ExpressionId id, ExpressionId conditionExpression, JumpPointId elsePoint, JumpPointId continuationPoint
+        ) override {}
+    virtual void setJumpPoint(JumpPointId id, String name) override {}
+    virtual void jump(JumpPointId destination) override {}
     void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::Ptr type) override {}
     void setLiteral(ExpressionId id, bool value) override {}
 

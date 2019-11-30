@@ -20,6 +20,7 @@ DEF_TYPED_NS( PracticalSemanticAnalyzer, ModuleId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, IdentifierId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, TypeId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId );
+DEF_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId );
 
 namespace PracticalSemanticAnalyzer {
 

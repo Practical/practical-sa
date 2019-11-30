@@ -31,6 +31,7 @@ DECL_TYPED_NS( PracticalSemanticAnalyzer, ModuleId, unsigned long, 0, PracticalS
 DECL_TYPED_NS( PracticalSemanticAnalyzer, IdentifierId, unsigned long, 0, PracticalSAModuleId );
 DECL_TYPED_NS( PracticalSemanticAnalyzer, TypeId, unsigned long, 0, PracticalSAModuleId );
 DECL_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId, unsigned long, 0, PracticalSAModuleId );
+DECL_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId, unsigned long, 0, PracticalSAModuleId );
 
 namespace PracticalSemanticAnalyzer {
     class CompilerArguments {
@@ -80,12 +81,27 @@ namespace PracticalSemanticAnalyzer {
     /// Callbacks used by the semantic analyzer to allow the SA user to actually generate code
     class FunctionGen {
     public:
+        // Function handling
         virtual void functionEnter(
                 IdentifierId id, String name, StaticType::Ptr returnType, Slice<const ArgumentDeclaration> arguments,
                 String file, size_t line, size_t col) = 0;
         virtual void functionLeave(IdentifierId id) = 0;
 
         virtual void returnValue(ExpressionId id) = 0;
+
+        // Flow control
+
+        // If id==ExpressionId(), then the code gen SHOULD assume that the result of the expression is never used.
+        // If elsePoint==JumpPointId(), there is no else clause.
+        // practical-sa will generate the jump points, but will not generate the jumps. It is up to the code generation
+        // to use the jump points to identify the code flow.
+        virtual void branch(
+                ExpressionId id, ExpressionId conditionExpression, JumpPointId elsePoint, JumpPointId continuationPoint
+            ) = 0;
+        virtual void setJumpPoint(JumpPointId id, String name = String()) = 0;
+        virtual void jump(JumpPointId destination) = 0;
+
+        // Litarals
         virtual void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::Ptr type) = 0;
         virtual void setLiteral(ExpressionId id, bool value) = 0;
 
@@ -94,6 +110,7 @@ namespace PracticalSemanticAnalyzer {
         virtual void assign( ExpressionId lvalue, ExpressionId rvalue ) = 0;
         virtual void dereferencePointer( ExpressionId id, StaticType::Ptr type, ExpressionId addr ) = 0;
 
+        // Casts
         virtual void truncateInteger(
                 ExpressionId id, ExpressionId source, StaticType::Ptr sourceType, StaticType::Ptr destType ) = 0;
         virtual void expandIntegerSigned(
@@ -103,6 +120,7 @@ namespace PracticalSemanticAnalyzer {
         virtual void callFunctionDirect(
                 ExpressionId id, String name, Slice<const ExpressionId> arguments, StaticType::Ptr returnType ) = 0;
 
+        // Binary operators
         virtual void binaryOperatorPlus(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::Ptr resultType ) = 0;
         virtual void binaryOperatorMinus(

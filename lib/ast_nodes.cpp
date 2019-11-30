@@ -19,6 +19,8 @@ using PracticalSemanticAnalyzer::CannotTakeValueOfFunction;
 
 namespace AST {
 
+static JumpPointId::Allocator<> jumpPointAllocator;
+
 Type::Type(const NonTerminals::Type *nt) : parseType(nt) {
 }
 
@@ -74,7 +76,7 @@ void CompoundExpression::codeGenStatement(FunctionGen *codeGen, const NonTermina
         }
 
         void operator()(const NonTerminals::Statement::ConditionalStatement &condition) {
-            ABORT() << "TODO implement";
+            _this->codeGenCondition(codeGen, &condition);
         }
     } visitor = { this, codeGen };
 
@@ -152,6 +154,32 @@ void CompoundExpression::codeGenVarDef(FunctionGen *codeGen, const NonTerminals:
     } else {
         ABORT() << "TODO Type default values not yet implemented";
     }
+}
+
+void CompoundExpression::codeGenCondition(
+        FunctionGen *codeGen, const NonTerminals::Statement::ConditionalStatement *condition)
+{
+    auto boolNamedType = AST::getGlobalCtx().lookupType("Bool");
+    StaticType::Ptr boolType = StaticType::allocate( boolNamedType->id() );
+    Expression conditionExpression = codeGenExpression( codeGen, ExpectedType(boolType), &condition->condition );
+
+    ASSERT( condition->ifClause )<<"Condition with no parsed \"if\" clause";
+
+    // TODO Use VRP to only generate the side of the condition actually taken
+    JumpPointId elseJumpPoint, contJumpPoint{ jumpPointAllocator.allocate() };
+    if( condition->elseClause ) {
+        elseJumpPoint = jumpPointAllocator.allocate();
+    }
+    codeGen->branch(ExpressionId(), conditionExpression.id, elseJumpPoint, contJumpPoint);
+
+    codeGenStatement( codeGen, condition->ifClause.get() );
+
+    if( condition->elseClause ) {
+        codeGen->setJumpPoint( elseJumpPoint );
+        codeGenStatement( codeGen, condition->elseClause.get() );
+    }
+
+    codeGen->setJumpPoint( contJumpPoint );
 }
 
 Expression CompoundExpression::codeGenLiteralInt(
