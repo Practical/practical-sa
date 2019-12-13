@@ -11,6 +11,7 @@
 
 #include "expected_type.h"
 #include "expression.h"
+#include "lookup_context.h"
 #include "parser.h"
 
 #include <deque>

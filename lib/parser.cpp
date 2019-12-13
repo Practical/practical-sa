@@ -8,107 +8,13 @@
  */
 #include "parser.h"
 
+#include "parser_internal.h"
 #include "practical-errors.h"
 #include "scope_tracing.h"
 
+using namespace InternalNonTerminals;
+
 namespace NonTerminals {
-
-#if VERBOSE_PARSING
-static size_t RECURSION_DEPTH;
-
-#define RULE_ENTER(source) \
-    size_t RECURSION_CURRENT_DEPTH = RECURSION_DEPTH++; \
-    for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
-    if( source.size()>0 ) \
-        std::cout<<"Processing " << __PRETTY_FUNCTION__ << " of " << source[0].token << " at " << source[0].line << ":" << source[0].col << "\n" ;\
-    else\
-        std::cout<<"Processing " << __PRETTY_FUNCTION__ << " at EOF\n" ;\
-    size_t tokensConsumed = 0
-
-#define RULE_LEAVE() \
-    RECURSION_DEPTH = RECURSION_CURRENT_DEPTH; \
-    for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
-    std::cout<<"Leaving " << __PRETTY_FUNCTION__ << " consumed " << tokensConsumed << "\n"; \
-    this->parsedSlice = source.subslice(0, tokensConsumed); \
-    return tokensConsumed
-
-#define EXCEPTION_CAUGHT(ex) \
-    RECURSION_DEPTH = RECURSION_CURRENT_DEPTH + 1; \
-    for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
-    std::cout<< __PRETTY_FUNCTION__ << " caught " << ex.what() << "\n"
-
-#else
-
-#define RULE_ENTER(source) size_t tokensConsumed = 0
-#define RULE_LEAVE() \
-    this->parsedSlice = source.subslice(0, tokensConsumed); \
-    return tokensConsumed
-#define EXCEPTION_CAUGHT(ex)
-
-#endif
-
-static bool skipWS(Slice<const Tokenizer::Token> source, size_t &index) {
-    bool moved = false;
-
-    while( index<source.size() &&
-            (source[index].token == Tokenizer::Tokens::WS || source[index].token == Tokenizer::Tokens::COMMENT_LINE_END ||
-             source[index].token == Tokenizer::Tokens::COMMENT_MULTILINE) )
-    {
-        index++;
-        moved = true;
-    }
-
-    return moved;
-}
-
-// Consumes the next token, optionally reporting EOF
-static const Tokenizer::Token *nextToken(Slice<const Tokenizer::Token> source, size_t &index, const char *msg = nullptr) {
-    skipWS(source, index);
-
-    if( index==source.size() ) {
-        if( msg==nullptr )
-            return nullptr;
-        else
-            throw parser_error(msg, 0, 0);
-    }
-
-    return &source[index++];
-}
-
-static const Tokenizer::Token &expectToken(
-        Tokenizer::Tokens expected, Slice<const Tokenizer::Token> source, size_t &index, const char *mismatchMsg,
-        const char *eofMsg = nullptr)
-{
-    if( eofMsg==nullptr )
-        eofMsg=mismatchMsg;
-
-    const Tokenizer::Token *currentToken = nextToken( source, index, eofMsg );
-    ASSERT( currentToken!=nullptr ) << "Unexpected EOF condition when searching for token";
-
-    if( currentToken->token!=expected ) {
-        index--;
-        throw parser_error(mismatchMsg, currentToken->line, currentToken->col);
-    }
-
-    return *currentToken;
-}
-
-bool wishForToken(Tokenizer::Tokens expected, Slice<const Tokenizer::Token> source, size_t &index) {
-    size_t indexCopy = index;
-    skipWS( source, indexCopy );
-
-    if( indexCopy>=source.size() ) {
-        return false;
-    }
-
-    if( source[indexCopy].token == expected ) {
-        index = indexCopy + 1;
-
-        return true;
-    }
-
-    return false;
-}
 
 size_t Identifier::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
@@ -588,19 +494,10 @@ size_t StatementList::parse(Slice<const Tokenizer::Token> source) {
 size_t CompoundExpression::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
-    expectToken( Tokenizer::Tokens::BRACKET_CURLY_OPEN, source, tokensConsumed, "Expected {",
-            "EOF while parsing compound statement" );
+    CompoundExpressionOrStatement compound;
+    tokensConsumed = compound.parseExpression(source);
 
-    tokensConsumed += statementList.parse(source.subslice(tokensConsumed));
-
-    try {
-        tokensConsumed += expression.parse(source.subslice(tokensConsumed));
-    } catch( parser_error &err ) {
-        EXCEPTION_CAUGHT(err);
-    }
-
-    expectToken( Tokenizer::Tokens::BRACKET_CURLY_CLOSE, source, tokensConsumed, "Expected }",
-            "Unmatched {" );
+    *this = compound.removeExpression();
 
     RULE_LEAVE();
 }

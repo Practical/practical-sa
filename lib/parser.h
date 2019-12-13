@@ -11,7 +11,6 @@
 
 #include "asserts.h"
 #include "defines.h"
-#include "lookup_context.h"
 #include "operators.h"
 #include "practical-sa.h"
 #include "slice.h"
@@ -118,6 +117,20 @@ namespace NonTerminals {
         mutable std::unique_ptr<Type> altTypeParse;
 
     public:
+        Expression() {}
+        Expression( Expression &&that ) : value( std::move(that.value) ), altTypeParse( std::move(that.altTypeParse) )
+        {}
+        Expression &operator=( Expression &&that ) {
+            value = std::move( that.value );
+            altTypeParse = std::move( that.altTypeParse );
+
+            return *this;
+        }
+
+        explicit Expression( std::unique_ptr<CompoundExpression> &&compoundExpression ) :
+            value( std::move(compoundExpression) )
+        {}
+
         size_t parse(Slice<const Tokenizer::Token> source) override final;
         const Type *reparseAsType() const;
 
@@ -149,13 +162,27 @@ namespace NonTerminals {
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
+    struct CompoundStatement;
+
     struct Statement : public NonTerminal {
         struct ConditionalStatement {
             Expression condition;
             std::unique_ptr<Statement> ifClause, elseClause;
         };
 
-        std::variant<std::monostate, Expression, VariableDefinition, ConditionalStatement> content;
+        Statement() {}
+        explicit Statement( std::unique_ptr<CompoundStatement> &&compoundStatement ) :
+            content( std::move(compoundStatement) )
+        {}
+        explicit Statement( Expression &&expression ) : content( std::move(expression) ) {}
+
+        std::variant<
+                std::monostate,
+                Expression,
+                VariableDefinition,
+                ConditionalStatement,
+                std::unique_ptr<CompoundStatement>
+            > content;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
@@ -172,8 +199,30 @@ namespace NonTerminals {
 
         CompoundExpression() {
         }
+        CompoundExpression( StatementList &&statements, Expression &&expression ) :
+            statementList( std::move(statements) ),
+            expression( std::move(expression) )
+        {}
+        CompoundExpression( CompoundExpression &&that ) :
+            statementList( std::move(that.statementList) ),
+            expression( std::move(that.expression) )
+        {}
+
+        CompoundExpression &operator=( CompoundExpression &&that ) {
+            statementList = std::move( that.statementList );
+            expression = std::move( that.expression );
+
+            return *this;
+        }
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
+    };
+
+    struct CompoundStatement {
+        StatementList statements;
+
+        CompoundStatement() {}
+        CompoundStatement( StatementList &&statements ) : statements( std::move(statements) ) {}
     };
 
     struct FuncDeclRet : public NonTerminal {
@@ -215,6 +264,7 @@ namespace NonTerminals {
 
         FuncDef() : body{} {
         }
+        FuncDef( FuncDef &&that ) : decl( std::move(that.decl) ), body( std::move(that.body) ) {}
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
 

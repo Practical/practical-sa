@@ -3,7 +3,7 @@ bin_PROGRAMS = practiparse
 noinst_PROGRAMS = practical-sa-ut
 
 libpractical_sa_la_LDFLAGS = -version-info 0:0:0
-libpractical_sa_la_SOURCES = practical-sa.cpp tokenizer.cpp parser.cpp scope_tracing.cpp lookup_context.cpp ast.cpp ast_nodes.cpp \
+libpractical_sa_la_SOURCES = practical-sa.cpp tokenizer.cpp parser.cpp parser_internal.cpp scope_tracing.cpp lookup_context.cpp ast.cpp ast_nodes.cpp \
 			     practical-errors.cpp casts.cpp dummy_codegen_impl.cpp operators.cpp expression.cpp codegen_operators.cpp \
 			     full_range_int.cpp
 

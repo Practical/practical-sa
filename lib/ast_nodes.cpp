@@ -78,6 +78,10 @@ void CompoundExpression::codeGenStatement(FunctionGen *codeGen, const NonTermina
         void operator()(const NonTerminals::Statement::ConditionalStatement &condition) {
             _this->codeGenCondition(codeGen, &condition);
         }
+
+        void operator()(const std::unique_ptr<NonTerminals::CompoundStatement> &statement) {
+            ABORT()<<"TODO: Implement";
+        }
     } visitor = { this, codeGen };
 
     std::visit( visitor, statement->content );
