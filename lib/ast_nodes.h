@@ -42,7 +42,31 @@ class CompoundExpression : NoCopy {
     const NonTerminals::CompoundExpression *parserExpression;
 
 public:
-    CompoundExpression(LookupContext *parentCtx, const NonTerminals::CompoundExpression *_parserExpression);
+    CompoundExpression(LookupContext *parentCtx, const NonTerminals::CompoundExpression *nt);
+
+    void symbolsPass1();
+    void symbolsPass2();
+    Expression codeGen(FunctionGen *codeGen, ExpectedType expectedResult);
+};
+
+class CompoundStatement : NoCopy {
+    LookupContext ctx;
+    const NonTerminals::CompoundStatement *parserStatement;
+
+public:
+    CompoundStatement(LookupContext *parentCtx, const NonTerminals::CompoundStatement *nt);
+
+    void symbolsPass1();
+    void symbolsPass2();
+    void codeGen(FunctionGen *codeGen);
+};
+
+class CompoundExpressionOrStatement : NoCopy {
+    LookupContext ctx;
+    std::variant< const NonTerminals::CompoundExpression *, const NonTerminals::CompoundStatement * > parserExpression;
+
+public:
+    CompoundExpression(LookupContext *parentCtx, const NonTerminals::FuncDef *funcDef);
 
     void symbolsPass1();
     void symbolsPass2();
@@ -54,19 +78,6 @@ public:
     const LookupContext &getContext() const {
         return ctx;
     }
-private:
-    void codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement);
-    void codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition);
-    void codeGenCondition(FunctionGen *codeGen, const NonTerminals::Statement::ConditionalStatement *condition);
-    Expression codeGenLiteralInt(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
-    Expression codeGenLiteralBool(
-            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal, bool value);
-    Expression codeGenLiteral(FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal);
-    Expression codeGenIdentifierLookup(
-            FunctionGen *codeGen, ExpectedType expectedResult, const Tokenizer::Token *identifier);
-    Expression codeGenFunctionCall(
-            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::FunctionCall *functionCall);
-
 };
 
 class FuncDecl : NoCopy {
@@ -104,7 +115,7 @@ class FuncDef : NoCopy {
     PracticalSemanticAnalyzer::IdentifierId id;
 
     FuncDecl declaration;
-    CompoundExpression body;
+    std::variant<std::monostate, CompoundExpression, CompoundStatement> body;
 public:
     FuncDef(const NonTerminals::FuncDef *nt, LookupContext *ctx, LookupContext::Function *ctxFunction);
 

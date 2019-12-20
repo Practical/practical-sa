@@ -77,6 +77,15 @@ void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
             dumpParseTree( func.arguments, depth+1 );
         }
 
+        void operator()( const std::unique_ptr<NonTerminals::ConditionalExpression> &condition ) {
+            indent(out, depth) << "Condition expression:\n";
+            dumpParseTree( condition->condition, depth+1 );
+            indent(out, depth) << "If clause:\n";
+            dumpParseTree( condition->ifClause, depth+1 );
+            indent(out, depth) << "Else clause:\n";
+            dumpParseTree( condition->elseClause, depth+1 );
+        }
+
         void operator()( const NonTerminals::Type &type ) {
             indent(out, depth) << "Type:\n";
             dumpType( type, depth+1 );

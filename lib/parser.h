@@ -88,12 +88,8 @@ namespace NonTerminals {
 
     struct CompoundExpression;
 
+    struct ConditionalExpression;
     struct Expression : public NonTerminal {
-        struct FunctionCall {
-            std::unique_ptr<Expression> expression;
-            FunctionArguments arguments;
-        };
-
         struct UnaryOperator {
             const Tokenizer::Token *op;
             std::unique_ptr<Expression> operand;
@@ -104,6 +100,11 @@ namespace NonTerminals {
             std::unique_ptr<Expression> operand1, operand2;
         };
 
+        struct FunctionCall {
+            std::unique_ptr<Expression> expression;
+            FunctionArguments arguments;
+        };
+
         std::variant<
                 std::unique_ptr<::NonTerminals::CompoundExpression>,
                 ::NonTerminals::Literal,
@@ -111,6 +112,7 @@ namespace NonTerminals {
                 UnaryOperator,
                 BinaryOperator,
                 FunctionCall,
+                std::unique_ptr<ConditionalExpression>,
                 Type
             > value;
     private:
@@ -147,6 +149,12 @@ namespace NonTerminals {
         size_t parsePostfixOp(
                 Slice<const Tokenizer::Token> source, size_t level, const Operators::OperatorPriority::OperatorsMap &operators);
     };
+
+    struct ConditionalExpression {
+        Expression condition;
+        Expression ifClause, elseClause;
+    };
+
 
     struct VariableDeclBody : public NonTerminal {
         Identifier name;
@@ -260,7 +268,7 @@ namespace NonTerminals {
 
     struct FuncDef : public NonTerminal {
         FuncDeclBody decl;
-        CompoundExpression body;
+        std::variant<std::monostate, CompoundExpression, CompoundStatement> body;
 
         FuncDef() : body{} {
         }

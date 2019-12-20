@@ -10,6 +10,7 @@
 
 #include "ast.h"
 #include "casts.h"
+#include "codegen.h"
 #include "dummy_codegen_impl.h"
 #include "tokenizer.h"
 
@@ -17,24 +18,26 @@
 
 using Tokenizer::Tokens;
 
+namespace CodeGen {
+
 Expression codeGenUnaryPlus(
-        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::UnaryOperator &op)
 {
-    return astExpression->codeGenExpression( codeGen, expectedResult, op.operand.get() );
+    return codeGenExpression( ctx, codeGen, expectedResult, op.operand.get() );
 }
 
 static const std::unordered_map<
     Tokens,
     Expression (*)(
-            AST::CompoundExpression *, FunctionGen *, ExpectedType, const NonTerminals::Expression::UnaryOperator &
+            LookupContext &, FunctionGen *, ExpectedType, const NonTerminals::Expression::UnaryOperator &
     )
 > unaryOperatorsMap {
     { Tokens::OP_PLUS, codeGenUnaryPlus },
 };
 
 Expression codeGenUnaryOperator(
-        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::UnaryOperator &op)
 {
     ASSERT( op.op!=nullptr ) << "Operator codegen called with no operator";
@@ -44,7 +47,7 @@ Expression codeGenUnaryOperator(
             "Code generation for unimplemented unary operator "<<op.op->token<<" at "<<op.op->line<<":"<<op.op->col<<
             "\n";
 
-    return opHandler->second( astExpression, codeGen, expectedResult, op );
+    return opHandler->second( ctx, codeGen, expectedResult, op );
 }
 
 static StaticType::Ptr findCommonType(
@@ -87,7 +90,7 @@ static StaticType::Ptr findCommonType(
 }
 
 static ExpectedType findCommonType(
-        const Tokenizer::Token *op, const LookupContext &ctx, const Expression &expr1, const Expression &expr2 )
+        const Tokenizer::Token *op, LookupContext &ctx, const Expression &expr1, const Expression &expr2 )
 {
     if( expr1.type == expr2.type )
         return ExpectedType( expr1.type );
@@ -104,7 +107,7 @@ static ExpectedType findCommonType(
 }
 
 static void binaryOpFindCommonType(
-        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op, Expression &leftOperand, Expression &rightOperand
         )
 {
@@ -113,21 +116,21 @@ static void binaryOpFindCommonType(
 
         // TODO: the recursion here has potential to re-calculate the same subtrees many times. Implement cache to speed
         // things up.
-        leftOperand = astExpression->codeGenExpression( &dummyFunctionGen, expectedResult, op.operand1.get() );
-        rightOperand = astExpression->codeGenExpression( &dummyFunctionGen, expectedResult, op.operand2.get() );
-        expectedResult = findCommonType( op.op, astExpression->getContext(), leftOperand, rightOperand );
+        leftOperand = codeGenExpression( ctx, &dummyFunctionGen, expectedResult, op.operand1.get() );
+        rightOperand = codeGenExpression( ctx, &dummyFunctionGen, expectedResult, op.operand2.get() );
+        expectedResult = findCommonType( op.op, ctx, leftOperand, rightOperand );
     }
 
-    leftOperand = astExpression->codeGenExpression( codeGen, expectedResult, op.operand1.get() );
-    rightOperand = astExpression->codeGenExpression( codeGen, expectedResult, op.operand2.get() );
+    leftOperand = codeGenExpression( ctx, codeGen, expectedResult, op.operand1.get() );
+    rightOperand = codeGenExpression( ctx, codeGen, expectedResult, op.operand2.get() );
 }
 
 static Expression codeGenBinaryPlus(
-        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {
     Expression leftOperand, rightOperand;
-    binaryOpFindCommonType(astExpression, codeGen, expectedResult, op, leftOperand, rightOperand);
+    binaryOpFindCommonType(ctx, codeGen, expectedResult, op, leftOperand, rightOperand);
 
     ASSERT( leftOperand.type == rightOperand.type );
     Expression result( StaticType::Ptr(leftOperand.type) );
@@ -146,11 +149,11 @@ static Expression codeGenBinaryPlus(
 }
 
 static Expression codeGenBinaryMinus(
-        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {
     Expression leftOperand, rightOperand;
-    binaryOpFindCommonType(astExpression, codeGen, expectedResult, op, leftOperand, rightOperand);
+    binaryOpFindCommonType(ctx, codeGen, expectedResult, op, leftOperand, rightOperand);
 
     ASSERT( leftOperand.type == rightOperand.type );
     Expression result( StaticType::Ptr(leftOperand.type) );
@@ -174,15 +177,15 @@ static Expression codeGenBinaryMinus(
 }
 
 static Expression codeGenSafeCast(
-        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {
     AST::Type expectedType( op.operand1.get() );
-    expectedType.symbolsPass2( &astExpression->getContext() );
+    expectedType.symbolsPass2( &ctx );
     ExpectedType castExpectedResult( expectedType.getType(), true );
 
     // First code-gen the expression with mandatory result in our cast type
-    Expression interimResult = astExpression->codeGenExpression( codeGen, castExpectedResult, op.operand2.get() );
+    Expression interimResult = codeGenExpression( ctx, codeGen, castExpectedResult, op.operand2.get() );
 
     // Next, implicit cast it to our expected result
     return codeGenCast( codeGen, interimResult, expectedResult, *op.op, true );
@@ -191,7 +194,7 @@ static Expression codeGenSafeCast(
 static const std::unordered_map<
     Tokens,
     Expression (*)(
-            AST::CompoundExpression *, FunctionGen *, ExpectedType, const NonTerminals::Expression::BinaryOperator &
+            LookupContext &, FunctionGen *, ExpectedType, const NonTerminals::Expression::BinaryOperator &
     )
 > binaryOperatorsMap{
     { Tokens::OP_PLUS, codeGenBinaryPlus },
@@ -200,7 +203,7 @@ static const std::unordered_map<
 };
 
 Expression codeGenBinaryOperator(
-        AST::CompoundExpression *astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
+        LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {
     ASSERT( op.op!=nullptr ) << "Operator codegen called with no operator";
@@ -210,5 +213,7 @@ Expression codeGenBinaryOperator(
             "Code generation for unimplemented binary operator "<<op.op->token<<" at "<<op.op->line<<":"<<op.op->col<<
             "\n";
 
-    return opHandler->second( astExpression, codeGen, expectedResult, op );
+    return opHandler->second( ctx, codeGen, expectedResult, op );
 }
+
+} // end namespace CodeGen

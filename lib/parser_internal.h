@@ -66,6 +66,20 @@ namespace InternalNonTerminals {
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
+    struct ConditionalExpressionOrStatement : public NonTerminal {
+        std::variant<
+                std::monostate,
+                std::unique_ptr<ConditionalExpression>,
+                std::unique_ptr<Statement::ConditionalStatement>
+            > condition;
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+
+        bool isStatement() const;
+        CompoundExpression removeExpression();
+        CompoundStatement removeStatement();
+    };
+
     struct CompoundExpressionOrStatement : public NonTerminal {
         std::variant<std::monostate, CompoundExpression, CompoundStatement> content;
 

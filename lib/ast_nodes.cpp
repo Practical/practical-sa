@@ -9,17 +9,17 @@
 #include "ast_nodes.h"
 
 #include "ast.h"
-#include "casts.h"
-#include "codegen_operators.h"
+#include "codegen.h"
 #include "practical-errors.h"
 
 #include "asserts.h"
 
+#include <variant>
+
 using PracticalSemanticAnalyzer::CannotTakeValueOfFunction;
+using namespace CodeGen;
 
 namespace AST {
-
-static JumpPointId::Allocator<> jumpPointAllocator;
 
 Type::Type(const NonTerminals::Type *nt) : parseType(nt) {
 }
@@ -36,8 +36,8 @@ void Type::symbolsPass2(const LookupContext *ctx) {
     staticType = StaticType::allocate( type->id() );
 }
 
-CompoundExpression::CompoundExpression(LookupContext *parentCtx, const NonTerminals::CompoundExpression *_parserExpresison)
-    : ctx(parentCtx), parserExpression(_parserExpresison)
+CompoundExpression::CompoundExpression(LookupContext *parentCtx, const NonTerminals::CompoundExpression *_parserExpression)
+    : ctx(parentCtx), parserExpression(_parserExpression)
 {
 }
 
@@ -51,281 +51,10 @@ void CompoundExpression::symbolsPass2() {
 
 Expression CompoundExpression::codeGen(FunctionGen *codeGen, ExpectedType expectedResult) {
     for( auto &statement: parserExpression->statementList.statements ) {
-        codeGenStatement( codeGen, &statement );
+        codeGenStatement( ctx, codeGen, &statement );
     }
 
-    return codeGenExpression( codeGen, expectedResult, &parserExpression->expression );
-}
-
-void CompoundExpression::codeGenStatement(FunctionGen *codeGen, const NonTerminals::Statement *statement) {
-
-    struct Visitor {
-        CompoundExpression *_this;
-        FunctionGen *codeGen;
-
-        void operator()(const NonTerminals::Expression &expression) {
-            _this->codeGenExpression(codeGen, ExpectedType(), &expression); // Disregard return value
-        }
-
-        void operator()(const NonTerminals::VariableDefinition &definition) {
-            _this->codeGenVarDef(codeGen, &definition);
-        }
-
-        void operator()(std::monostate mono) {
-            ABORT() << "Codegen called on unparsed expression";
-        }
-
-        void operator()(const NonTerminals::Statement::ConditionalStatement &condition) {
-            _this->codeGenCondition(codeGen, &condition);
-        }
-
-        void operator()(const std::unique_ptr<NonTerminals::CompoundStatement> &statement) {
-            ABORT()<<"TODO: Implement";
-        }
-    } visitor = { this, codeGen };
-
-    std::visit( visitor, statement->content );
-}
-
-Expression CompoundExpression::codeGenExpression(
-        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression *expression)
-{
-    using namespace NonTerminals;
-
-    struct Visitor {
-        CompoundExpression *_this;
-        FunctionGen *codeGen;
-        ExpectedType expectedResult;
-
-        ::Expression operator()( std::monostate none ) const {
-            return ::Expression();
-        }
-
-        ::Expression operator()( const std::unique_ptr<NonTerminals::CompoundExpression> &compound ) const {
-            ABORT() << "TODO implement";
-            /*
-            return std::get< static_cast<unsigned int>(Expression::ExpressionType::CompoundExpression) >(expression->value)->
-                    codeGen(functionGen);
-            */
-        }
-
-        ::Expression operator()( const NonTerminals::Literal &literal ) const {
-            return _this->codeGenLiteral( codeGen, expectedResult, &literal );
-        }
-
-        ::Expression operator()( const NonTerminals::Identifier &identifier ) const {
-            return _this->codeGenIdentifierLookup(codeGen, expectedResult, identifier.identifier);
-        }
-
-        ::Expression operator()( const NonTerminals::Expression::UnaryOperator &op ) const {
-            return codeGenUnaryOperator( _this, codeGen, expectedResult, op );
-        }
-
-        ::Expression operator()( const NonTerminals::Expression::BinaryOperator &op ) const {
-            return codeGenBinaryOperator( _this, codeGen, expectedResult, op );
-        }
-
-        ::Expression operator()( const NonTerminals::Expression::FunctionCall &functionCall ) const {
-            return _this->codeGenFunctionCall(codeGen, expectedResult, &functionCall);
-        }
-
-        ::Expression operator()( const NonTerminals::Type &parseType ) const {
-            ABORT()<<"TODO untested code";
-            auto result = ::Expression( StaticType::Ptr(typeType) );
-            ::AST::Type semanticType( &parseType );
-
-            result.compileTimeValue = semanticType.getType();
-
-            return result;
-        }
-    };
-
-    Visitor visitor = { this, codeGen, expectedResult };
-    return std::visit( visitor, expression->value );
-}
-
-void CompoundExpression::codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition) {
-    Type varType( &definition->body.type );
-    varType.symbolsPass2( &ctx );
-    const LookupContext::LocalVariable *namedVar = ctx.registerVariable( LookupContext::LocalVariable(
-			    definition->body.name.identifier, Expression( std::move(varType).removeType() ) ) );
-    codeGen->allocateStackVar( namedVar->lvalueExpression.id, namedVar->lvalueExpression.type, namedVar->name->text );
-
-    if( definition->initValue ) {
-        Expression initValue = codeGenExpression(
-                codeGen, ExpectedType( namedVar->lvalueExpression.type ), definition->initValue.get());
-        codeGen->assign( namedVar->lvalueExpression.id, initValue.id );
-    } else {
-        ABORT() << "TODO Type default values not yet implemented";
-    }
-}
-
-void CompoundExpression::codeGenCondition(
-        FunctionGen *codeGen, const NonTerminals::Statement::ConditionalStatement *condition)
-{
-    auto boolNamedType = AST::getGlobalCtx().lookupType("Bool");
-    StaticType::Ptr boolType = StaticType::allocate( boolNamedType->id() );
-    Expression conditionExpression = codeGenExpression( codeGen, ExpectedType(boolType), &condition->condition );
-
-    ASSERT( condition->ifClause )<<"Condition with no parsed \"if\" clause";
-
-    // TODO Use VRP to only generate the side of the condition actually taken
-    JumpPointId elseJumpPoint, contJumpPoint{ jumpPointAllocator.allocate() };
-    if( condition->elseClause ) {
-        elseJumpPoint = jumpPointAllocator.allocate();
-    }
-    codeGen->branch(ExpressionId(), conditionExpression.id, elseJumpPoint, contJumpPoint);
-
-    codeGenStatement( codeGen, condition->ifClause.get() );
-
-    if( condition->elseClause ) {
-        codeGen->setJumpPoint( elseJumpPoint );
-        codeGenStatement( codeGen, condition->elseClause.get() );
-    }
-
-    codeGen->setJumpPoint( contJumpPoint );
-}
-
-Expression CompoundExpression::codeGenLiteralInt(
-        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal)
-{
-    String text = literal->token.text;
-
-    LongEnoughInt resultValue = 0;
-
-    switch( literal->token.token ) {
-    case Tokenizer::Tokens::LITERAL_INT_10:
-        for( char c: text ) {
-            // TODO check range and assign type
-            if( c=='_' )
-                continue;
-
-            ASSERT( c>='0' && c<='9' ) << "Decimal literal has character '"<<c<<"' out of allowed range";
-            resultValue *= 10;
-            resultValue += c-'0';
-        }
-        break;
-    default:
-        ABORT() << "TODO implement";
-    }
-
-    Expression result( AST::AST::deductLiteralRange(resultValue) );
-    result.valueRange = ValueRange::allocate( resultValue, resultValue );
-    if( expectedResult && checkImplicitCastAllowed(result, expectedResult, literal->token) ) {
-        result.type = expectedResult.type;
-    }
-
-    codeGen->setLiteral(result.id, resultValue, result.type);
-
-    return Expression( std::move(result) );
-}
-
-Expression CompoundExpression::codeGenLiteralBool(
-        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal, bool value)
-{
-    auto boolType = AST::getGlobalCtx().lookupType("Bool");
-    Expression result( StaticType::allocate(boolType->id()) );
-
-    codeGen->setLiteral(result.id, value);
-
-    return Expression( std::move(result) );
-}
-
-Expression CompoundExpression::codeGenLiteral(
-        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal)
-{
-    Expression expression;
-
-    switch( literal->token.token ) {
-    case Tokenizer::Tokens::LITERAL_INT_10:
-    case Tokenizer::Tokens::LITERAL_INT_16:
-    case Tokenizer::Tokens::LITERAL_INT_2:
-        expression = codeGenLiteralInt(codeGen, expectedResult, literal);
-        break;
-    case Tokenizer::Tokens::RESERVED_TRUE:
-        expression = codeGenLiteralBool(codeGen, expectedResult, literal, true);
-        break;
-    case Tokenizer::Tokens::RESERVED_FALSE:
-        expression = codeGenLiteralBool(codeGen, expectedResult, literal, false);
-        break;
-    default:
-        ABORT() << "TODO implement";
-    }
-
-    if( expectedResult )
-        expression = codeGenCast( codeGen, expression, expectedResult, literal->token, true );
-
-    return expression;
-}
-
-Expression CompoundExpression::codeGenIdentifierLookup(
-        FunctionGen *codeGen, ExpectedType expectedResult, const Tokenizer::Token *identifier)
-{
-    const LookupContext::NamedObject *referencedObject = ctx.lookupIdentifier( identifier->text );
-    if( referencedObject==nullptr )
-        throw SymbolNotFound(identifier->text, identifier->line, identifier->col);
-
-    struct Visitor {
-        const Tokenizer::Token *identifier;
-        FunctionGen *codeGen;
-        ExpectedType expectedResult;
-
-        Expression operator()(const LookupContext::LocalVariable &localVar) const {
-            Expression expression( StaticType::Ptr(localVar.lvalueExpression.type) );
-            codeGen->dereferencePointer( expression.id, localVar.lvalueExpression.type, localVar.lvalueExpression.id );
-
-            if( expectedResult )
-                expression = codeGenCast( codeGen, expression, expectedResult, *identifier, true );
-
-            return expression;
-        }
-
-        Expression operator()(const LookupContext::Function &function) const {
-            throw CannotTakeValueOfFunction(identifier);
-        }
-    };
-
-    return std::visit(
-            Visitor{ .identifier=identifier, .codeGen=codeGen, .expectedResult=expectedResult }, *referencedObject );
-}
-
-Expression CompoundExpression::codeGenFunctionCall(
-        FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression::FunctionCall *functionCall)
-{
-    const NonTerminals::Identifier *functionName = std::get_if<NonTerminals::Identifier>( & functionCall->expression->value );
-    ASSERT( functionName != nullptr ) << "TODO support function calls not by means of direct call";
-
-    const LookupContext::NamedObject *functionObject = ctx.lookupIdentifier( functionName->identifier->text );
-    if( functionObject==nullptr ) {
-        throw SymbolNotFound(
-                functionName->identifier->text, functionName->identifier->line, functionName->identifier->col);
-    }
-
-    const LookupContext::Function *function = std::get_if< LookupContext::Function >( functionObject );
-    if( function==nullptr ) {
-        throw TryToCallNonCallable( functionName->identifier );
-    }
-
-    std::vector<ExpressionId> arguments;
-    arguments.reserve( function->arguments.size() );
-
-    for( unsigned int argNum=0; argNum<function->arguments.size(); ++argNum ) {
-        Expression argument = codeGenExpression(
-                codeGen, ExpectedType( function->arguments[argNum].type ), &functionCall->arguments.arguments[argNum] );
-        ASSERT( argument.type == function->arguments[argNum].type ) <<
-                "Expression " << argument << " did not return mandatory expected type " <<
-                function->arguments[argNum].type;
-        arguments.emplace_back( argument.id );
-    }
-
-    Expression functionRet( StaticType::Ptr(function->returnType) );
-    codeGen->callFunctionDirect(
-            functionRet.id, functionName->identifier->text, Slice<const ExpressionId>(arguments), function->returnType );
-
-    if( !expectedResult )
-        return functionRet;
-
-    return codeGenCast( codeGen, functionRet, expectedResult, *functionName->identifier, true );
+    return codeGenExpression( ctx, codeGen, expectedResult, &parserExpression->expression );
 }
 
 FuncDecl::FuncDecl(const NonTerminals::FuncDeclBody *nt, LookupContext::Function *function)
@@ -357,8 +86,16 @@ void FuncDecl::symbolsPass2(LookupContext *ctx) {
 }
 
 FuncDef::FuncDef(const NonTerminals::FuncDef *nt, LookupContext *ctx, LookupContext::Function *ctxFunction)
-    : parserFuncDef(nt), declaration(&nt->decl, ctxFunction), body(ctx, &nt->body)
+    : parserFuncDef(nt), declaration(&nt->decl, ctxFunction)
 {
+    const NonTerminals::CompoundExpression *expr = std::get_if<NonTerminals::CompoundExpression>( &nt->body );
+    if( expr ) {
+        body.emplace<CompoundExpression>(ctx, expr);
+    } else {
+        const NonTerminals::CompoundStatement *stmt = std::get_if<NonTerminals::CompoundStatement>( &nt->body );
+        ASSERT( stmt!=nullptr )<<" Function definition is neither statement nor expression";
+        body.emplace<CompoundStatement>(ctx, stmt);
+    }
 }
 
 String FuncDef::getName() const {
@@ -375,12 +112,42 @@ void FuncDef::setId(IdentifierId id) {
 
 void FuncDef::symbolsPass1(LookupContext *ctx) {
     declaration.symbolsPass1(ctx);
-    body.symbolsPass1();
+
+    struct Visitor {
+        void operator()( const std::monostate state ) {
+            ABORT()<<"symbolsPass1 on FuncDef with no valid body";
+        }
+
+        void operator()( CompoundExpression &expression ) {
+            expression.symbolsPass1();
+        }
+
+        void operator()( CompoundStatement &statement ) {
+            statement.symbolsPass1();
+        }
+    };
+
+    std::visit( Visitor{}, body );
 }
 
 void FuncDef::symbolsPass2(LookupContext *ctx) {
     declaration.symbolsPass2(ctx);
-    body.symbolsPass2();
+
+    struct Visitor {
+        void operator()( const std::monostate state ) {
+            ABORT()<<"symbolsPass1 on FuncDef with no valid body";
+        }
+
+        void operator()( CompoundExpression &expression ) {
+            expression.symbolsPass2();
+        }
+
+        void operator()( CompoundStatement &statement ) {
+            statement.symbolsPass2();
+        }
+    };
+
+    std::visit( Visitor{}, body );
 }
 
 void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
@@ -396,8 +163,25 @@ void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
             declaration.getArguments(),
             toSlice("No file"), declaration.getLine(), declaration.getCol());
 
-    Expression result = body.codeGen( functionGen.get(), ExpectedType( declaration.getRetType() ) );
-    functionGen->returnValue(result.id);
+    struct Visitor {
+        FunctionGen *functionGen;
+        FuncDecl &declaration;
+
+        void operator()( const std::monostate state ) {
+            ABORT()<<"symbolsPass1 on FuncDef with no valid body";
+        }
+
+        void operator()( CompoundExpression &expression ) {
+            Expression result = expression.codeGen( functionGen, ExpectedType( declaration.getRetType() ) );
+            functionGen->returnValue(result.id);
+        }
+
+        void operator()( CompoundStatement &statement ) {
+            statement.codeGen( functionGen );
+        }
+    };
+
+    std::visit( Visitor{ .functionGen = functionGen.get(), .declaration = declaration }, body );
 
     functionGen->functionLeave(id);
 }

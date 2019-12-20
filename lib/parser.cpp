@@ -596,7 +596,12 @@ size_t FuncDef::parse(Slice<const Tokenizer::Token> source) {
     }
 
     tokensConsumed += decl.parse( source.subslice(tokensConsumed) );
+    CompoundExpressionOrStatement body;
     tokensConsumed += body.parse( source.subslice(tokensConsumed) );
+    if( body.isStatement() )
+        this->body = body.removeStatement();
+    else
+        this->body = body.removeExpression();
 
     RULE_LEAVE();
 }
