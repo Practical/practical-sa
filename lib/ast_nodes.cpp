@@ -57,6 +57,25 @@ Expression CompoundExpression::codeGen(FunctionGen *codeGen, ExpectedType expect
     return codeGenExpression( ctx, codeGen, expectedResult, &parserExpression->expression );
 }
 
+CompoundStatement::CompoundStatement(LookupContext *parentCtx, const NonTerminals::CompoundStatement *nt) :
+    ctx(parentCtx), parserStatement(nt)
+{
+}
+
+void CompoundStatement::symbolsPass1() {
+    // TODO implement
+}
+
+void CompoundStatement::symbolsPass2() {
+    // TODO implement
+}
+
+void CompoundStatement::codeGen(FunctionGen *codeGen) {
+    for( auto &statement: parserStatement->statements.statements ) {
+        codeGenStatement( ctx, codeGen, &statement );
+    }
+}
+
 FuncDecl::FuncDecl(const NonTerminals::FuncDeclBody *nt, LookupContext::Function *function)
     : parserFuncDecl(nt), ctxFunction(function)
 {
@@ -178,6 +197,7 @@ void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
 
         void operator()( CompoundStatement &statement ) {
             statement.codeGen( functionGen );
+            functionGen->returnValue();
         }
     };
 

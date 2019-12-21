@@ -88,6 +88,7 @@ namespace PracticalSemanticAnalyzer {
         virtual void functionLeave(IdentifierId id) = 0;
 
         virtual void returnValue(ExpressionId id) = 0;
+        virtual void returnValue() = 0; // For Void functions
 
         // Flow control
 

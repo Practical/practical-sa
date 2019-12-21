@@ -25,6 +25,7 @@ class DummyFunctionGen : public PracticalSemanticAnalyzer::FunctionGen {
     void functionLeave(IdentifierId id) override {}
 
     void returnValue(ExpressionId id) override {}
+    void returnValue() override {}
     virtual void branch(
             ExpressionId id, ExpressionId conditionExpression, JumpPointId elsePoint, JumpPointId continuationPoint
         ) override {}
