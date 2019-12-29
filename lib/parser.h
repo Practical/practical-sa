@@ -120,6 +120,9 @@ namespace NonTerminals {
 
     public:
         Expression() {}
+        explicit Expression( ConditionalExpression &&condition ) :
+            value( safenew<ConditionalExpression>( std::move(condition) ) )
+        {}
         Expression( Expression &&that ) : value( std::move(that.value) ), altTypeParse( std::move(that.altTypeParse) )
         {}
         Expression &operator=( Expression &&that ) {

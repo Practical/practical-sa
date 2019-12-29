@@ -78,6 +78,15 @@ size_t FunctionArguments::parse(Slice<const Tokenizer::Token> source) {
 size_t Expression::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
+    if( wishForToken(Tokenizer::Tokens::RESERVED_IF, source, tokensConsumed) ) {
+        ConditionalExpressionOrStatement condition;
+        tokensConsumed = condition.parse( source, ExpectedResult::Expression );
+
+        value = safenew<ConditionalExpression>( condition.removeExpression() );
+
+        RULE_LEAVE();
+    }
+
     std::exception_ptr expressionParseError;
     try {
         tokensConsumed = actualParse(source, Operators::operators.size());
@@ -429,28 +438,28 @@ size_t VariableDefinition::parse(Slice<const Tokenizer::Token> source) {
 size_t Statement::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
+    ConditionalExpressionOrStatement condition;
     if( wishForToken(Tokenizer::Tokens::RESERVED_IF, source, tokensConsumed) ) {
-        ConditionalStatement condition;
+        tokensConsumed = condition.parse(source);
+        if( condition.isStatement() ) {
+            content = condition.removeStatement();
+        } else {
+            auto expression = Expression( condition.removeExpression() );
+            // XXX Don't handle conditional expression that is part of a larger expression
+            //tokensConsumed += expression.continueParse( source.subslice(tokensConsumed) );
 
-        expectToken( Tokenizer::Tokens::BRACKET_ROUND_OPEN, source, tokensConsumed, "Expecting '(' after if" );
-        tokensConsumed += condition.condition.parse( source.subslice(tokensConsumed) );
-        expectToken( Tokenizer::Tokens::BRACKET_ROUND_CLOSE, source, tokensConsumed, "Expecting ')' at end of condition" );
+            expectToken( Tokenizer::Tokens::SEMICOLON, source, tokensConsumed, "Statement does not end with a semicolon",
+                    "Unexpected EOF" );
 
-        condition.ifClause = safenew<Statement>();
-        tokensConsumed += condition.ifClause->parse( source.subslice(tokensConsumed) );
-
-        if( wishForToken(Tokenizer::Tokens::RESERVED_ELSE, source, tokensConsumed) ) {
-            condition.elseClause = safenew<Statement>();
-            tokensConsumed += condition.elseClause->parse( source.subslice(tokensConsumed) );
+            content = std::move(expression);
         }
-
-        content = std::move( condition );
 
         RULE_LEAVE();
     }
 
     try {
         Expression expression;
+
         tokensConsumed = expression.parse(source);
 
         expectToken( Tokenizer::Tokens::SEMICOLON, source, tokensConsumed, "Statement does not end with a semicolon",

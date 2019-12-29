@@ -34,6 +34,11 @@ void dumpType( const NonTerminals::Type &type, size_t depth ) {
 }
 
 void dumpParseTree( const NonTerminals::Expression &node, size_t depth=0 );
+void dumpParseTree( const NonTerminals::Statement &statement, size_t depth=0 );
+
+void dumpParseTree( const NonTerminals::Statement &statement, size_t depth ) {
+    ABORT()<<"TODO implement";
+}
 
 void dumpParseTree( const FunctionArguments &args, size_t depth=0 ) {
     for( const auto &i : args.arguments ) {
@@ -48,7 +53,16 @@ void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
 
         Visitor( size_t depth, std::ostream &out ) : depth(depth), out(out) {}
 
-        void operator()( const std::unique_ptr<::NonTerminals::CompoundExpression> &compound ) {}
+        void operator()( const std::unique_ptr<::NonTerminals::CompoundExpression> &compound ) {
+            indent(out, depth) << "Compound expression Statements:\n";
+            for( const auto &statement: compound->statementList.statements ) {
+                dumpParseTree( statement, depth+1 );
+            }
+
+            indent(out, depth) << "Compound expression value:\n";
+                dumpParseTree( compound->expression, depth+1 );
+        }
+
         void operator()( const Literal &literal ) {
             indent(out, depth) << "Literal "<<literal.token<<"\n";
         }
@@ -93,6 +107,10 @@ void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
     };
 
     std::visit( Visitor( depth, std::cout ), node.value );
+}
+
+void dumpParseTree( const NonTerminals::Module &module, size_t depth=0 ) {
+    ABORT()<<"TODO implement";
 }
 
 void help() {
@@ -161,6 +179,7 @@ int main(int argc, char *argv[]) {
             NonTerminals::Module module;
             module.parse( tokens );
             std::cout<<"Successfully parsed. Dumping parse tree:\n";
+            dumpParseTree( module );
         }
     } catch(std::exception &error) {
         std::cerr << "Parsing failed: " << error.what() << "\n";

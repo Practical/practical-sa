@@ -61,25 +61,6 @@ public:
     void codeGen(FunctionGen *codeGen);
 };
 
-class CompoundExpressionOrStatement : NoCopy {
-    LookupContext ctx;
-    std::variant< const NonTerminals::CompoundExpression *, const NonTerminals::CompoundStatement * > parserExpression;
-
-public:
-    CompoundExpression(LookupContext *parentCtx, const NonTerminals::FuncDef *funcDef);
-
-    void symbolsPass1();
-    void symbolsPass2();
-    Expression codeGen(FunctionGen *codeGen, ExpectedType expectedResult);
-
-    Expression codeGenExpression(
-            FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Expression *expression);
-
-    const LookupContext &getContext() const {
-        return ctx;
-    }
-};
-
 class FuncDecl : NoCopy {
     const NonTerminals::FuncDeclBody *parserFuncDecl;
     LookupContext::Function *ctxFunction;

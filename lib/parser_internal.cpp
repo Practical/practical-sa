@@ -103,6 +103,92 @@ size_t ExpressionOrStatement::parse(Slice<const Tokenizer::Token> source) {
     RULE_LEAVE();
 }
 
+size_t ConditionalExpressionOrStatement::parse(Slice<const Tokenizer::Token> source ) {
+    return parse( source, ExpectedResult::Unknown );
+}
+
+size_t ConditionalExpressionOrStatement::parse(Slice<const Tokenizer::Token> source, ExpectedResult result ) {
+    RULE_ENTER(source);
+
+    auto ifToken = expectToken(
+            Tokenizer::Tokens::RESERVED_IF, source, tokensConsumed,
+            "Condition must start with 'if'", "EOF searching for condition" );
+
+    Expression condition;
+
+    expectToken( Tokenizer::Tokens::BRACKET_ROUND_OPEN, source, tokensConsumed, "Expecting '(' after if" );
+    tokensConsumed += condition.parse( source.subslice(tokensConsumed) );
+    expectToken( Tokenizer::Tokens::BRACKET_ROUND_CLOSE, source, tokensConsumed, "Expecting ')' at end of condition" );
+
+    ExpressionOrStatement ifClause;
+    tokensConsumed += ifClause.parse( source.subslice(tokensConsumed) );
+
+    std::unique_ptr<ExpressionOrStatement> elseClause;
+    if( wishForToken(Tokenizer::Tokens::RESERVED_ELSE, source, tokensConsumed) ) {
+        elseClause = safenew<ExpressionOrStatement>();
+        tokensConsumed += elseClause->parse( source.subslice(tokensConsumed) );
+    }
+
+    if( result==ExpectedResult::Unknown )
+        result = ifClause.isStatement() ? ExpectedResult::Statement : ExpectedResult::Expression;
+
+    // Make sure parsing matches what we expect
+    switch(result) {
+    case ExpectedResult::Statement:
+        {
+            if( ! ifClause.isStatement() )
+                throw parser_error(
+                        "condition must have statement (not expression) as \"then\" clause", ifToken.line, ifToken.col);
+
+            if( elseClause && !elseClause->isStatement() )
+                throw parser_error(
+                        "condition must have statement (not expression) as \"else\" clause", ifToken.line, ifToken.col);
+
+            auto &statement=this->condition.emplace<Statement::ConditionalStatement>();
+            statement.condition=std::move(condition);
+            statement.ifClause = safenew<Statement>( ifClause.removeStatement() );
+            if( elseClause )
+                statement.elseClause = safenew<Statement>( elseClause->removeStatement() );
+        }
+        break;
+    case ExpectedResult::Expression:
+        {
+            if( ifClause.isStatement() )
+                throw parser_error(
+                        "condition must have expression (not statement) as \"then\" clause", ifToken.line, ifToken.col);
+
+            if( !elseClause )
+                throw parser_error(
+                        "conditional expression must have an \"else\" clause", ifToken.line, ifToken.col);
+
+            if( elseClause->isStatement() )
+                throw parser_error(
+                        "condition must have expression (not statement) as \"else\" clause", ifToken.line, ifToken.col);
+
+            auto &expression = this->condition.emplace<ConditionalExpression>();
+            expression.condition = std::move(condition);
+            expression.ifClause = ifClause.removeExpression();
+            expression.elseClause = elseClause->removeExpression();
+
+            if(
+                    ! std::get_if< std::unique_ptr<CompoundExpression> >(& expression.ifClause.value) ||
+                    ! std::get_if< std::unique_ptr<CompoundExpression> >(& expression.elseClause.value)
+              )
+            {
+                throw parser_error(
+                        "Conditional expression must use compound expressions for \"then\" and \"else\" clauses",
+                        ifToken.line, ifToken.col);
+            }
+        }
+        break;
+    case ExpectedResult::Unknown:
+        ABORT()<<"Unreachable code reached";
+        break;
+    }
+
+    RULE_LEAVE();
+}
+
 bool CompoundExpressionOrStatement::isStatement() const {
     ASSERT( content.index()!=0 )<<
             "Tried to get statement/expression from CompoundExpressionOrStatement containing neither";

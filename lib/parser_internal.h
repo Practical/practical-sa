@@ -48,6 +48,12 @@ extern size_t PARSER_RECURSION_DEPTH;
 namespace InternalNonTerminals {
     using namespace NonTerminals;
 
+    enum class ExpectedResult {
+        Unknown,
+        Statement,
+        Expression,
+    };
+
     bool skipWS(Slice<const Tokenizer::Token> source, size_t &index);
     const Tokenizer::Token *nextToken(Slice<const Tokenizer::Token> source, size_t &index, const char *msg = nullptr);
     const Tokenizer::Token &expectToken(
@@ -64,20 +70,47 @@ namespace InternalNonTerminals {
         std::variant<std::monostate, Expression, Statement> content;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
+
+        bool isStatement() const {
+            ASSERT( content.index()!=0 )<<
+                    "Tried to get statement/expression from CompoundExpressionOrStatement containing neither";
+            return content.index()==2;
+        }
+
+        bool isValid() const {
+            return content.index()!=0;
+        }
+
+        Expression removeExpression() {
+            return Expression( std::move( std::get<Expression>(content) ) );
+        }
+        Statement removeStatement() {
+            return Statement( std::move( std::get<Statement>(content) ) );
+        }
     };
 
     struct ConditionalExpressionOrStatement : public NonTerminal {
         std::variant<
                 std::monostate,
-                std::unique_ptr<ConditionalExpression>,
-                std::unique_ptr<Statement::ConditionalStatement>
+                ConditionalExpression,
+                Statement::ConditionalStatement
             > condition;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
+        size_t parse(Slice<const Tokenizer::Token> source, ExpectedResult result);
 
-        bool isStatement() const;
-        CompoundExpression removeExpression();
-        CompoundStatement removeStatement();
+        bool isStatement() const {
+            ASSERT( condition.index()!=0 )<<
+                    "Tried to get statement/expression from ConditionalExpressionOrStatement containing neither";
+            return condition.index()==2;
+        }
+
+        ConditionalExpression removeExpression() {
+            return ConditionalExpression( std::move( std::get<ConditionalExpression>(condition) ) );
+        }
+        Statement::ConditionalStatement removeStatement() {
+            return Statement::ConditionalStatement( std::move( std::get<Statement::ConditionalStatement>(condition) ) );
+        }
     };
 
     struct CompoundExpressionOrStatement : public NonTerminal {
