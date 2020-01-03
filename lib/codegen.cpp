@@ -3,6 +3,8 @@
 #include "ast.h"
 #include "casts.h"
 #include "codegen_operators.h"
+#include "dummy_codegen_impl.h"
+
 #include <practical-errors.h>
 
 using namespace PracticalSemanticAnalyzer;
@@ -10,6 +12,62 @@ using namespace PracticalSemanticAnalyzer;
 namespace CodeGen {
 
 static JumpPointId::Allocator<> jumpPointAllocator;
+
+static StaticType::Ptr findCommonType(
+        const PracticalSemanticAnalyzer::NamedType *type1,
+        const PracticalSemanticAnalyzer::NamedType *type2 )
+{
+    if( type1==nullptr || type2==nullptr ) {
+        return StaticType::Ptr();
+    }
+
+    if( type2->type()==NamedType::Type::UnsignedInteger ) {
+        // Make sure that if either types is UnsignedInteger, that type1 is UnsignedInteger
+        std::swap( type2, type1 );
+    }
+
+    if( type1->type()==NamedType::Type::UnsignedInteger ) {
+        if( type2->type()==NamedType::Type::UnsignedInteger ) {
+            return StaticType::allocate( (type1->size()>type2->size() ? type1 : type2)->id() );
+        } else if( type2->type()==NamedType::Type::SignedInteger ) {
+            // Unsigned and signed. This might get hairy
+            if( type2->size() > type1->size() ) {
+                return StaticType::allocate( type2->id() );
+            }
+
+            char retTypeName[10];
+            snprintf(retTypeName, sizeof(retTypeName), "S%lu", type1->size()*2);
+            auto retType = AST::AST::getGlobalCtx().lookupType(retTypeName);
+            if( retType != nullptr ) {
+                return StaticType::allocate( retType->id() );
+            }
+        }
+    } else if( type1->type()==NamedType::Type::SignedInteger ) {
+        if( type2->type()!=NamedType::Type::SignedInteger )
+            return StaticType::Ptr();
+
+        return StaticType::allocate( (type1->size()>type2->size() ? type1 : type2)->id() );
+    }
+
+    return StaticType::Ptr();
+}
+
+ExpectedType findCommonType(
+        const Tokenizer::Token *op, LookupContext &ctx, const Expression &expr1, const Expression &expr2 )
+{
+    if( expr1.type == expr2.type )
+        return ExpectedType( expr1.type );
+
+    using PracticalSemanticAnalyzer::NamedType;
+    auto type1 = ctx.lookupType( expr1.type->getId() );
+    auto type2 = ctx.lookupType( expr2.type->getId() );
+
+    auto retType = findCommonType( type1, type2 );
+    if( !retType )
+        throw PracticalSemanticAnalyzer::IncompatibleTypes( expr1.type, expr2.type, op->line, op->col );
+
+    return ExpectedType( retType );
+}
 
 void codeGenStatement(LookupContext &ctx, FunctionGen *codeGen, const NonTerminals::Statement *statement) {
 
@@ -89,8 +147,7 @@ Expression codeGenExpression(
         }
 
         ::Expression operator()( const std::unique_ptr< NonTerminals::ConditionalExpression > &condition ) const {
-            ABORT()<<"TODO: Implement";
-            //return codeGenCondition(ctx, codeGen, condition.get());
+            return codeGenCondition(ctx, codeGen, condition.get(), expectedResult);
         }
 
         ::Expression operator()( const NonTerminals::Type &parseType ) const {
@@ -138,7 +195,7 @@ void codeGenCondition(
     if( condition->elseClause ) {
         elseJumpPoint = jumpPointAllocator.allocate();
     }
-    codeGen->conditionalBranch(ExpressionId(), conditionExpression.id, elseJumpPoint, contJumpPoint);
+    codeGen->conditionalBranch(ExpressionId(), StaticType::Ptr(), conditionExpression.id, elseJumpPoint, contJumpPoint);
 
     codeGenStatement( ctx, codeGen, condition->ifClause.get() );
 
@@ -148,6 +205,41 @@ void codeGenCondition(
     }
 
     codeGen->setJumpPoint( contJumpPoint );
+}
+
+Expression codeGenCondition(
+        LookupContext &ctx, FunctionGen *codeGen, const NonTerminals::ConditionalExpression *condition,
+        ExpectedType expectedResult)
+{
+    auto boolNamedType = AST::AST::getGlobalCtx().lookupType("Bool");
+    StaticType::Ptr boolType = StaticType::allocate( boolNamedType->id() );
+    Expression conditionExpression = codeGenExpression( ctx, codeGen, ExpectedType(boolType), &condition->condition );
+
+    // TODO Use VRP to only generate the side of the condition actually taken
+    JumpPointId elseJumpPoint{ jumpPointAllocator.allocate() }, contJumpPoint{ jumpPointAllocator.allocate() };
+
+    if( !expectedResult.mandatory ) {
+        Expression ifResult = codeGenExpression( ctx, &dummyFunctionGen, expectedResult, &condition->ifClause );
+        Expression elseResult = codeGenExpression( ctx, &dummyFunctionGen, expectedResult, &condition->elseClause );
+
+        Tokenizer::Token emptyTokenXXX;
+        expectedResult = findCommonType( &emptyTokenXXX, ctx, ifResult, elseResult );
+    }
+
+    Expression result( StaticType::Ptr(expectedResult.type) );
+    codeGen->conditionalBranch(result.id, expectedResult.type, conditionExpression.id, elseJumpPoint, contJumpPoint);
+
+    Expression clauseResult = codeGenExpression( ctx, codeGen, expectedResult, &condition->ifClause );
+    codeGen->setConditionClauseResult( clauseResult.id );
+
+    codeGen->setJumpPoint( elseJumpPoint );
+    clauseResult = codeGenExpression( ctx, codeGen, expectedResult, &condition->elseClause );
+    codeGen->setConditionClauseResult( clauseResult.id );
+
+    codeGen->setJumpPoint( contJumpPoint );
+
+    // TODO Need to calculate unified VRP
+    return result;
 }
 
 Expression codeGenLiteralInt(

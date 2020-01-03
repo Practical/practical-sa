@@ -11,6 +11,9 @@ using namespace PracticalSemanticAnalyzer;
 
 namespace CodeGen {
 
+ExpectedType findCommonType(
+        const Tokenizer::Token *op, LookupContext &ctx, const Expression &expr1, const Expression &expr2 );
+
 Expression codeGenExpression(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType, const NonTerminals::Expression *parserExpression);
 void codeGenStatement(LookupContext &ctx, FunctionGen *codeGen, const NonTerminals::Statement *parserStatement);
@@ -25,6 +28,9 @@ Expression codeGenFunctionCall(
 void codeGenVarDef(LookupContext &ctx, FunctionGen *codeGen, const NonTerminals::VariableDefinition *definition);
 void codeGenCondition(
         LookupContext &ctx, FunctionGen *codeGen, const NonTerminals::Statement::ConditionalStatement *condition);
+Expression codeGenCondition(
+        LookupContext &ctx, FunctionGen *codeGen, const NonTerminals::ConditionalExpression *condition,
+        ExpectedType expectedResult);
 } // End namespace CodeGen
 
 #endif // CODE_GEN_H

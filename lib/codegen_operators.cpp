@@ -50,62 +50,6 @@ Expression codeGenUnaryOperator(
     return opHandler->second( ctx, codeGen, expectedResult, op );
 }
 
-static StaticType::Ptr findCommonType(
-        const PracticalSemanticAnalyzer::NamedType *type1,
-        const PracticalSemanticAnalyzer::NamedType *type2 )
-{
-    if( type1==nullptr || type2==nullptr ) {
-        return StaticType::Ptr();
-    }
-
-    if( type2->type()==NamedType::Type::UnsignedInteger ) {
-        // Make sure that if either types is UnsignedInteger, that type1 is UnsignedInteger
-        std::swap( type2, type1 );
-    }
-
-    if( type1->type()==NamedType::Type::UnsignedInteger ) {
-        if( type2->type()==NamedType::Type::UnsignedInteger ) {
-            return StaticType::allocate( (type1->size()>type2->size() ? type1 : type2)->id() );
-        } else if( type2->type()==NamedType::Type::SignedInteger ) {
-            // Unsigned and signed. This might get hairy
-            if( type2->size() > type1->size() ) {
-                return StaticType::allocate( type2->id() );
-            }
-
-            char retTypeName[10];
-            snprintf(retTypeName, sizeof(retTypeName), "S%lu", type1->size()*2);
-            auto retType = AST::AST::getGlobalCtx().lookupType(retTypeName);
-            if( retType != nullptr ) {
-                return StaticType::allocate( retType->id() );
-            }
-        }
-    } else if( type1->type()==NamedType::Type::SignedInteger ) {
-        if( type2->type()!=NamedType::Type::SignedInteger )
-            return StaticType::Ptr();
-
-        return StaticType::allocate( (type1->size()>type2->size() ? type1 : type2)->id() );
-    }
-
-    return StaticType::Ptr();
-}
-
-static ExpectedType findCommonType(
-        const Tokenizer::Token *op, LookupContext &ctx, const Expression &expr1, const Expression &expr2 )
-{
-    if( expr1.type == expr2.type )
-        return ExpectedType( expr1.type );
-
-    using PracticalSemanticAnalyzer::NamedType;
-    auto type1 = ctx.lookupType( expr1.type->getId() );
-    auto type2 = ctx.lookupType( expr2.type->getId() );
-
-    auto retType = findCommonType( type1, type2 );
-    if( !retType )
-        throw PracticalSemanticAnalyzer::IncompatibleTypes( expr1.type, expr2.type, op->line, op->col );
-
-    return ExpectedType( retType );
-}
-
 static void binaryOpFindCommonType(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op, Expression &leftOperand, Expression &rightOperand

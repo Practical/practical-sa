@@ -27,9 +27,10 @@ class DummyFunctionGen : public PracticalSemanticAnalyzer::FunctionGen {
     void returnValue(ExpressionId id) override {}
     void returnValue() override {}
     virtual void conditionalBranch(
-            ExpressionId id, ExpressionId conditionExpression, JumpPointId elsePoint, JumpPointId continuationPoint
+            ExpressionId id, StaticType::Ptr type, ExpressionId conditionExpression, JumpPointId elsePoint,
+            JumpPointId continuationPoint
         ) override {}
-    //virtual void setConditionClauseResult( ExpressionId id ) override {}
+    virtual void setConditionClauseResult( ExpressionId id ) override {}
     virtual void setJumpPoint(JumpPointId id, String name) override {}
     virtual void jump(JumpPointId destination) override {}
     void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::Ptr type) override {}
