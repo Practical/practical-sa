@@ -96,9 +96,10 @@ namespace PracticalSemanticAnalyzer {
         // If elsePoint==JumpPointId(), there is no else clause.
         // practical-sa will generate the jump points, but will not generate the jumps. It is up to the code generation
         // to use the jump points to identify the code flow.
-        virtual void branch(
+        virtual void conditionalBranch(
                 ExpressionId id, ExpressionId conditionExpression, JumpPointId elsePoint, JumpPointId continuationPoint
             ) = 0;
+        //virtual void setConditionClauseResult( ExpressionId id ) = 0;
         virtual void setJumpPoint(JumpPointId id, String name = String()) = 0;
         virtual void jump(JumpPointId destination) = 0;
 

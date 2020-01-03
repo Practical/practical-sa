@@ -54,7 +54,7 @@ Expression CompoundExpression::codeGen(FunctionGen *codeGen, ExpectedType expect
         codeGenStatement( ctx, codeGen, &statement );
     }
 
-    return codeGenExpression( ctx, codeGen, expectedResult, &parserExpression->expression );
+    return codeGenExpression(ctx, codeGen, expectedResult, &parserExpression->expression);
 }
 
 CompoundStatement::CompoundStatement(LookupContext *parentCtx, const NonTerminals::CompoundStatement *nt) :

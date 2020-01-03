@@ -3,7 +3,7 @@
 #include "practical-errors.h"
 
 #if VERBOSE_PARSING
-size_t RECURSION_DEPTH;
+size_t PARSER_RECURSION_DEPTH;
 #endif
 
 namespace InternalNonTerminals {
@@ -213,16 +213,25 @@ size_t CompoundExpressionOrStatement::parseInternal(Slice<const Tokenizer::Token
     tokensConsumed += statementList.parse(source.subslice(tokensConsumed));
 
     try {
-        Expression expression;
-        tokensConsumed += expression.parse(source.subslice(tokensConsumed));
+        if( parseType!=ParseType::Statement ) {
+            Expression expression;
+            tokensConsumed += expression.parse(source.subslice(tokensConsumed));
 
-        content.emplace<CompoundExpression>( std::move(statementList), std::move(expression) );
+            parseType=ParseType::Expression;
+
+            content.emplace<CompoundExpression>( std::move(statementList), std::move(expression) );
+        }
     } catch( parser_error &err ) {
         if( parseType==ParseType::Expression )
             throw;
 
         EXCEPTION_CAUGHT(err);
 
+        parseType = ParseType::Statement;
+    }
+
+    ASSERT( parseType!=ParseType::Either );
+    if( parseType==ParseType::Statement ) {
         content.emplace<CompoundStatement>( std::move(statementList) );
     }
 

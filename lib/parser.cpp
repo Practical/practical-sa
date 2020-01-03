@@ -87,6 +87,16 @@ size_t Expression::parse(Slice<const Tokenizer::Token> source) {
         RULE_LEAVE();
     }
 
+    tokensConsumed=0;
+    if( wishForToken(Tokenizer::Tokens::BRACKET_CURLY_OPEN, source, tokensConsumed) ) {
+        CompoundExpression compound;
+        tokensConsumed=compound.parse(source);
+
+        value = safenew<CompoundExpression>( std::move(compound) );
+
+        RULE_LEAVE();
+    }
+
     std::exception_ptr expressionParseError;
     try {
         tokensConsumed = actualParse(source, Operators::operators.size());
@@ -457,6 +467,16 @@ size_t Statement::parse(Slice<const Tokenizer::Token> source) {
         RULE_LEAVE();
     }
 
+    tokensConsumed=0;
+    if( wishForToken(Tokenizer::Tokens::BRACKET_CURLY_OPEN, source, tokensConsumed) ) {
+        CompoundStatement compound;
+        tokensConsumed=compound.parse(source);
+
+        content = safenew<CompoundStatement>( std::move(compound) );
+
+        RULE_LEAVE();
+    }
+
     try {
         Expression expression;
 
@@ -507,6 +527,17 @@ size_t CompoundExpression::parse(Slice<const Tokenizer::Token> source) {
     tokensConsumed = compound.parseExpression(source);
 
     *this = compound.removeExpression();
+
+    RULE_LEAVE();
+}
+
+size_t CompoundStatement::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
+
+    CompoundExpressionOrStatement compound;
+    tokensConsumed = compound.parseStatement(source);
+
+    *this = compound.removeStatement();
 
     RULE_LEAVE();
 }

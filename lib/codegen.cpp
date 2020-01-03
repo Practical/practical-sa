@@ -34,7 +34,10 @@ void codeGenStatement(LookupContext &ctx, FunctionGen *codeGen, const NonTermina
         }
 
         void operator()(const std::unique_ptr<NonTerminals::CompoundStatement> &statement) {
-            ABORT()<<"TODO: Implement";
+            AST::CompoundStatement astStatement(&ctx, statement.get());
+            astStatement.symbolsPass1();
+            astStatement.symbolsPass2();
+            astStatement.codeGen(codeGen);
         }
     } visitor = { ctx, codeGen };
 
@@ -59,11 +62,10 @@ Expression codeGenExpression(
         }
 
         ::Expression operator()( const std::unique_ptr<NonTerminals::CompoundExpression> &compound ) const {
-            ABORT() << "TODO implement";
-            /*
-            return std::get< static_cast<unsigned int>(Expression::ExpressionType::CompoundExpression) >(expression->value)->
-                    codeGen(functionGen);
-            */
+            AST::CompoundExpression expression(&ctx, compound.get());
+            expression.symbolsPass1();
+            expression.symbolsPass2();
+            return expression.codeGen(codeGen, expectedResult);
         }
 
         ::Expression operator()( const NonTerminals::Literal &literal ) const {
@@ -88,6 +90,7 @@ Expression codeGenExpression(
 
         ::Expression operator()( const std::unique_ptr< NonTerminals::ConditionalExpression > &condition ) const {
             ABORT()<<"TODO: Implement";
+            //return codeGenCondition(ctx, codeGen, condition.get());
         }
 
         ::Expression operator()( const NonTerminals::Type &parseType ) const {
@@ -135,7 +138,7 @@ void codeGenCondition(
     if( condition->elseClause ) {
         elseJumpPoint = jumpPointAllocator.allocate();
     }
-    codeGen->branch(ExpressionId(), conditionExpression.id, elseJumpPoint, contJumpPoint);
+    codeGen->conditionalBranch(ExpressionId(), conditionExpression.id, elseJumpPoint, contJumpPoint);
 
     codeGenStatement( ctx, codeGen, condition->ifClause.get() );
 

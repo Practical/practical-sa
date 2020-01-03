@@ -229,11 +229,13 @@ namespace NonTerminals {
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
-    struct CompoundStatement {
+    struct CompoundStatement : public NonTerminal {
         StatementList statements;
 
         CompoundStatement() {}
         CompoundStatement( StatementList &&statements ) : statements( std::move(statements) ) {}
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct FuncDeclRet : public NonTerminal {
