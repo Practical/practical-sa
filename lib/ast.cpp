@@ -19,7 +19,7 @@ ModuleId::Allocator<> moduleIdAllocator;
 
 namespace AST {
 
-LookupContext AST::globalCtx(nullptr);
+LookupContext AST::builtinCtx(nullptr);
 
 StaticType::Ptr AST::deductLiteralRange(LongEnoughInt value) {
     String typeName;
@@ -50,7 +50,7 @@ StaticType::Ptr AST::deductLiteralRange(LongEnoughInt value) {
         }
     }
 
-    auto type = globalCtx.lookupType(typeName);
+    auto type = builtinCtx.lookupType(typeName);
     ASSERT(type != nullptr) << "Failed to look up built-in type \"" << typeName << "\"";
 
     return StaticType::allocate( type->id() );
@@ -69,17 +69,17 @@ void AST::prepare()
     // Register the built-in types
 #define RegisterBuiltInType( name, type, size ) \
     static const BuiltInTypeToken name##Identifier{String(#name, std::char_traits<char>::length(#name))}; \
-    globalCtx.registerType( &name##Identifier, NamedType::Type::type, size )
+    builtinCtx.registerType( &name##Identifier, NamedType::Type::type, size )
 #define RegisterBuiltInTypeWithRange( name, type, size, minvalue, maxvalue ) \
     static const BuiltInTypeToken name##Identifier{String(#name, std::char_traits<char>::length(#name))}; \
-    globalCtx.registerType( &name##Identifier, NamedType::Type::type, size, minvalue, maxvalue )
+    builtinCtx.registerType( &name##Identifier, NamedType::Type::type, size, minvalue, maxvalue )
 
     RegisterBuiltInType( Void, Void, 0 );
-    TypeId VoidTypeId = globalCtx.lookupType( "Void" )->id();
+    TypeId VoidTypeId = builtinCtx.lookupType( "Void" )->id();
     voidExpression = Expression( StaticType::allocate( VoidTypeId ) );
 
     RegisterBuiltInType( Type, Type, 0 );
-    TypeId TypeTypeId = globalCtx.lookupType( "Type" )->id();
+    TypeId TypeTypeId = builtinCtx.lookupType( "Type" )->id();
     typeType = StaticType::allocate( TypeTypeId );
 
     RegisterBuiltInType( Bool, Boolean, 1 );
@@ -109,7 +109,7 @@ void AST::parseModule(String moduleSource) {
 
     auto astModule = modulesAST.emplace(
             parseModule.first->second->getName(),
-            new ::AST::Module( parseModule.first->second.get(), &globalCtx )
+            new ::AST::Module( parseModule.first->second.get(), &builtinCtx )
             );
     ASSERT( astModule.second ) << "Module \"" << parseModule.first->second->getName() << "\"already existed";
 

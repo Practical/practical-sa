@@ -25,7 +25,7 @@ extern PracticalSemanticAnalyzer::ModuleId::Allocator<> moduleIdAllocator;
 namespace AST {
 
 class AST {
-    static LookupContext globalCtx;
+    static LookupContext builtinCtx;
     std::unordered_map<String, std::unique_ptr<NonTerminals::Module>> parsedModules;
     std::unordered_map<String, std::unique_ptr<::AST::Module>> modulesAST;
 
@@ -34,8 +34,8 @@ public:
     AST() {
     }
 
-    static const LookupContext &getGlobalCtx() {
-        return globalCtx;
+    static const LookupContext &getBuiltinCtx() {
+        return builtinCtx;
     }
     static StaticType::Ptr deductLiteralRange(LongEnoughInt value);
 

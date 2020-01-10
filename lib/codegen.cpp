@@ -37,7 +37,7 @@ static StaticType::Ptr findCommonType(
 
             char retTypeName[10];
             snprintf(retTypeName, sizeof(retTypeName), "S%lu", type1->size()*2);
-            auto retType = AST::AST::getGlobalCtx().lookupType(retTypeName);
+            auto retType = AST::AST::getBuiltinCtx().lookupType(retTypeName);
             if( retType != nullptr ) {
                 return StaticType::allocate( retType->id() );
             }
@@ -184,7 +184,7 @@ void codeGenVarDef(LookupContext &ctx, FunctionGen *codeGen, const NonTerminals:
 void codeGenCondition(
         LookupContext &ctx, FunctionGen *codeGen, const NonTerminals::Statement::ConditionalStatement *condition)
 {
-    auto boolNamedType = AST::AST::getGlobalCtx().lookupType("Bool");
+    auto boolNamedType = AST::AST::getBuiltinCtx().lookupType("Bool");
     StaticType::Ptr boolType = StaticType::allocate( boolNamedType->id() );
     Expression conditionExpression = codeGenExpression( ctx, codeGen, ExpectedType(boolType), &condition->condition );
 
@@ -211,7 +211,7 @@ Expression codeGenCondition(
         LookupContext &ctx, FunctionGen *codeGen, const NonTerminals::ConditionalExpression *condition,
         ExpectedType expectedResult)
 {
-    auto boolNamedType = AST::AST::getGlobalCtx().lookupType("Bool");
+    auto boolNamedType = AST::AST::getBuiltinCtx().lookupType("Bool");
     StaticType::Ptr boolType = StaticType::allocate( boolNamedType->id() );
     Expression conditionExpression = codeGenExpression( ctx, codeGen, ExpectedType(boolType), &condition->condition );
 
@@ -279,7 +279,7 @@ Expression codeGenLiteralInt(
 Expression codeGenLiteralBool(
         FunctionGen *codeGen, ExpectedType expectedResult, const NonTerminals::Literal *literal, bool value)
 {
-    auto boolType = AST::AST::getGlobalCtx().lookupType("Bool");
+    auto boolType = AST::AST::getBuiltinCtx().lookupType("Bool");
     Expression result( StaticType::allocate(boolType->id()) );
 
     codeGen->setLiteral(result.id, value);
