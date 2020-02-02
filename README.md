@@ -2,6 +2,13 @@
 If you're looking for the actual Practical compiler, this is the wrong repository. Check out the
 [Practicomp](https://github.com/Practical/practicomp) project (of which this is a subproject) for the stand-alone compiler.
 
+# Tracking Progress and Community
+You can watch this repository to get minute updates on minor improvements to the language. Announcements on more significant
+milestones will be posted to the announcement forum at https://forum.practical-pl.org. This is also the place to ask questions
+about the language and its details.
+
+If all you want is to get a taste for the program's syntax, please have a look at the code we use to test the [compiler with](https://github.com/Practical/practical-testcases).
+
 # Practical: Semantic Analyzer
 This is the repository for the semantic analyzer library for the Practical programming language.
 
@@ -26,8 +33,3 @@ Practical is currently in preliminary the implementation effort stage. It does n
 # What's Planned?
 For specifics on the plans for the language, syntax and features, please check out the
 [language's wiki](https://github.com/Practical/practical-sa/wiki).
-
-# Tracking Progress and Community
-You can watch this repository to get minute updates on minor improvements to the language. Announcements on more significant
-milestones will be posted to the announcement forum at https://forum.practical-pl.org. This is also the place to ask questions
-about the language and its details.
