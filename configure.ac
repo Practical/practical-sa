@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.69])
 AC_INIT([The Practical Programming Language], [0.0], [BUG-REPORT-ADDRESS])
-AC_CONFIG_SRCDIR([examples/hello.pr])
+AC_CONFIG_SRCDIR([include/practical-sa.h])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 LT_INIT
