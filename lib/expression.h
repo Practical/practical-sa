@@ -17,6 +17,8 @@
 #include <iostream>
 #include <memory>
 
+namespace AST {
+
 struct Expression : private NoCopy {
     PracticalSemanticAnalyzer::ExpressionId id;
     PracticalSemanticAnalyzer::StaticType::Ptr type;
@@ -35,5 +37,7 @@ struct Expression : private NoCopy {
 };
 
 std::ostream &operator<<( std::ostream &out, const Expression &expr );
+
+} // End namespace AST
 
 #endif // EXPRESSION_H

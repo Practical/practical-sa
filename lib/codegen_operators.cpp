@@ -20,7 +20,7 @@ using Tokenizer::Tokens;
 
 namespace CodeGen {
 
-Expression codeGenUnaryPlus(
+AST::Expression codeGenUnaryPlus(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::UnaryOperator &op)
 {
@@ -29,14 +29,14 @@ Expression codeGenUnaryPlus(
 
 static const std::unordered_map<
     Tokens,
-    Expression (*)(
+    AST::Expression (*)(
             LookupContext &, FunctionGen *, ExpectedType, const NonTerminals::Expression::UnaryOperator &
     )
 > unaryOperatorsMap {
     { Tokens::OP_PLUS, codeGenUnaryPlus },
 };
 
-Expression codeGenUnaryOperator(
+AST::Expression codeGenUnaryOperator(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::UnaryOperator &op)
 {
@@ -52,7 +52,7 @@ Expression codeGenUnaryOperator(
 
 static void binaryOpFindCommonType(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
-        const NonTerminals::Expression::BinaryOperator &op, Expression &leftOperand, Expression &rightOperand
+        const NonTerminals::Expression::BinaryOperator &op, AST::Expression &leftOperand, AST::Expression &rightOperand
         )
 {
     if( !expectedResult || !expectedResult.mandatory ) {
@@ -69,15 +69,15 @@ static void binaryOpFindCommonType(
     rightOperand = codeGenExpression( ctx, codeGen, expectedResult, op.operand2.get() );
 }
 
-static Expression codeGenBinaryPlus(
+static AST::Expression codeGenBinaryPlus(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {
-    Expression leftOperand, rightOperand;
+    AST::Expression leftOperand, rightOperand;
     binaryOpFindCommonType(ctx, codeGen, expectedResult, op, leftOperand, rightOperand);
 
     ASSERT( leftOperand.type == rightOperand.type );
-    Expression result( StaticType::Ptr(leftOperand.type) );
+    AST::Expression result( StaticType::Ptr(leftOperand.type) );
     try {
         auto leftValueRange = leftOperand.getRange(), rightValueRange = rightOperand.getRange();
         if( leftValueRange && rightValueRange )
@@ -92,15 +92,15 @@ static Expression codeGenBinaryPlus(
     return result;
 }
 
-static Expression codeGenBinaryMinus(
+static AST::Expression codeGenBinaryMinus(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {
-    Expression leftOperand, rightOperand;
+    AST::Expression leftOperand, rightOperand;
     binaryOpFindCommonType(ctx, codeGen, expectedResult, op, leftOperand, rightOperand);
 
     ASSERT( leftOperand.type == rightOperand.type );
-    Expression result( StaticType::Ptr(leftOperand.type) );
+    AST::Expression result( StaticType::Ptr(leftOperand.type) );
     try {
         auto leftValueRange = leftOperand.getRange(), rightValueRange = rightOperand.getRange();
         if( leftValueRange && rightValueRange )
@@ -120,7 +120,7 @@ static Expression codeGenBinaryMinus(
     return result;
 }
 
-static Expression codeGenSafeCast(
+static AST::Expression codeGenSafeCast(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {
@@ -129,7 +129,7 @@ static Expression codeGenSafeCast(
     ExpectedType castExpectedResult( expectedType.getType(), true );
 
     // First code-gen the expression with mandatory result in our cast type
-    Expression interimResult = codeGenExpression( ctx, codeGen, castExpectedResult, op.operand2.get() );
+    AST::Expression interimResult = codeGenExpression( ctx, codeGen, castExpectedResult, op.operand2.get() );
 
     // Next, implicit cast it to our expected result
     return codeGenCast( codeGen, interimResult, expectedResult, *op.op, true );
@@ -137,7 +137,7 @@ static Expression codeGenSafeCast(
 
 static const std::unordered_map<
     Tokens,
-    Expression (*)(
+    AST::Expression (*)(
             LookupContext &, FunctionGen *, ExpectedType, const NonTerminals::Expression::BinaryOperator &
     )
 > binaryOperatorsMap{
@@ -146,7 +146,7 @@ static const std::unordered_map<
     { Tokens::RESERVED_EXPECT, codeGenSafeCast },
 };
 
-Expression codeGenBinaryOperator(
+AST::Expression codeGenBinaryOperator(
         LookupContext &ctx, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op)
 {

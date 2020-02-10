@@ -13,11 +13,11 @@
 
 namespace CodeGen {
 
-Expression codeGenBinaryOperator(
+AST::Expression codeGenBinaryOperator(
         LookupContext &astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::BinaryOperator &op);
 
-Expression codeGenUnaryOperator(
+AST::Expression codeGenUnaryOperator(
         LookupContext &astExpression, FunctionGen *codeGen, ExpectedType expectedResult,
         const NonTerminals::Expression::UnaryOperator &op);
 

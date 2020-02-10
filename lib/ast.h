@@ -16,7 +16,6 @@
 
 #include <memory>
 
-extern Expression voidExpression;
 // The "Type" static type (when an expression describes a type)
 extern StaticType::Ptr typeType;
 

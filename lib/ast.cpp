@@ -13,7 +13,6 @@
 #include <string>
 #include <sstream>
 
-Expression voidExpression;
 StaticType::Ptr typeType;
 ModuleId::Allocator<> moduleIdAllocator;
 
@@ -75,8 +74,6 @@ void AST::prepare()
     builtinCtx.registerType( &name##Identifier, NamedType::Type::type, size, minvalue, maxvalue )
 
     RegisterBuiltInType( Void, Void, 0 );
-    TypeId VoidTypeId = builtinCtx.lookupType( "Void" )->id();
-    voidExpression = Expression( StaticType::allocate( VoidTypeId ) );
 
     RegisterBuiltInType( Type, Type, 0 );
     TypeId TypeTypeId = builtinCtx.lookupType( "Type" )->id();

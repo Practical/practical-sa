@@ -10,11 +10,15 @@
 #define LOOKUP_CONTEXT_H
 
 #include "asserts.h"
-#include "expression.h"
 #include "nocopy.h"
 #include "tokenizer.h"
+#include "value_range.h"
 
 #include <practical-sa.h>
+
+namespace AST {
+    struct Expression;
+}
 
 // A Context is anything that may contain further symbolic definitions. This may be a module, a struct, a function or even an
 // anonymous block of code.
@@ -69,7 +73,7 @@ public:
         PracticalSemanticAnalyzer::IdentifierId id;
 
         explicit LocalVariable( const Tokenizer::Token *name );
-        LocalVariable( const Tokenizer::Token *name, const Expression &lvalueExpression );
+        LocalVariable( const Tokenizer::Token *name, const AST::Expression &lvalueExpression );
     };
 
     class Function {

@@ -9,6 +9,7 @@
 #include "lookup_context.h"
 
 #include "asserts.h"
+#include "expression.h"
 #include "practical-errors.h"
 
 #include <sstream>
@@ -38,7 +39,7 @@ LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name) : name
 {
 }
 
-LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, const Expression &lvalueExpression) :
+LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, const AST::Expression &lvalueExpression) :
     name(name),
     type( lvalueExpression.type ),
     expressionId( lvalueExpression.id ),

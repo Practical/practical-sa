@@ -17,13 +17,13 @@
 using namespace PracticalSemanticAnalyzer;
 
 // Forward declaration
-static Expression codeGenCast(
-        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *namedSource,
+static AST::Expression codeGenCast(
+        FunctionGen *codeGen, const AST::Expression &sourceExpression, const LookupContext::NamedType *namedSource,
         const LookupContext::NamedType *namedDest, StaticType::Ptr destType, const Tokenizer::Token &expressionSource,
         bool implicitOnly );
 
 bool checkImplicitCastAllowed(
-        const Expression &sourceExpression, ExpectedType destType, const Tokenizer::Token &expressionSource)
+        const AST::Expression &sourceExpression, ExpectedType destType, const Tokenizer::Token &expressionSource)
 {
     try {
         codeGenCast( &dummyFunctionGen, sourceExpression, destType, expressionSource, true );
@@ -37,8 +37,8 @@ bool checkImplicitCastAllowed(
     return true;
 }
 
-static Expression codeGenCast_ValueRange(
-        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *sourceType,
+static AST::Expression codeGenCast_ValueRange(
+        FunctionGen *codeGen, const AST::Expression &sourceExpression, const LookupContext::NamedType *sourceType,
         const LookupContext::NamedType *destNamedType, StaticType::Ptr destStaticType,
         const Tokenizer::Token &expressionSource )
 {
@@ -57,8 +57,8 @@ static Expression codeGenCast_ValueRange(
 #undef REPORT_ERROR
 }
 
-static Expression codeGenCast_SignedIntSource(
-        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *sourceType,
+static AST::Expression codeGenCast_SignedIntSource(
+        FunctionGen *codeGen, const AST::Expression &sourceExpression, const LookupContext::NamedType *sourceType,
         const LookupContext::NamedType *destNamedType, StaticType::Ptr destStaticType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
@@ -66,7 +66,7 @@ static Expression codeGenCast_SignedIntSource(
     if( destNamedType->type()!=NamedType::Type::SignedInteger )
         REPORT_ERROR();
 
-    Expression castResult{ StaticType::Ptr(destStaticType) };
+    AST::Expression castResult{ StaticType::Ptr(destStaticType) };
     if( sourceType->size()>destNamedType->size() ) {
         if( implicitOnly )
             REPORT_ERROR();
@@ -87,13 +87,13 @@ static Expression codeGenCast_SignedIntSource(
 #undef REPORT_ERROR
 }
 
-static Expression codeGenCast_UnsignedIntSource(
-        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *sourceType,
+static AST::Expression codeGenCast_UnsignedIntSource(
+        FunctionGen *codeGen, const AST::Expression &sourceExpression, const LookupContext::NamedType *sourceType,
         const LookupContext::NamedType *destNamedType, StaticType::Ptr destStaticType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
 #define REPORT_ERROR() throw CastNotAllowed(sourceExpression.type, destStaticType, implicitOnly, expressionSource.line, expressionSource.col)
-    Expression castResult{ StaticType::Ptr(destStaticType) };
+    AST::Expression castResult{ StaticType::Ptr(destStaticType) };
 
     if( destNamedType->type()==NamedType::Type::SignedInteger ) {
         if( sourceType->size()>=destNamedType->size() ) {
@@ -135,8 +135,8 @@ static Expression codeGenCast_UnsignedIntSource(
 #undef REPORT_ERROR
 }
 
-static Expression codeGenCast(
-        FunctionGen *codeGen, const Expression &sourceExpression, const LookupContext::NamedType *namedSource,
+static AST::Expression codeGenCast(
+        FunctionGen *codeGen, const AST::Expression &sourceExpression, const LookupContext::NamedType *namedSource,
         const LookupContext::NamedType *namedDest, StaticType::Ptr destType, const Tokenizer::Token &expressionSource,
         bool implicitOnly )
 {
@@ -156,8 +156,8 @@ static Expression codeGenCast(
     ABORT() << "Unreachable code reached";
 }
 
-Expression codeGenCast(
-        FunctionGen *codeGen, const Expression &sourceExpression, ExpectedType destType,
+AST::Expression codeGenCast(
+        FunctionGen *codeGen, const AST::Expression &sourceExpression, ExpectedType destType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
     ASSERT( destType )<<"codeGenCast called with no expected result set at "<<expressionSource;
@@ -165,8 +165,8 @@ Expression codeGenCast(
     return codeGenCast( codeGen, sourceExpression, destType.type, expressionSource, implicitOnly );
 }
 
-Expression codeGenCast(
-        FunctionGen *codeGen, const Expression &sourceExpression, StaticType::Ptr destType,
+AST::Expression codeGenCast(
+        FunctionGen *codeGen, const AST::Expression &sourceExpression, StaticType::Ptr destType,
         const Tokenizer::Token &expressionSource, bool implicitOnly )
 {
     // Fastpath

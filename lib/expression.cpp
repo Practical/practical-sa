@@ -10,6 +10,8 @@
 
 #include "asserts.h"
 
+namespace AST {
+
 static PracticalSemanticAnalyzer::ExpressionId::Allocator<> expressionIdAllocator;
 
 Expression::Expression() {
@@ -53,3 +55,5 @@ std::ostream &operator<<( std::ostream &out, const Expression &expr ) {
 
     return out;
 }
+
+} // End namespace AST
