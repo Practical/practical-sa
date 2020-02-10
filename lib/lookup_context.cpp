@@ -38,8 +38,11 @@ LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name) : name
 {
 }
 
-LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, Expression &&lvalueExpression)
-    : name(name), lvalueExpression(std::move(lvalueExpression)), id( idAllocator.allocate() )
+LookupContext::LocalVariable::LocalVariable(const Tokenizer::Token *name, const Expression &lvalueExpression) :
+    name(name),
+    type( lvalueExpression.type ),
+    expressionId( lvalueExpression.id ),
+    id( idAllocator.allocate() )
 {
 }
 

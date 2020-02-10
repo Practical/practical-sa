@@ -100,7 +100,7 @@ void FuncDecl::symbolsPass2(LookupContext *ctx) {
                 LookupContext::LocalVariable(
                     parserArg.name.identifier, std::move(lvalueExpression) ) );
         ctxFunction->arguments.emplace_back(
-                localVariable->lvalueExpression.type, localVariable->name->text, localVariable->lvalueExpression.id );
+                localVariable->type, localVariable->name->text, localVariable->expressionId );
     }
 }
 

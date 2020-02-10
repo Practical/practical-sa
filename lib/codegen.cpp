@@ -170,12 +170,12 @@ void codeGenVarDef(LookupContext &ctx, FunctionGen *codeGen, const NonTerminals:
     varType.symbolsPass2( &ctx );
     const LookupContext::LocalVariable *namedVar = ctx.registerVariable( LookupContext::LocalVariable(
                 definition->body.name.identifier, Expression( std::move(varType).removeType() ) ) );
-    codeGen->allocateStackVar( namedVar->lvalueExpression.id, namedVar->lvalueExpression.type, namedVar->name->text );
+    codeGen->allocateStackVar( namedVar->expressionId, namedVar->type, namedVar->name->text );
 
     if( definition->initValue ) {
         Expression initValue = codeGenExpression(
-                ctx, codeGen, ExpectedType( namedVar->lvalueExpression.type ), definition->initValue.get());
-        codeGen->assign( namedVar->lvalueExpression.id, initValue.id );
+                ctx, codeGen, ExpectedType( namedVar->type ), definition->initValue.get());
+        codeGen->assign( namedVar->expressionId, initValue.id );
     } else {
         ABORT() << "TODO Type default values not yet implemented";
     }
@@ -326,8 +326,8 @@ Expression codeGenIdentifierLookup(
         ExpectedType expectedResult;
 
         Expression operator()(const LookupContext::LocalVariable &localVar) const {
-            Expression expression( StaticType::Ptr(localVar.lvalueExpression.type) );
-            codeGen->dereferencePointer( expression.id, localVar.lvalueExpression.type, localVar.lvalueExpression.id );
+            Expression expression( StaticType::Ptr(localVar.type) );
+            codeGen->dereferencePointer( expression.id, localVar.type, localVar.expressionId );
 
             if( expectedResult )
                 expression = codeGenCast( codeGen, expression, expectedResult, *identifier, true );

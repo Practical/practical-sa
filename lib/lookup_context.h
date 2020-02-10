@@ -64,11 +64,12 @@ public:
     class LocalVariable {
     public:
         const Tokenizer::Token *name;
-        Expression lvalueExpression; // Expression where variable was defined
+        PracticalSemanticAnalyzer::StaticType::Ptr type;
+        PracticalSemanticAnalyzer::ExpressionId expressionId; // Expression where variable was defined
         PracticalSemanticAnalyzer::IdentifierId id;
 
         explicit LocalVariable( const Tokenizer::Token *name );
-        LocalVariable( const Tokenizer::Token *name, Expression &&lvalueExpression );
+        LocalVariable( const Tokenizer::Token *name, const Expression &lvalueExpression );
     };
 
     class Function {
