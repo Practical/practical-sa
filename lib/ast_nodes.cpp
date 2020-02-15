@@ -49,12 +49,59 @@ void CompoundExpression::symbolsPass2() {
     // TODO implement
 }
 
-Expression CompoundExpression::codeGen(FunctionGen *codeGen, ExpectedType expectedResult) {
-    for( auto &statement: parserExpression->statementList.statements ) {
-        codeGenStatement( ctx, codeGen, &statement );
-    }
+Statement::Statement(LookupContext &ctx, const NonTerminals::Statement &nt) :
+    ctx(ctx),
+    parserStatement(nt)
+{
+}
 
-    return codeGenExpression(ctx, codeGen, expectedResult, &parserExpression->expression);
+void Statement::codeGen(FunctionGen *codeGen) {
+    struct Visitor {
+        Statement *_this;
+        FunctionGen *codeGen;
+
+        void operator()( std::monostate none ) {
+            ABORT()<<"XXX Possibly unreachable state";
+        }
+
+        void operator()( const NonTerminals::Expression &parserExpression ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const NonTerminals::VariableDefinition &definition ) {
+            _this->codeGenVarDef(codeGen, definition);
+        }
+
+        void operator()( const NonTerminals::Statement::ConditionalStatement &condition ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const std::unique_ptr<NonTerminals::CompoundStatement> &compound ) {
+            ABORT()<<"TODO implement";
+        }
+    };
+
+    std::visit( Visitor{ ._this = this, .codeGen = codeGen }, parserStatement.content );
+}
+
+void Statement::codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition &definition) {
+    Type varType( &definition.body.type );
+    varType.symbolsPass2( &ctx );
+    const LookupContext::LocalVariable *namedVar = ctx.registerVariable( LookupContext::LocalVariable(
+                definition.body.name.identifier, Expression( std::move(varType).removeType() ) ) );
+    codeGen->allocateStackVar(
+            namedVar->expressionId, namedVar->type, namedVar->name->text );
+
+    if( definition.initValue ) {
+        Expression initValue( *definition.initValue );
+
+        initValue.buildAst( ctx, ExpectedType( namedVar->type ) );
+        initValue.codeGen( codeGen );
+
+        codeGen->assign( namedVar->expressionId, initValue.getId() );
+    } else {
+        ABORT() << "TODO Type default values not yet implemented";
+    }
 }
 
 CompoundStatement::CompoundStatement(LookupContext *parentCtx, const NonTerminals::CompoundStatement *nt) :
@@ -71,8 +118,10 @@ void CompoundStatement::symbolsPass2() {
 }
 
 void CompoundStatement::codeGen(FunctionGen *codeGen) {
-    for( auto &statement: parserStatement->statements.statements ) {
-        codeGenStatement( ctx, codeGen, &statement );
+    ABORT()<<"TODO implement";
+    for( const auto &parserStatement: parserStatement->statements.statements ) {
+        Statement statement( ctx, parserStatement );
+        statement.codeGen(codeGen);
     }
 }
 
@@ -191,8 +240,9 @@ void FuncDef::codeGen(PracticalSemanticAnalyzer::ModuleGen *moduleGen) {
         }
 
         void operator()( CompoundExpression &expression ) {
-            Expression result = expression.codeGen( functionGen, ExpectedType( declaration.getRetType() ) );
-            functionGen->returnValue(result.id);
+            expression.buildAst( ExpectedType( declaration.getRetType() ) );
+            Expression result = expression.codeGen( functionGen );
+            functionGen->returnValue(result.getId());
         }
 
         void operator()( CompoundStatement &statement ) {

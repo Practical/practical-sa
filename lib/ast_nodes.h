@@ -37,16 +37,16 @@ public:
     }
 };
 
-class CompoundExpression : NoCopy {
-    LookupContext ctx;
-    const NonTerminals::CompoundExpression *parserExpression;
-
+class Statement : NoCopy {
+    LookupContext &ctx;
+    const NonTerminals::Statement &parserStatement;
 public:
-    CompoundExpression(LookupContext *parentCtx, const NonTerminals::CompoundExpression *nt);
+    Statement(LookupContext &ctx, const NonTerminals::Statement &nt);
 
-    void symbolsPass1();
-    void symbolsPass2();
-    Expression codeGen(FunctionGen *codeGen, ExpectedType expectedResult);
+    void codeGen(FunctionGen *codeGen);
+
+private:
+    void codeGenVarDef(FunctionGen *codeGen, const NonTerminals::VariableDefinition &definition);
 };
 
 class CompoundStatement : NoCopy {

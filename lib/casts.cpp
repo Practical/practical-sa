@@ -43,7 +43,7 @@ static AST::Expression codeGenCast_ValueRange(
         const Tokenizer::Token &expressionSource )
 {
 #define REPORT_ERROR() throw CastNotAllowed(sourceExpression.type, destStaticType, true, expressionSource.line, expressionSource.col)
-    ASSERT( sourceExpression.valueRange )<<"Called value range based cast on expression with no value range";
+    ASSERT( sourceExpression.getValueRange() )<<"Called value range based cast on expression with no value range";
     ASSERT( destNamedType->range() )<<
             "Asked to convert to "<<destNamedType->name()<<
             " based on value range, but type doesn't have range information";

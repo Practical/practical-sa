@@ -17,12 +17,6 @@ static PracticalSemanticAnalyzer::ExpressionId::Allocator<> expressionIdAllocato
 Expression::Expression() {
 }
 
-Expression::Expression( PracticalSemanticAnalyzer::StaticType::Ptr && type ) :
-    id(expressionIdAllocator.allocate()),
-    type(type)
-{
-}
-
 Expression::Expression( Expression && that ) :
     id(that.id), type( std::move(that.type) ), valueRange( std::move(that.valueRange) )
 {
@@ -37,6 +31,13 @@ Expression &Expression::operator=( Expression &&that ) {
     return *this;
 }
 
+Expression::Expression( const NonTerminals::Expression &ntExpression ) :
+    id( expressionIdAllocator.allocate() ),
+    ntExpression( &ntExpression )
+{
+}
+
+#if 0
 Expression Expression::duplicate() const {
     Expression ret;
     ret.id = id;
@@ -45,13 +46,51 @@ Expression Expression::duplicate() const {
 
     return ret;
 }
+#endif
 
-boost::intrusive_ptr<const ValueRange> Expression::getRange() const {
-    return valueRange;
+void Expression::buildAst( LookupContext &ctx, ExpectedType expectedType ) {
+    ASSERT( ntExpression!=nullptr )<<"Cannot build AST for a non-organic expression";
+    ASSERT( !astNode )<<"AST already built for expression";
+
+    struct Visitor {
+        void operator()( const std::unique_ptr<::NonTerminals::CompoundExpression> &compound ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const ::NonTerminals::Literal &literal ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const NonTerminals::Identifier &identifier ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const NonTerminals::Expression::UnaryOperator &op ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const NonTerminals::Expression::BinaryOperator &op ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const NonTerminals::Expression::FunctionCall &func ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const std::unique_ptr<NonTerminals::ConditionalExpression> &condition ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const NonTerminals::Type &type ) {
+            ABORT()<<"TODO implement";
+        }
+    };
+
+    std::visit( Visitor(), ntExpression->value );
 }
 
 std::ostream &operator<<( std::ostream &out, const Expression &expr ) {
-    out<<"Expression("<<expr.id<<": "<<expr.type<<")";
+    out<<"Expression("<<expr.getId()<<": "<<expr.getType()<<")";
 
     return out;
 }
