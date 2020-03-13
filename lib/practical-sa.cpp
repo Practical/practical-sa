@@ -10,7 +10,6 @@
 
 #include <practical-sa.h>
 
-#include "ast.h"
 #include "mmap.h"
 #include "parser.h"
 
@@ -40,6 +39,7 @@ int compile(std::string path, const CompilerArguments *arguments, ModuleGen *cod
     // Load file into memory
     Mmap<MapMode::ReadOnly> sourceFile(path);
 
+    /*
     AST::AST ast;
 
     // Parse + symbols lookup
@@ -48,12 +48,13 @@ int compile(std::string path, const CompilerArguments *arguments, ModuleGen *cod
 
     // And that other thing
     ast.codeGen(codeGen);
+    */
 
     return 0;
 }
 
 const NamedType *lookupTypeId(TypeId id) {
-    return LookupContext::lookupType(id);
+    //return LookupContext::lookupType(id);
 }
 
 StaticType::Ptr StaticType::allocate(TypeId id) {
