@@ -14,7 +14,7 @@
 
 namespace PracticalSemanticAnalyzer {
 
-CastNotAllowed::CastNotAllowed(StaticType::Ptr src, StaticType::Ptr dst, bool implicit, size_t line, size_t col)
+CastNotAllowed::CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
         : compile_error(line, col)
 {
     std::stringstream buf;
@@ -27,7 +27,7 @@ CastNotAllowed::CastNotAllowed(StaticType::Ptr src, StaticType::Ptr dst, bool im
     setMsg( buf.str().c_str() );
 }
 
-IncompatibleTypes::IncompatibleTypes(StaticType::Ptr left, StaticType::Ptr right, size_t line, size_t col)
+IncompatibleTypes::IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, size_t line, size_t col)
         : compile_error(line, col)
 {
     std::stringstream buf;

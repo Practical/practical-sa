@@ -74,12 +74,12 @@ public:
 
 class CastNotAllowed : public compile_error {
 public:
-    CastNotAllowed(StaticType::Ptr src, StaticType::Ptr dst, bool implicit, size_t line, size_t col);
+    CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
 };
 
 class IncompatibleTypes : public compile_error {
 public:
-    IncompatibleTypes(StaticType::Ptr left, StaticType::Ptr right, size_t line, size_t col);
+    IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, size_t line, size_t col);
 };
 
 class SymbolRedefined : public compile_error {

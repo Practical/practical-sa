@@ -10,6 +10,8 @@
 
 #include <practical-sa.h>
 
+#include "ast/ast.h"
+#include "ast/static_type.h"
 #include "mmap.h"
 #include "parser.h"
 
@@ -17,16 +19,13 @@
 
 DEF_TYPED_NS( PracticalSemanticAnalyzer, ModuleId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, IdentifierId );
-DEF_TYPED_NS( PracticalSemanticAnalyzer, TypeId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId );
 
 namespace PracticalSemanticAnalyzer {
 
-std::ostream &operator<<(std::ostream &out, StaticType::Ptr type) {
-    auto namedType = lookupTypeId(type->getId());
-
-    out << namedType->name();
+std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
+    out << type->getName();
 
     return out;
 }
@@ -35,30 +34,26 @@ std::unique_ptr<CompilerArguments> allocateArguments() {
     return safenew<CompilerArguments>();
 }
 
+void prepare( BuiltinContextGen *ctxGen ) {
+    AST::AST::prepare(ctxGen);
+}
+
 int compile(std::string path, const CompilerArguments *arguments, ModuleGen *codeGen) {
     // Load file into memory
     Mmap<MapMode::ReadOnly> sourceFile(path);
 
-    /*
     AST::AST ast;
 
     // Parse + symbols lookup
-    ast.prepare();
-    ast.parseModule(sourceFile.getSlice<const char>());
+    ASSERT( AST::AST::prepared() )<<"compile called without calling prepare first";
+    auto tokenizedModule = Tokenizer::Tokenizer::tokenize( sourceFile.getSlice<const char>() );
+    NonTerminals::Module module;
+    module.parse( tokenizedModule );
 
     // And that other thing
-    ast.codeGen(codeGen);
-    */
+    ast.codeGen( module, codeGen );
 
     return 0;
-}
-
-const NamedType *lookupTypeId(TypeId id) {
-    //return LookupContext::lookupType(id);
-}
-
-StaticType::Ptr StaticType::allocate(TypeId id) {
-    return new StaticType(id);
 }
 
 } // PracticalSemanticAnalyzer
