@@ -16,9 +16,9 @@
 #include <memory>
 #include <utility>
 
-template <typename T, typename... ARGS>
-std::unique_ptr<T> safenew(ARGS&&... args) {
-    return std::unique_ptr<T>( new T(std::forward<ARGS>(args)...) );
+template<typename T, typename... Args>
+std::unique_ptr<T> safenew(Args&&... args) {
+    return std::unique_ptr<T>( new T(std::forward<Args>(args)...) );
 }
 
 // static constexpr double GoldenRatio = (1 + sqrt(5.0)) / 2;

@@ -25,7 +25,15 @@ DEF_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId );
 namespace PracticalSemanticAnalyzer {
 
 std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
-    out << type->getName();
+    struct Visitor {
+        std::ostream &out;
+
+        void operator()( const StaticType::Scalar *scalar ) {
+            out<<scalar->getName();
+        }
+    };
+
+    std::visit( Visitor{ .out = out }, type->getType() );
 
     return out;
 }

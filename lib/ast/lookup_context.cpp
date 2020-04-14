@@ -10,6 +10,8 @@
 
 #include <asserts.h>
 
+using namespace PracticalSemanticAnalyzer;
+
 namespace AST {
 
 StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
@@ -21,10 +23,10 @@ StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
     return iter->second;
 }
 
-StaticTypeImpl::CPtr LookupContext::registerBuiltinType( BuiltinType &&type ) {
+StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarImpl &&type ) {
     auto iter = types.emplace(
             type.getName(),
-            new StaticTypeImpl( std::move(type) ) );
+            StaticTypeImpl::allocate( std::move(type) ) );
     ASSERT( iter.second )<<"registerBuiltinType called on "<<type.getName()<<" which is already registered";
 
     return iter.first->second;

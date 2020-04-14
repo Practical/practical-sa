@@ -45,12 +45,34 @@ namespace PracticalSemanticAnalyzer {
 
     class StaticType : private NoCopy, public boost::intrusive_ref_counter<StaticType, boost::thread_unsafe_counter> {
     public:
+        class Scalar {
+            size_t size=0, alignment=1;
+            TypeId typeId;
+
+        public:
+            Scalar( size_t size, size_t alignment, TypeId typeId ) : size(size), alignment(alignment), typeId(typeId) {}
+
+            virtual String getName() const = 0;
+
+            size_t getSize() const {
+                return size;
+            }
+
+            size_t getAlignment() const {
+                return alignment;
+            }
+
+            TypeId getTypeId()  const {
+                return typeId;
+            }
+        };
+
         using CPtr = boost::intrusive_ptr<const StaticType>;
+        using Types = std::variant<const Scalar *>;
 
         virtual ~StaticType() {}
 
-        virtual String getName() const = 0;
-
+        virtual Types getType() const = 0;
     };
     std::ostream &operator<<(std::ostream &out, StaticType::CPtr type);
 

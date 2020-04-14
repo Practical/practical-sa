@@ -9,39 +9,48 @@
 #ifndef AST_STATIC_TYPE_H
 #define AST_STATIC_TYPE_H
 
+#include "asserts.h"
+
 #include <practical-sa.h>
+
+#include <memory>
 
 namespace AST {
 
-class BuiltinType {
+class ScalarImpl final : public PracticalSemanticAnalyzer::StaticType::Scalar, private NoCopy {
     std::string name;
 
 public:
+    explicit ScalarImpl( String name, size_t size, size_t alignment, PracticalSemanticAnalyzer::TypeId backendType );
+    ScalarImpl( ScalarImpl &&that ) :
+        PracticalSemanticAnalyzer::StaticType::Scalar( that ),
+        name( std::move(that.name) )
+    {}
 
-    String getName() const;
+    virtual String getName() const override final {
+        return name.c_str();
+    }
 };
 
 class StaticTypeImpl : public PracticalSemanticAnalyzer::StaticType {
-    private:
-        String name;
+private:
+    std::variant<
+            std::unique_ptr<ScalarImpl>
+    > content;
 
-    public:
-        using CPtr = boost::intrusive_ptr<const StaticType>;
-        using Ptr = boost::intrusive_ptr<StaticType>;
+public:
+    using CPtr = boost::intrusive_ptr<const StaticType>;
+    using Ptr = boost::intrusive_ptr<StaticType>;
 
-        explicit StaticTypeImpl( BuiltinType &&builtin );
+    template<typename... Args>
+    static Ptr allocate(Args&&... args) {
+        return new StaticTypeImpl( std::forward<Args>(args)... );
+    }
 
-        virtual String getName() const override final
-        {
-            return name;
-        }
+    virtual Types getType() const override final;
 
-        static Ptr allocate( const char *name );
-
-    private:
-        explicit StaticTypeImpl(const char *name) :
-            name(name)
-        {}
+private:
+    explicit StaticTypeImpl( ScalarImpl &&scalar );
 };
 
 } // End namespace AST

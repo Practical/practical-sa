@@ -22,7 +22,7 @@ class LookupContext {
 public:
     StaticTypeImpl::CPtr lookupType( String name ) const;
 
-    StaticTypeImpl::CPtr registerBuiltinType( BuiltinType &&type );
+    StaticTypeImpl::CPtr registerScalarType( ScalarImpl &&type );
 };
 
 } // End namespace AST
