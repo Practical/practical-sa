@@ -78,10 +78,10 @@ namespace PracticalSemanticAnalyzer {
 
     class BuiltinContextGen {
     public:
-        virtual TypeId registerVoidType( String name ) = 0;
-        virtual TypeId registerBoolType( String name ) = 0;
-        virtual TypeId registerIntegerType( String name, size_t bitSize, size_t alignment, bool _signed ) = 0;
-        virtual TypeId registerCharType( String name, size_t bitSize, size_t alignment, bool _signed ) = 0;
+        virtual TypeId registerVoidType() = 0;
+        virtual TypeId registerBoolType() = 0;
+        virtual TypeId registerIntegerType( size_t bitSize, size_t alignment, bool _signed ) = 0;
+        virtual TypeId registerCharType( size_t bitSize, size_t alignment, bool _signed ) = 0;
     };
 
     struct ArgumentDeclaration {

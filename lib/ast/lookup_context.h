@@ -12,12 +12,13 @@
 #include "ast/static_type.h"
 #include "slice.h"
 
+#include <string>
 #include <unordered_map>
 
 namespace AST {
 
 class LookupContext {
-    std::unordered_map< String, StaticTypeImpl::CPtr > types;
+    std::unordered_map< std::string, StaticTypeImpl::CPtr > types;
 
 public:
     StaticTypeImpl::CPtr lookupType( String name ) const;

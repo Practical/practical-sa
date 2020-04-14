@@ -15,7 +15,7 @@ using namespace PracticalSemanticAnalyzer;
 namespace AST {
 
 StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
-    auto iter = types.find(name);
+    auto iter = types.find( sliceToString(name) );
 
     if( iter==types.end() )
         return StaticTypeImpl::CPtr();
@@ -24,10 +24,11 @@ StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
 }
 
 StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarImpl &&type ) {
+    std::string name = sliceToString(type.getName());
     auto iter = types.emplace(
-            type.getName(),
+            name,
             StaticTypeImpl::allocate( std::move(type) ) );
-    ASSERT( iter.second )<<"registerBuiltinType called on "<<type.getName()<<" which is already registered";
+    ASSERT( iter.second )<<"registerBuiltinType called on "<<iter.first->second<<" ("<<iter.first->first<<", "<<name<<") which is already registered";
 
     return iter.first->second;
 }
