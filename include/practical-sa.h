@@ -67,8 +67,11 @@ namespace PracticalSemanticAnalyzer {
             }
         };
 
+        class Function {
+        };
+
         using CPtr = boost::intrusive_ptr<const StaticType>;
-        using Types = std::variant<const Scalar *>;
+        using Types = std::variant<const Scalar *, const Function *>;
 
         virtual ~StaticType() {}
 

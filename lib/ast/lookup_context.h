@@ -10,7 +10,9 @@
 #define AST_LOOKUP_CONTEXT_H
 
 #include "ast/static_type.h"
+#include "parser.h"
 #include "slice.h"
+#include "tokenizer.h"
 
 #include <string>
 #include <unordered_map>
@@ -18,12 +20,28 @@
 namespace AST {
 
 class LookupContext {
+    struct Symbol {
+        const Tokenizer::Token *token;
+        StaticTypeImpl::CPtr type;
+    };
+
     std::unordered_map< std::string, StaticTypeImpl::CPtr > types;
+    const LookupContext *parent = nullptr;
+
+    std::unordered_map< String, Symbol > symbols;
 
 public:
-    StaticTypeImpl::CPtr lookupType( String name ) const;
+    explicit LookupContext(const LookupContext *parent = nullptr) :
+        parent(parent)
+    {}
 
-    StaticTypeImpl::CPtr registerScalarType( ScalarImpl &&type );
+    StaticTypeImpl::CPtr lookupType( String name ) const;
+    StaticTypeImpl::CPtr lookupType( const NonTerminals::Type &type ) const;
+
+    StaticTypeImpl::CPtr registerScalarType( ScalarTypeImpl &&type );
+
+    void addFunctionPass1( const Tokenizer::Token *token );
+    void addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type );
 };
 
 } // End namespace AST

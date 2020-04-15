@@ -12,9 +12,18 @@ using namespace PracticalSemanticAnalyzer;
 
 namespace AST {
 
-ScalarImpl::ScalarImpl( String name, size_t size, size_t alignment, PracticalSemanticAnalyzer::TypeId backendType ) :
+ScalarTypeImpl::ScalarTypeImpl(
+        String name, size_t size, size_t alignment, PracticalSemanticAnalyzer::TypeId backendType ) :
     PracticalSemanticAnalyzer::StaticType::Scalar( size, alignment, backendType ),
     name( sliceToString(name) )
+{
+}
+
+FunctionTypeImpl::FunctionTypeImpl(
+        boost::intrusive_ptr<const StaticTypeImpl> &&returnType,
+        std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes ) :
+    returnType( std::move(returnType) ),
+    argumentTypes( std::move(argumentTypes) )
 {
 }
 
@@ -22,16 +31,25 @@ StaticType::Types StaticTypeImpl::getType() const {
     struct Visitor {
         const StaticType *_this;
 
-        Types operator()( const std::unique_ptr<ScalarImpl> &scalar ) {
+        Types operator()( const std::unique_ptr<ScalarTypeImpl> &scalar ) {
             return scalar.get();
+        }
+
+        Types operator()( const std::unique_ptr<FunctionTypeImpl> &function ) {
+            return function.get();
         }
     };
 
     return std::visit( Visitor{ ._this=this }, content );
 }
 
-StaticTypeImpl::StaticTypeImpl( ScalarImpl &&scalar ) :
-    content( std::unique_ptr<ScalarImpl>( new ScalarImpl( std::move(scalar) ) ) )
+StaticTypeImpl::StaticTypeImpl( ScalarTypeImpl &&scalar ) :
+    content( std::unique_ptr<ScalarTypeImpl>( new ScalarTypeImpl( std::move(scalar) ) ) )
+{
+}
+
+StaticTypeImpl::StaticTypeImpl( FunctionTypeImpl &&function ) :
+    content( safenew<FunctionTypeImpl>( std::move(function) ) )
 {
 }
 

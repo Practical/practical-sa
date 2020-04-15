@@ -6,30 +6,27 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#ifndef AST_AST_H
-#define AST_AST_H
+#ifndef AST_MODULE_H
+#define AST_MODULE_H
 
-#include <practical-sa.h>
-
-#include "parser.h"
 #include "ast/lookup_context.h"
-#include "ast/module.h"
+#include "parser.h"
 
 namespace AST {
 
-class AST {
-    static LookupContext builtinCtx;
-    Module::Ptr module;
+class Module final : public boost::intrusive_ref_counter<Module, boost::thread_unsafe_counter>, private NoCopy {
+    const NonTerminals::Module &parserModule;
+    LookupContext lookupContext;
 
 public:
-    static void prepare( BuiltinContextGen *ctxGen );
-    static bool prepared();
-    void codeGen(const NonTerminals::Module &module, PracticalSemanticAnalyzer::ModuleGen *codeGen);
+    using Ptr = boost::intrusive_ptr<Module>;
 
-private:
-    static void registerBuiltinTypes( BuiltinContextGen *ctxGen );
+    explicit Module( const NonTerminals::Module &parserModule, const LookupContext &parentLookupContext );
+
+    void symbolsPass1();
+    void symbolsPass2();
 };
 
 } // End namespace AST
 
-#endif // AST_AST_H
+#endif // AST_MODULE_H

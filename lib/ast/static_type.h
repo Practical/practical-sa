@@ -17,12 +17,14 @@
 
 namespace AST {
 
-class ScalarImpl final : public PracticalSemanticAnalyzer::StaticType::Scalar, private NoCopy {
+class StaticTypeImpl;
+
+class ScalarTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Scalar, private NoCopy {
     std::string name;
 
 public:
-    explicit ScalarImpl( String name, size_t size, size_t alignment, PracticalSemanticAnalyzer::TypeId backendType );
-    ScalarImpl( ScalarImpl &&that ) :
+    explicit ScalarTypeImpl( String name, size_t size, size_t alignment, PracticalSemanticAnalyzer::TypeId backendType );
+    ScalarTypeImpl( ScalarTypeImpl &&that ) :
         PracticalSemanticAnalyzer::StaticType::Scalar( that ),
         name( std::move(that.name) )
     {}
@@ -32,15 +34,31 @@ public:
     }
 };
 
+class FunctionTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Function, private NoCopy {
+    boost::intrusive_ptr<const StaticTypeImpl> returnType;
+    std::vector< boost::intrusive_ptr<const StaticTypeImpl> > argumentTypes;
+
+public:
+    explicit FunctionTypeImpl(
+            boost::intrusive_ptr<const StaticTypeImpl> &&returnType,
+            std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes );
+
+    FunctionTypeImpl( FunctionTypeImpl &&that ) :
+        returnType( std::move(that.returnType) ),
+        argumentTypes( std::move(that.argumentTypes) )
+    {}
+};
+
 class StaticTypeImpl : public PracticalSemanticAnalyzer::StaticType {
 private:
     std::variant<
-            std::unique_ptr<ScalarImpl>
+            std::unique_ptr<ScalarTypeImpl>,
+            std::unique_ptr<FunctionTypeImpl>
     > content;
 
 public:
-    using CPtr = boost::intrusive_ptr<const StaticType>;
-    using Ptr = boost::intrusive_ptr<StaticType>;
+    using CPtr = boost::intrusive_ptr<const StaticTypeImpl>;
+    using Ptr = boost::intrusive_ptr<StaticTypeImpl>;
 
     template<typename... Args>
     static Ptr allocate(Args&&... args) {
@@ -50,7 +68,8 @@ public:
     virtual Types getType() const override final;
 
 private:
-    explicit StaticTypeImpl( ScalarImpl &&scalar );
+    explicit StaticTypeImpl( ScalarTypeImpl &&scalar );
+    explicit StaticTypeImpl( FunctionTypeImpl &&function );
 };
 
 } // End namespace AST

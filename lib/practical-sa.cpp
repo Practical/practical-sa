@@ -31,6 +31,11 @@ std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
         void operator()( const StaticType::Scalar *scalar ) {
             out<<scalar->getName();
         }
+
+        void operator()( const StaticType::Function *function ) {
+            out<<"Function of some type";
+            ABORT()<<"TODO implement";
+        }
     };
 
     std::visit( Visitor{ .out = out }, type->getType() );

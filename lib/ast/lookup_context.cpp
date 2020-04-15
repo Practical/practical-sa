@@ -17,13 +17,21 @@ namespace AST {
 StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
     auto iter = types.find( sliceToString(name) );
 
-    if( iter==types.end() )
-        return StaticTypeImpl::CPtr();
+    if( iter==types.end() ) {
+        if( parent )
+            return parent->lookupType(name);
+        else
+            return StaticTypeImpl::CPtr();
+    }
 
     return iter->second;
 }
 
-StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarImpl &&type ) {
+StaticTypeImpl::CPtr LookupContext::lookupType( const NonTerminals::Type &type ) const {
+    return lookupType( type.type.identifier->text );
+}
+
+StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type ) {
     std::string name = sliceToString(type.getName());
     auto iter = types.emplace(
             name,
@@ -31,6 +39,19 @@ StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarImpl &&type ) {
     ASSERT( iter.second )<<"registerBuiltinType called on "<<iter.first->second<<" ("<<iter.first->first<<", "<<name<<") which is already registered";
 
     return iter.first->second;
+}
+
+void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {
+    symbols.emplace(
+            token->text,
+            Symbol{ .token = token } );
+}
+
+void LookupContext::addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type ) {
+    auto iter = symbols.find( token->text );
+    ASSERT( iter!=symbols.end() )<<"addFunctionPass2 called for "<<token->text<<", but not for addFunctionPass1";
+
+    iter->second.type = std::move(type);
 }
 
 } // End namespace AST
