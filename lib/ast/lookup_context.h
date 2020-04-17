@@ -24,7 +24,6 @@ public:
     struct Symbol {
         const Tokenizer::Token *token;
         StaticTypeImpl::CPtr type;
-        IdentifierId id;
     };
 
 private:

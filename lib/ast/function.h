@@ -16,7 +16,6 @@ namespace AST {
 
 class Function : private NoCopy {
     const NonTerminals::FuncDef &parserFunction;
-    PracticalSemanticAnalyzer::IdentifierId id;
     String name;
     LookupContext lookupCtx;
     StaticType::CPtr returnType;
@@ -24,10 +23,6 @@ class Function : private NoCopy {
 
 public:
     explicit Function( const NonTerminals::FuncDef &parserFunction, const LookupContext &parentCtx );
-
-    PracticalSemanticAnalyzer::IdentifierId getId() const {
-        return id;
-    }
 
     void codeGen( std::shared_ptr<PracticalSemanticAnalyzer::FunctionGen> functionGen );
 };

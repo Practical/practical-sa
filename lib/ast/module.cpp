@@ -55,7 +55,7 @@ void Module::codeGen( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) {
     for( const auto &funcDef : parserModule.functionDefinitions ) {
         Function function(funcDef, lookupContext);
 
-        function.codeGen( moduleGen->handleFunction( function.getId() ) );
+        function.codeGen( moduleGen->handleFunction() );
     }
 
     moduleGen->moduleLeave( moduleId );

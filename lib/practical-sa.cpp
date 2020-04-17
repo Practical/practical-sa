@@ -18,7 +18,6 @@
 #include "defines.h"
 
 DEF_TYPED_NS( PracticalSemanticAnalyzer, ModuleId );
-DEF_TYPED_NS( PracticalSemanticAnalyzer, IdentifierId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId );
 

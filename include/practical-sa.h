@@ -28,7 +28,6 @@ using LongEnoughIntSigned = std::intmax_t;
 // Hopefully unique module ID for our typed ids
 static constexpr size_t PracticalSAModuleId = 0xc5489da402dc5a84;
 DECL_TYPED_NS( PracticalSemanticAnalyzer, ModuleId, unsigned long, 0, PracticalSAModuleId );
-DECL_TYPED_NS( PracticalSemanticAnalyzer, IdentifierId, unsigned long, 0, PracticalSAModuleId );
 DECL_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId, unsigned long, 0, PracticalSAModuleId );
 DECL_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId, unsigned long, 0, PracticalSAModuleId );
 
@@ -109,9 +108,9 @@ namespace PracticalSemanticAnalyzer {
     public:
         // Function handling
         virtual void functionEnter(
-                IdentifierId id, String name, StaticType::CPtr returnType, Slice<const ArgumentDeclaration> arguments,
+                String name, StaticType::CPtr returnType, Slice<const ArgumentDeclaration> arguments,
                 String file, size_t line, size_t col) = 0;
-        virtual void functionLeave(IdentifierId id) = 0;
+        virtual void functionLeave() = 0;
 
         virtual void returnValue(ExpressionId id) = 0;
         virtual void returnValue() = 0; // For Void functions
@@ -162,7 +161,7 @@ namespace PracticalSemanticAnalyzer {
         virtual void moduleEnter(ModuleId id, String name, String file, size_t line, size_t col) = 0;
         virtual void moduleLeave(ModuleId id) = 0;
 
-        virtual std::shared_ptr<FunctionGen> handleFunction(IdentifierId id) = 0;
+        virtual std::shared_ptr<FunctionGen> handleFunction() = 0;
     };
 
     std::unique_ptr<CompilerArguments> allocateArguments();

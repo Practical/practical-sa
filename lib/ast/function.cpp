@@ -22,7 +22,6 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
 {
     const LookupContext::Symbol *funcType = parentCtx.lookupSymbol( name );
     ASSERT( funcType );
-    id = funcType->id;
     StaticType::Types type = funcType->type->getType();
     auto function = std::get_if< const StaticType::Function * >(&type);
     ASSERT( function!=nullptr );
@@ -41,7 +40,6 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
 
 void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {
     functionGen->functionEnter(
-            getId(),
             name,
             returnType,
             arguments,
@@ -49,7 +47,7 @@ void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {
             parserFunction.decl.name.identifier->line,
             parserFunction.decl.name.identifier->col );
 
-    functionGen->functionLeave( getId() );
+    functionGen->functionLeave();
 }
 
 } // namespace AST

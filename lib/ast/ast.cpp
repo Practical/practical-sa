@@ -21,12 +21,6 @@ bool AST::prepared() {
     return builtinCtx.lookupType("Void") != StaticTypeImpl::CPtr();
 }
 
-PracticalSemanticAnalyzer::IdentifierId AST::allocateId() {
-    static PracticalSemanticAnalyzer::IdentifierId::Allocator allocator;
-
-    return allocator.allocate();
-}
-
 void AST::codeGen( const NonTerminals::Module &parserModule, PracticalSemanticAnalyzer::ModuleGen *codeGen ) {
     ASSERT( prepared() )<<"codegen called without calling prepare first";
     module = new Module( parserModule, builtinCtx );
