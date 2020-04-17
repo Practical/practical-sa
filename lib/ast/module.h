@@ -17,6 +17,7 @@ namespace AST {
 class Module final : public boost::intrusive_ref_counter<Module, boost::thread_unsafe_counter>, private NoCopy {
     const NonTerminals::Module &parserModule;
     LookupContext lookupContext;
+    PracticalSemanticAnalyzer::ModuleId moduleId;
 
 public:
     using Ptr = boost::intrusive_ptr<Module>;
@@ -25,6 +26,7 @@ public:
 
     void symbolsPass1();
     void symbolsPass2();
+    void codeGen( PracticalSemanticAnalyzer::ModuleGen *codeGen );
 };
 
 } // End namespace AST

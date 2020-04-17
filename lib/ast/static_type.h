@@ -47,6 +47,14 @@ public:
         returnType( std::move(that.returnType) ),
         argumentTypes( std::move(that.argumentTypes) )
     {}
+
+    PracticalSemanticAnalyzer::StaticType::CPtr getReturnType() const override;
+
+    size_t getNumArguments() const override {
+        return argumentTypes.size();
+    }
+
+    PracticalSemanticAnalyzer::StaticType::CPtr getArgumentType( unsigned index ) const override;
 };
 
 class StaticTypeImpl : public PracticalSemanticAnalyzer::StaticType {

@@ -45,6 +45,8 @@ namespace PracticalSemanticAnalyzer {
 
     class StaticType : private NoCopy, public boost::intrusive_ref_counter<StaticType, boost::thread_unsafe_counter> {
     public:
+        using CPtr = boost::intrusive_ptr<const StaticType>;
+
         class Scalar {
             size_t size=0, alignment=1;
             TypeId typeId;
@@ -68,9 +70,14 @@ namespace PracticalSemanticAnalyzer {
         };
 
         class Function {
+        public:
+            virtual ~Function() {}
+
+            virtual CPtr getReturnType() const = 0;
+            virtual size_t getNumArguments() const = 0;
+            virtual CPtr getArgumentType( unsigned index ) const = 0;
         };
 
-        using CPtr = boost::intrusive_ptr<const StaticType>;
         using Types = std::variant<const Scalar *, const Function *>;
 
         virtual ~StaticType() {}

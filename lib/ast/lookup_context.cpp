@@ -54,4 +54,15 @@ void LookupContext::addFunctionPass2( const Tokenizer::Token *token, StaticTypeI
     iter->second.type = std::move(type);
 }
 
+const LookupContext::Symbol *LookupContext::lookupSymbol( String name ) const {
+    auto iter = symbols.find(name);
+    if( iter!=symbols.end() )
+        return &iter->second;
+
+    if( getParent()==nullptr )
+        return nullptr;
+
+    return getParent()->lookupSymbol( name );
+}
+
 } // End namespace AST

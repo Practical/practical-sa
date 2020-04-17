@@ -20,11 +20,15 @@
 namespace AST {
 
 class LookupContext {
+public:
     struct Symbol {
         const Tokenizer::Token *token;
         StaticTypeImpl::CPtr type;
+        IdentifierId id;
     };
 
+private:
+    // Members
     std::unordered_map< std::string, StaticTypeImpl::CPtr > types;
     const LookupContext *parent = nullptr;
 
@@ -35,6 +39,10 @@ public:
         parent(parent)
     {}
 
+    const LookupContext *getParent() const {
+        return parent;
+    }
+
     StaticTypeImpl::CPtr lookupType( String name ) const;
     StaticTypeImpl::CPtr lookupType( const NonTerminals::Type &type ) const;
 
@@ -42,6 +50,8 @@ public:
 
     void addFunctionPass1( const Tokenizer::Token *token );
     void addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type );
+
+    const Symbol *lookupSymbol( String name ) const;
 };
 
 } // End namespace AST

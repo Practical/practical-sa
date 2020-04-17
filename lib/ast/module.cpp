@@ -8,11 +8,16 @@
  */
 #include "module.h"
 
+#include "ast/function.h"
+
 namespace AST {
+
+static ModuleId::Allocator moduleIdAllocator;
 
 Module::Module( const NonTerminals::Module &parserModule, const LookupContext &parentLookupContext ) :
     parserModule(parserModule),
-    lookupContext(&parentLookupContext)
+    lookupContext(&parentLookupContext),
+    moduleId( moduleIdAllocator.allocate() )
 {} 
 
 void Module::symbolsPass1() {
@@ -42,6 +47,18 @@ void Module::symbolsPass2() {
                     )
                 ) );
     }
+}
+
+void Module::codeGen( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) {
+    moduleGen->moduleEnter( moduleId, "Module", "file.pr", 1, 1 );
+
+    for( const auto &funcDef : parserModule.functionDefinitions ) {
+        Function function(funcDef, lookupContext);
+
+        function.codeGen( moduleGen->handleFunction( function.getId() ) );
+    }
+
+    moduleGen->moduleLeave( moduleId );
 }
 
 } // namespace AST

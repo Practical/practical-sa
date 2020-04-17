@@ -27,6 +27,14 @@ FunctionTypeImpl::FunctionTypeImpl(
 {
 }
 
+StaticType::CPtr FunctionTypeImpl::getReturnType() const {
+    return returnType;
+}
+
+StaticType::CPtr FunctionTypeImpl::getArgumentType( unsigned index ) const {
+    return argumentTypes[index];
+}
+
 StaticType::Types StaticTypeImpl::getType() const {
     struct Visitor {
         const StaticType *_this;
