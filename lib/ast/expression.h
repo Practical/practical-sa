@@ -9,13 +9,29 @@
 #ifndef AST_EXPRESSION_H
 #define AST_EXPRESSION_H
 
+#include "ast/expected_result.h"
+#include "parser.h"
+
+#include "ast/lookup_context.h"
+
 #include <practical-sa.h>
 
 namespace AST {
 
 class Expression {
+    const NonTerminals::Expression &parserExpression;
+    PracticalSemanticAnalyzer::ExpressionId id;
+
 public:
     static PracticalSemanticAnalyzer::ExpressionId allocateId();
+
+    explicit Expression( const NonTerminals::Expression &parserExpression );
+
+    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult );
+    void codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen );
+    PracticalSemanticAnalyzer::ExpressionId getId() const {
+        return id;
+    }
 };
 
 } // namespace AST

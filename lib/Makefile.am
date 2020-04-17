@@ -7,7 +7,7 @@ libpractical_sa_la_SOURCES = practical-sa.cpp practical-errors.cpp \
 			     scope_tracing.cpp full_range_int.cpp \
 			     tokenizer.cpp parser.cpp parser_internal.cpp operators.cpp \
 			     ast/ast.cpp ast/lookup_context.cpp ast/static_type.cpp \
-			     ast/module.cpp ast/function.cpp ast/expression.cpp
+			     ast/module.cpp ast/function.cpp ast/statement_list.cpp ast/expected_result.cpp ast/expression.cpp
 # XXX temporarily disabled: casts.cpp dummy_codegen_impl.cpp operators.cpp codegen.cpp codegen_operators.cpp
 
 practical_sa_ut_SOURCES = ut_runner.cpp slice_ut.cpp tokenizer_ut.cpp \

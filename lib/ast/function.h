@@ -25,6 +25,7 @@ public:
     explicit Function( const NonTerminals::FuncDef &parserFunction, const LookupContext &parentCtx );
 
     void codeGen( std::shared_ptr<PracticalSemanticAnalyzer::FunctionGen> functionGen );
+    void codeGen( const NonTerminals::StatementList &statementList, PracticalSemanticAnalyzer::FunctionGen *functionGen );
 };
 
 } // namespace AST

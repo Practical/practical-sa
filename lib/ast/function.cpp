@@ -10,6 +10,7 @@
 
 #include "ast/ast.h"
 #include "ast/expression.h"
+#include "ast/statement_list.h"
 
 using namespace PracticalSemanticAnalyzer;
 
@@ -47,7 +48,43 @@ void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {
             parserFunction.decl.name.identifier->line,
             parserFunction.decl.name.identifier->col );
 
+    struct Visitor {
+        Function *_this;
+        FunctionGen *functionGen;
+
+        void operator()( const std::monostate &mono ) {
+            ABORT()<<"Unreachable code reached";
+        }
+
+        void operator()( const NonTerminals::CompoundExpression &parserExpression ) {
+            _this->codeGen( parserExpression.statementList, functionGen );
+
+            Expression expression( parserExpression.expression );
+
+            expression.buildAST( _this->lookupCtx, _this->returnType );
+            expression.codeGen( functionGen );
+
+            functionGen->returnValue( expression.getId() );
+        }
+
+        void operator()( const NonTerminals::CompoundStatement &parserStatement ) {
+            _this->codeGen( parserStatement.statements, functionGen );
+
+            functionGen->returnValue();
+        }
+    };
+
+    std::visit( Visitor{ ._this = this, .functionGen = functionGen.get() }, parserFunction.body );
+
     functionGen->functionLeave();
+}
+
+void Function::codeGen(
+        const NonTerminals::StatementList &statementList, PracticalSemanticAnalyzer::FunctionGen *functionGen )
+{
+    StatementList sl( statementList );
+
+    sl.codeGen( lookupCtx, functionGen );
 }
 
 } // namespace AST

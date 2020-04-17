@@ -18,4 +18,15 @@ ExpressionId Expression::allocateId() {
     return allocator.allocate();
 }
 
+Expression::Expression( const NonTerminals::Expression &parserExpression ) :
+    parserExpression( parserExpression )
+{
+}
+
+void Expression::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+}
+
+void Expression::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+}
+
 } // namespace AST
