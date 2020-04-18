@@ -28,7 +28,10 @@ Practical is aimed for programmers in the gaming, storage, video and, eventually
 latency are everything.
 
 # Status
-Practical is currently in preliminary the implementation effort stage. It does not, yet, have any working compiler.
+Practical is currently in preliminary the implementation effort stage.
+
+Current compiler manages the basics: literals, function calls, variables and a few choice operators. This stage is important
+for deciding on the correct syntax and semantics.
 
 # What's Planned?
 For specifics on the plans for the language, syntax and features, please check out the
