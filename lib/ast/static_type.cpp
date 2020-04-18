@@ -13,8 +13,8 @@ using namespace PracticalSemanticAnalyzer;
 namespace AST {
 
 ScalarTypeImpl::ScalarTypeImpl(
-        String name, size_t size, size_t alignment, PracticalSemanticAnalyzer::TypeId backendType ) :
-    PracticalSemanticAnalyzer::StaticType::Scalar( size, alignment, backendType ),
+        String name, size_t size, size_t alignment, Scalar::Type type, PracticalSemanticAnalyzer::TypeId backendType ) :
+    PracticalSemanticAnalyzer::StaticType::Scalar( size, alignment, type, backendType ),
     name( sliceToString(name) )
 {
 }

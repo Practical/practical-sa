@@ -25,6 +25,10 @@ public:
     static void prepare( BuiltinContextGen *ctxGen );
     static bool prepared();
 
+    static const LookupContext &getBuiltinCtx() {
+        return builtinCtx;
+    }
+
     void codeGen(const NonTerminals::Module &module, PracticalSemanticAnalyzer::ModuleGen *codeGen);
 
 private:

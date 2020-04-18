@@ -18,7 +18,7 @@ class Function : private NoCopy {
     const NonTerminals::FuncDef &parserFunction;
     String name;
     LookupContext lookupCtx;
-    StaticType::CPtr returnType;
+    StaticTypeImpl::CPtr returnType;
     std::vector< PracticalSemanticAnalyzer::ArgumentDeclaration > arguments;
 
 public:

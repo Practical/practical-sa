@@ -6,14 +6,17 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#include "expected_result.h"
+#include "statement.h"
 
 namespace AST {
 
-ExpectedResult::ExpectedResult( StaticTypeImpl::CPtr type, bool mandatory ) :
-    type(type),
-    mandatory(mandatory)
+Statement::Statement( const NonTerminals::Statement &parserStatement )
 {
+    ABORT()<<"TODO implement";
+}
+
+void Statement::codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
+    ABORT()<<"TODO implement";
 }
 
 } // namespace AST

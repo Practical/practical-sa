@@ -47,11 +47,20 @@ namespace PracticalSemanticAnalyzer {
         using CPtr = boost::intrusive_ptr<const StaticType>;
 
         class Scalar {
+        public:
+            enum class Type {
+                Void, Bool, SignedInt, UnsignedInt, Char
+            };
+
+        private:
             size_t size=0, alignment=1;
             TypeId typeId;
+            Type type;
 
         public:
-            Scalar( size_t size, size_t alignment, TypeId typeId ) : size(size), alignment(alignment), typeId(typeId) {}
+            Scalar( size_t size, size_t alignment, Type type, TypeId typeId ) :
+                size(size), alignment(alignment), typeId(typeId), type(type)
+            {}
 
             virtual String getName() const = 0;
 
@@ -61,6 +70,10 @@ namespace PracticalSemanticAnalyzer {
 
             size_t getAlignment() const {
                 return alignment;
+            }
+
+            Type getType() const {
+                return type;
             }
 
             TypeId getTypeId()  const {

@@ -35,16 +35,26 @@ void AST::codeGen( const NonTerminals::Module &parserModule, PracticalSemanticAn
 void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
     ASSERT( !prepared() )<<"prepare called twice";
 
-    builtinCtx.registerScalarType( ScalarTypeImpl( "Void", 0, 1, ctxGen->registerVoidType() ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "Bool", 1, 1, ctxGen->registerBoolType() ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "S8", 8, 1, ctxGen->registerIntegerType( 8, 1, true ) ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "S16", 16, 2, ctxGen->registerIntegerType( 16, 2, true ) ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "S32", 32, 4, ctxGen->registerIntegerType( 32, 4, true ) ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "S64", 64, 8, ctxGen->registerIntegerType( 64, 8, true ) ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "U8", 8, 1, ctxGen->registerIntegerType( 8, 1, false ) ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "U16", 16, 2, ctxGen->registerIntegerType( 16, 2, false ) ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "U32", 32, 4, ctxGen->registerIntegerType( 32, 4, false ) ) );
-    builtinCtx.registerScalarType( ScalarTypeImpl( "U64", 64, 8, ctxGen->registerIntegerType( 64, 8, false ) ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "Void", 0, 1, ScalarTypeImpl::Type::Void, ctxGen->registerVoidType() ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "Bool", 1, 1, ScalarTypeImpl::Type::Bool, ctxGen->registerBoolType() ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "S8", 8, 1, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 8, 1, true ) ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "S16", 16, 2, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 16, 2, true ) ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "S32", 32, 4, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 32, 4, true ) ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "S64", 64, 8, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 64, 8, true ) ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "U8", 8, 1, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 8, 1, false ) ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "U16", 16, 2, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 16, 2, false ) ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "U32", 32, 4, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 32, 4, false ) ) );
+    builtinCtx.registerScalarType(
+            ScalarTypeImpl( "U64", 64, 8, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 64, 8, false ) ) );
 }
 
 } // End namespace AST

@@ -72,6 +72,12 @@ public:
     }
 };
 
+class IllegalLiteral : public compile_error {
+public:
+    IllegalLiteral(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    }
+};
+
 class CastNotAllowed : public compile_error {
 public:
     CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);

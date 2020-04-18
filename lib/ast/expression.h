@@ -10,6 +10,7 @@
 #define AST_EXPRESSION_H
 
 #include "ast/expected_result.h"
+#include "ast/expression/base.h"
 #include "parser.h"
 
 #include "ast/lookup_context.h"
@@ -18,20 +19,15 @@
 
 namespace AST {
 
-class Expression {
+class Expression final : public ExpressionImpl::Base {
     const NonTerminals::Expression &parserExpression;
-    PracticalSemanticAnalyzer::ExpressionId id;
+    std::unique_ptr< ExpressionImpl::Base > actualExpression;
 
 public:
-    static PracticalSemanticAnalyzer::ExpressionId allocateId();
-
     explicit Expression( const NonTerminals::Expression &parserExpression );
 
-    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult );
-    void codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen );
-    PracticalSemanticAnalyzer::ExpressionId getId() const {
-        return id;
-    }
+    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
+    ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
 };
 
 } // namespace AST

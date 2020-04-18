@@ -23,7 +23,12 @@ class ScalarTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Scala
     std::string name;
 
 public:
-    explicit ScalarTypeImpl( String name, size_t size, size_t alignment, PracticalSemanticAnalyzer::TypeId backendType );
+    explicit ScalarTypeImpl(
+            String name,
+            size_t size,
+            size_t alignment,
+            Scalar::Type type,
+            PracticalSemanticAnalyzer::TypeId backendType );
     ScalarTypeImpl( ScalarTypeImpl &&that ) :
         PracticalSemanticAnalyzer::StaticType::Scalar( that ),
         name( std::move(that.name) )
@@ -57,7 +62,7 @@ public:
     PracticalSemanticAnalyzer::StaticType::CPtr getArgumentType( unsigned index ) const override;
 };
 
-class StaticTypeImpl : public PracticalSemanticAnalyzer::StaticType {
+class StaticTypeImpl final : public PracticalSemanticAnalyzer::StaticType {
 private:
     std::variant<
             std::unique_ptr<ScalarTypeImpl>,

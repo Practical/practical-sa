@@ -9,6 +9,7 @@
 #ifndef AST_STATEMENT_H
 #define AST_STATEMENT_H
 
+#include "ast/lookup_context.h"
 #include "parser.h"
 
 namespace AST {

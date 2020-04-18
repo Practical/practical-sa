@@ -27,7 +27,7 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
     auto function = std::get_if< const StaticType::Function * >(&type);
     ASSERT( function!=nullptr );
 
-    returnType = (*function)->getReturnType();
+    returnType = static_cast<const StaticTypeImpl *>( (*function)->getReturnType().get() );
     size_t numArguments = (*function)->getNumArguments();
     arguments.reserve( numArguments );
     for( unsigned i=0; i<numArguments; ++i ) {
@@ -62,9 +62,8 @@ void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {
             Expression expression( parserExpression.expression );
 
             expression.buildAST( _this->lookupCtx, _this->returnType );
-            expression.codeGen( functionGen );
 
-            functionGen->returnValue( expression.getId() );
+            functionGen->returnValue( expression.codeGen( functionGen ) );
         }
 
         void operator()( const NonTerminals::CompoundStatement &parserStatement ) {

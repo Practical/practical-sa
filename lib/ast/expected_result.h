@@ -9,17 +9,32 @@
 #ifndef AST_EXPECTED_RESULT_H
 #define AST_EXPECTED_RESULT_H
 
-#include <practical-sa.h>
+#include "ast/static_type.h"
 
 namespace AST {
 
 class ExpectedResult {
-    PracticalSemanticAnalyzer::StaticType::CPtr type;
+    StaticTypeImpl::CPtr type;
     bool mandatory = false;
 
 public:
     ExpectedResult() = default;
-    /* implicit */ ExpectedResult( PracticalSemanticAnalyzer::StaticType::CPtr type, bool mandatory = true );
+    /* implicit */ ExpectedResult( StaticTypeImpl::CPtr type, bool mandatory = true );
+
+    bool isMandatory() const {
+        return mandatory;
+    }
+
+    StaticTypeImpl::CPtr getType() const {
+        return type;
+    }
+
+    operator bool() const {
+        return type != nullptr;
+    }
+
+    // Prevent accidental casts to int via the bool cast
+    operator int() const = delete;
 };
 
 } // namespace AST
