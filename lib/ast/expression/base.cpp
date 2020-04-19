@@ -11,7 +11,7 @@
 namespace AST::ExpressionImpl {
 
 ExpressionId Base::allocateId() {
-    static ExpressionId::Allocator allocator;
+    static ExpressionId::Allocator<> allocator;
 
     return allocator.allocate();
 }

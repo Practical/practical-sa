@@ -12,7 +12,7 @@
 
 namespace AST {
 
-static ModuleId::Allocator moduleIdAllocator;
+static ModuleId::Allocator<> moduleIdAllocator;
 
 Module::Module( const NonTerminals::Module &parserModule, const LookupContext &parentLookupContext ) :
     parserModule(parserModule),
