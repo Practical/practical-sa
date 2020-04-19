@@ -10,6 +10,8 @@
 
 #include <asserts.h>
 
+#include <practical-errors.h>
+
 using namespace PracticalSemanticAnalyzer;
 
 namespace AST {
@@ -63,6 +65,14 @@ const LookupContext::Symbol *LookupContext::lookupSymbol( String name ) const {
         return nullptr;
 
     return getParent()->lookupSymbol( name );
+}
+
+void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue ) {
+    auto iter = symbols.emplace( token->text, Symbol{ .token=token, .type=type, .lvalueId=lvalue } );
+
+    if( !iter.second ) {
+        throw SymbolRedefined(token->text, token->line, token->col);
+    }
 }
 
 } // End namespace AST

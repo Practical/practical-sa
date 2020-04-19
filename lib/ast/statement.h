@@ -15,6 +15,8 @@
 namespace AST {
 
 class Statement {
+    const NonTerminals::Statement &parserStatement;
+
 public:
     explicit Statement( const NonTerminals::Statement &parserStatement );
 

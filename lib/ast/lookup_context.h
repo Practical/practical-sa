@@ -24,6 +24,7 @@ public:
     struct Symbol {
         const Tokenizer::Token *token;
         StaticTypeImpl::CPtr type;
+        ExpressionId lvalueId;
     };
 
 private:
@@ -49,6 +50,8 @@ public:
 
     void addFunctionPass1( const Tokenizer::Token *token );
     void addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type );
+
+    void addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue );
 
     const Symbol *lookupSymbol( String name ) const;
 };
