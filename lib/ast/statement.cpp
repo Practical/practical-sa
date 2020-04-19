@@ -37,9 +37,9 @@ void Statement::codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::Fu
             initValue.buildAST(lookupCtx, varType);
             ExpressionId initValueExpressionId = initValue.codeGen(functionGen);
 
-            functionGen->allocateStackVar(varExpressionId, varType, varDef.body.name.identifier->text);
-
             lookupCtx.addLocalVar( varDef.body.name.identifier, varType, varExpressionId );
+
+            functionGen->allocateStackVar(varExpressionId, varType, varDef.body.name.identifier->text);
 
             functionGen->assign( varExpressionId, initValueExpressionId );
         }
