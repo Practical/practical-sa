@@ -23,6 +23,39 @@ DEF_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId );
 
 namespace PracticalSemanticAnalyzer {
 
+bool StaticType::Scalar::operator==( const Scalar &rhs ) const {
+    return
+            size==rhs.size &&
+            alignment==rhs.alignment &&
+            type==rhs.type;
+}
+
+bool StaticType::Function::operator==( const Function &rhs ) const {
+    ABORT()<<"TODO implement";
+}
+
+bool StaticType::operator==( const StaticType &rhs ) const {
+    auto leftType = getType();
+    auto rightType = rhs.getType();
+
+    if( leftType.index() != rightType.index() )
+        return false;
+
+    struct Visitor {
+        StaticType::Types rightTypes;
+
+        bool operator()( const Scalar *scalar ) {
+            return (*scalar)==*( std::get<const Scalar *>( rightTypes ) );
+        }
+
+        bool operator()( const StaticType::Function *function ) {
+            return (*function)==*( std::get<const Function *>( rightTypes ) );
+        }
+    };
+
+    return std::visit( Visitor{ .rightTypes = rhs.getType() }, getType() );
+}
+
 std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
     struct Visitor {
         std::ostream &out;

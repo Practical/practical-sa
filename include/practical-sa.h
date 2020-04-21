@@ -79,6 +79,8 @@ namespace PracticalSemanticAnalyzer {
             TypeId getTypeId()  const {
                 return typeId;
             }
+
+            bool operator==( const Scalar &rhs ) const;
         };
 
         class Function {
@@ -88,6 +90,8 @@ namespace PracticalSemanticAnalyzer {
             virtual CPtr getReturnType() const = 0;
             virtual size_t getNumArguments() const = 0;
             virtual CPtr getArgumentType( unsigned index ) const = 0;
+
+            bool operator==( const Function &rhs ) const;
         };
 
         using Types = std::variant<const Scalar *, const Function *>;
@@ -95,6 +99,11 @@ namespace PracticalSemanticAnalyzer {
         virtual ~StaticType() {}
 
         virtual Types getType() const = 0;
+
+        bool operator==( const StaticType &rhs ) const;
+        bool operator!=( const StaticType &rhs ) const {
+            return ! (*this==rhs);
+        }
     };
     std::ostream &operator<<(std::ostream &out, StaticType::CPtr type);
 

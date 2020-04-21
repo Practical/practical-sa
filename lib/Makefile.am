@@ -8,7 +8,7 @@ libpractical_sa_la_SOURCES = practical-sa.cpp practical-errors.cpp \
 			     tokenizer.cpp parser.cpp parser_internal.cpp operators.cpp \
 			     ast/ast.cpp ast/lookup_context.cpp ast/static_type.cpp \
 			     ast/module.cpp ast/function.cpp ast/statement_list.cpp ast/expected_result.cpp ast/statement.cpp \
-			     ast/expression.cpp ast/expression/base.cpp ast/expression/literal.cpp
+			     ast/expression.cpp ast/expression/base.cpp ast/expression/literal.cpp ast/expression/identifier.cpp
 
 practical_sa_ut_SOURCES = ut_runner.cpp slice_ut.cpp tokenizer_ut.cpp \
 			  tokenizer.cpp exact_int_ut.cpp full_range_int.cpp full_range_int_ut.cpp

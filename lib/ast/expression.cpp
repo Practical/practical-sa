@@ -8,6 +8,7 @@
  */
 #include "ast/expression.h"
 
+#include "ast/expression/identifier.h"
 #include "ast/expression/literal.h"
 
 using namespace PracticalSemanticAnalyzer;
@@ -36,8 +37,11 @@ void Expression::buildAST( LookupContext &lookupContext, ExpectedResult expected
             _this->actualExpression = std::move(literal);
         }
 
-        void operator()( const NonTerminals::Identifier &identifier ) {
-            ABORT()<<"TODO implement";
+        void operator()( const NonTerminals::Identifier &parserIdentifier ) {
+            auto identifier = safenew<ExpressionImpl::Identifier>( parserIdentifier );
+
+            identifier->buildAST( lookupContext, expectedResult );
+            _this->actualExpression = std::move(identifier);
         }
 
         void operator()( const NonTerminals::Expression::UnaryOperator &op ) {
