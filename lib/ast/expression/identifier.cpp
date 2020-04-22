@@ -23,14 +23,14 @@ void Identifier::buildAST( LookupContext &lookupContext, ExpectedResult expected
     symbol = lookupContext.lookupSymbol( parserIdentifier.identifier->text );
 
     if( symbol==nullptr ) {
-        throw SymbolRedefined(
+        throw SymbolNotFound(
                 parserIdentifier.identifier->text, parserIdentifier.identifier->line, parserIdentifier.identifier->col );
     }
 
     if( !expectedResult || *expectedResult.getType()==*symbol->type )
         return;
 
-    ABORT()<<"TODO implement";
+    ABORT()<<"TODO implement casts";
 }
 
 ExpressionId Identifier::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {

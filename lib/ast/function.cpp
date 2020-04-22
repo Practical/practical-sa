@@ -31,10 +31,15 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
     size_t numArguments = (*function)->getNumArguments();
     arguments.reserve( numArguments );
     for( unsigned i=0; i<numArguments; ++i ) {
+        ExpressionId varExpressionId = Expression::allocateId();
+        lookupCtx.addLocalVar(
+                parserFunction.decl.arguments.arguments[i].name.identifier,
+                static_cast<const StaticTypeImpl *>( (*function)->getArgumentType(i).get() ),
+                varExpressionId );
         arguments.emplace_back(
                 (*function)->getArgumentType( i ),
                 parserFunction.decl.arguments.arguments[i].name.identifier->text,
-                Expression::allocateId()
+                varExpressionId
         );
     }
 }
