@@ -20,6 +20,7 @@ class ExpectedResult {
 public:
     ExpectedResult() = default;
     /* implicit */ ExpectedResult( StaticTypeImpl::CPtr type, bool mandatory = true );
+    /* implicit */ ExpectedResult( PracticalSemanticAnalyzer::StaticType::CPtr type, bool mandatory = true );
 
     bool isMandatory() const {
         return mandatory;

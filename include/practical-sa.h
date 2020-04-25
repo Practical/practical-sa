@@ -90,6 +90,7 @@ namespace PracticalSemanticAnalyzer {
             virtual CPtr getReturnType() const = 0;
             virtual size_t getNumArguments() const = 0;
             virtual CPtr getArgumentType( unsigned index ) const = 0;
+            virtual String getFunctionName() const = 0;
 
             bool operator==( const Function &rhs ) const;
         };
@@ -168,6 +169,8 @@ namespace PracticalSemanticAnalyzer {
                 ExpressionId id, ExpressionId source, StaticType::CPtr sourceType, StaticType::CPtr destType ) = 0;
         virtual void expandIntegerUnsigned(
                 ExpressionId id, ExpressionId source, StaticType::CPtr sourceType, StaticType::CPtr destType ) = 0;
+
+        // Function calls
         virtual void callFunctionDirect(
                 ExpressionId id, String name, Slice<const ExpressionId> arguments, StaticType::CPtr returnType ) = 0;
 

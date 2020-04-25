@@ -21,9 +21,11 @@ ScalarTypeImpl::ScalarTypeImpl(
 
 FunctionTypeImpl::FunctionTypeImpl(
         boost::intrusive_ptr<const StaticTypeImpl> &&returnType,
-        std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes ) :
+        std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes,
+        String functionName ) :
     returnType( std::move(returnType) ),
-    argumentTypes( std::move(argumentTypes) )
+    argumentTypes( std::move(argumentTypes) ),
+    functionName( functionName )
 {
 }
 
@@ -49,6 +51,10 @@ StaticType::Types StaticTypeImpl::getType() const {
     };
 
     return std::visit( Visitor{ ._this=this }, content );
+}
+
+String FunctionTypeImpl::getFunctionName() const {
+    return functionName;
 }
 
 StaticTypeImpl::StaticTypeImpl( ScalarTypeImpl &&scalar ) :

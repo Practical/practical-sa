@@ -9,6 +9,7 @@
 #include "ast/expression.h"
 
 #include "ast/expression/identifier.h"
+#include "ast/expression/function_call.h"
 #include "ast/expression/literal.h"
 
 using namespace PracticalSemanticAnalyzer;
@@ -52,8 +53,11 @@ void Expression::buildAST( LookupContext &lookupContext, ExpectedResult expected
             ABORT()<<"TODO implement";
         }
 
-        void operator()( const NonTerminals::Expression::FunctionCall &funcCall ) {
-            ABORT()<<"TODO implement";
+        void operator()( const NonTerminals::Expression::FunctionCall &parserFuncCall ) {
+            auto functionCall = safenew<ExpressionImpl::FunctionCall>( parserFuncCall );
+
+            functionCall->buildAST( lookupContext, expectedResult );
+            _this->actualExpression = std::move(functionCall);
         }
 
         void operator()( const std::unique_ptr<NonTerminals::ConditionalExpression> &condition ) {

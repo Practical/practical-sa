@@ -65,8 +65,13 @@ std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
         }
 
         void operator()( const StaticType::Function *function ) {
-            out<<"Function of some type";
-            ABORT()<<"TODO implement";
+            out<<"(";
+            for( unsigned argNum=0; argNum<function->getNumArguments(); argNum++ ) {
+                if( argNum!=0 )
+                    out<<",";
+                out<<function->getArgumentType(argNum);
+            }
+            out<<")->"<<function->getReturnType();
         }
     };
 

@@ -36,6 +36,19 @@ public:
     constexpr Slice(T *ptr, size_t length) : ptr(ptr), len(length) {
     }
 
+    template<
+        typename V,
+        std::enable_if_t<
+            std::is_same_v<std::remove_const_t<T>,V> && std::is_const_v<T>,
+            int
+        > = 0
+    >
+    /* implicit conversion */ Slice(const Slice< V > &that) :
+        ptr( that.get() ),
+        len( that.size() )
+    {
+    }
+
     /* implicit conversion */ Slice(vector_type &vector) :
         ptr(vector.data()), len(vector.size())
     {
@@ -119,6 +132,10 @@ public:
 
     const T* end() const {
         return get() + size();
+    }
+
+    explicit operator bool() const noexcept {
+        return size()!=0;
     }
 };
 

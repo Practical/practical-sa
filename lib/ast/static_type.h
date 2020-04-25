@@ -42,15 +42,18 @@ public:
 class FunctionTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Function, private NoCopy {
     boost::intrusive_ptr<const StaticTypeImpl> returnType;
     std::vector< boost::intrusive_ptr<const StaticTypeImpl> > argumentTypes;
+    String functionName;
 
 public:
     explicit FunctionTypeImpl(
             boost::intrusive_ptr<const StaticTypeImpl> &&returnType,
-            std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes );
+            std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes,
+            String functionName );
 
     FunctionTypeImpl( FunctionTypeImpl &&that ) :
         returnType( std::move(that.returnType) ),
-        argumentTypes( std::move(that.argumentTypes) )
+        argumentTypes( std::move(that.argumentTypes) ),
+        functionName( that.functionName )
     {}
 
     PracticalSemanticAnalyzer::StaticType::CPtr getReturnType() const override;
@@ -60,6 +63,8 @@ public:
     }
 
     PracticalSemanticAnalyzer::StaticType::CPtr getArgumentType( unsigned index ) const override;
+
+    String getFunctionName() const override;
 };
 
 class StaticTypeImpl final : public PracticalSemanticAnalyzer::StaticType {

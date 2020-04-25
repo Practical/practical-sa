@@ -27,8 +27,10 @@ void Identifier::buildAST( LookupContext &lookupContext, ExpectedResult expected
                 parserIdentifier.identifier->text, parserIdentifier.identifier->line, parserIdentifier.identifier->col );
     }
 
-    if( !expectedResult || *expectedResult.getType()==*symbol->type )
+    if( !expectedResult || *expectedResult.getType()==*symbol->type ) {
+        type = symbol->type;
         return;
+    }
 
     ABORT()<<"TODO implement casts";
 }

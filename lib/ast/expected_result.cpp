@@ -8,10 +8,18 @@
  */
 #include "expected_result.h"
 
+using namespace PracticalSemanticAnalyzer;
+
 namespace AST {
 
 ExpectedResult::ExpectedResult( StaticTypeImpl::CPtr type, bool mandatory ) :
     type(type),
+    mandatory(mandatory)
+{
+}
+
+ExpectedResult::ExpectedResult( StaticType::CPtr type, bool mandatory ) :
+    type( dynamic_cast<const StaticTypeImpl *>( type.get() ) ),
     mandatory(mandatory)
 {
 }
