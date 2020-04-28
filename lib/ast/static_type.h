@@ -9,6 +9,7 @@
 #ifndef AST_STATIC_TYPE_H
 #define AST_STATIC_TYPE_H
 
+#include "ast/value_range_base.h"
 #include "asserts.h"
 
 #include <practical-sa.h>
@@ -73,6 +74,7 @@ private:
             std::unique_ptr<ScalarTypeImpl>,
             std::unique_ptr<FunctionTypeImpl>
     > content;
+    ValueRangeBase::CPtr valueRange;
 
 public:
     using CPtr = boost::intrusive_ptr<const StaticTypeImpl>;
@@ -84,9 +86,12 @@ public:
     }
 
     virtual Types getType() const override final;
+    ValueRangeBase::CPtr defaultRange() const {
+        return valueRange;
+    }
 
 private:
-    explicit StaticTypeImpl( ScalarTypeImpl &&scalar );
+    explicit StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange );
     explicit StaticTypeImpl( FunctionTypeImpl &&function );
 };
 

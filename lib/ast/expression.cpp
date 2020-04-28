@@ -73,7 +73,7 @@ void Expression::buildAST( LookupContext &lookupContext, ExpectedResult expected
             Visitor{ ._this = this, .lookupContext = lookupContext, .expectedResult = expectedResult },
             parserExpression.value );
 
-    type = actualExpression->getType();
+    metadata = actualExpression->getMetadata();
 }
 
 ExpressionId Expression::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {

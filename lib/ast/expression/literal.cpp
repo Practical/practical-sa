@@ -9,6 +9,9 @@
 #include "literal.h"
 
 #include "ast/ast.h"
+#include "ast/signed_int_value_range.h"
+#include "ast/unsigned_int_value_range.h"
+
 #include <practical-errors.h>
 
 using namespace PracticalSemanticAnalyzer;
@@ -50,7 +53,7 @@ ExpressionId Literal::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionG
 ExpressionId Literal::LiteralInt::codeGen( Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
     ExpressionId id = allocateId();
 
-    functionGen->setLiteral( id, result, owner->type );
+    functionGen->setLiteral( id, result, owner->metadata.type );
 
     return id;
 }
@@ -77,7 +80,7 @@ void Literal::LiteralInt::parseInt10( Literal *owner, ExpectedResult expectedRes
 }
 
 void Literal::LiteralInt::parseInt( Literal *owner, ExpectedResult expectedResult ) {
-    ASSERT( !owner->type )<<"Cannot reuse AST nodes";
+    ASSERT( !owner->metadata.type )<<"Cannot reuse AST nodes";
 
     String naturalTypeName;
     if( result>std::numeric_limits<uint32_t>::max() ) {
@@ -91,8 +94,9 @@ void Literal::LiteralInt::parseInt( Literal *owner, ExpectedResult expectedResul
         naturalTypeName = "U8";
     }
 
-    owner->type = AST::getBuiltinCtx().lookupType( naturalTypeName );
-    ASSERT( owner->type );
+    owner->metadata.type = AST::getBuiltinCtx().lookupType( naturalTypeName );
+    ASSERT( owner->metadata.type );
+    owner->metadata.valueRange = UnsignedIntValueRange::allocate( result, result );
 
     // Check if a cast to the expected type is even necessary, or we can just create it in the right type
     if( !expectedResult )
@@ -105,14 +109,15 @@ void Literal::LiteralInt::parseInt( Literal *owner, ExpectedResult expectedResul
             LongEnoughInt limit=1;
             limit <<= (*expectedScalar)->getSize()-1;
             if( result<limit ) {
-                owner->type = expectedResult.getType();
+                owner->metadata.type = expectedResult.getType();
+                owner->metadata.valueRange = SignedIntValueRange::allocate( result, result );
                 return;
             }
         } else if( (*expectedScalar)->getType() == StaticType::Scalar::Type::UnsignedInt ) {
             ASSERT( (*expectedScalar)->getSize()<=64 );
 
             if( (*expectedScalar)->getSize()==64 ) {
-                owner->type = expectedResult.getType();
+                owner->metadata.type = expectedResult.getType();
                 return;
             }
 
@@ -120,7 +125,7 @@ void Literal::LiteralInt::parseInt( Literal *owner, ExpectedResult expectedResul
             limit <<= (*expectedScalar)->getSize();
 
             if( result < limit ) {
-                owner->type = expectedResult.getType();
+                owner->metadata.type = expectedResult.getType();
                 return;
             }
         }

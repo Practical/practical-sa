@@ -57,8 +57,9 @@ String FunctionTypeImpl::getFunctionName() const {
     return functionName;
 }
 
-StaticTypeImpl::StaticTypeImpl( ScalarTypeImpl &&scalar ) :
-    content( std::unique_ptr<ScalarTypeImpl>( new ScalarTypeImpl( std::move(scalar) ) ) )
+StaticTypeImpl::StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange ) :
+    content( std::unique_ptr<ScalarTypeImpl>( new ScalarTypeImpl( std::move(scalar) ) ) ),
+    valueRange(valueRange)
 {
 }
 

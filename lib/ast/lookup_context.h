@@ -46,7 +46,7 @@ public:
     StaticTypeImpl::CPtr lookupType( String name ) const;
     StaticTypeImpl::CPtr lookupType( const NonTerminals::Type &type ) const;
 
-    StaticTypeImpl::CPtr registerScalarType( ScalarTypeImpl &&type );
+    StaticTypeImpl::CPtr registerScalarType( ScalarTypeImpl &&type, ValueRangeBase::CPtr defaultValueRange );
 
     void addFunctionPass1( const Tokenizer::Token *token );
     void addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type );

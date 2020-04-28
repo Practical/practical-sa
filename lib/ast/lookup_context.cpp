@@ -33,11 +33,11 @@ StaticTypeImpl::CPtr LookupContext::lookupType( const NonTerminals::Type &type )
     return lookupType( type.type.identifier->text );
 }
 
-StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type ) {
+StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type, ValueRangeBase::CPtr defaultValueRange ) {
     std::string name = sliceToString(type.getName());
     auto iter = types.emplace(
             name,
-            StaticTypeImpl::allocate( std::move(type) ) );
+            StaticTypeImpl::allocate( std::move(type), std::move(defaultValueRange) ) );
     ASSERT( iter.second )<<"registerBuiltinType called on "<<iter.first->second<<" ("<<iter.first->first<<", "<<name<<") which is already registered";
 
     return iter.first->second;

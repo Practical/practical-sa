@@ -28,7 +28,8 @@ void Identifier::buildAST( LookupContext &lookupContext, ExpectedResult expected
     }
 
     if( !expectedResult || *expectedResult.getType()==*symbol->type ) {
-        type = symbol->type;
+        metadata.type = symbol->type;
+        metadata.valueRange = symbol->type->defaultRange();
         return;
     }
 

@@ -11,13 +11,17 @@
 
 #include "ast/expected_result.h"
 #include "ast/lookup_context.h"
+#include "ast/value_range_base.h"
 #include <practical-sa.h>
 
 namespace AST::ExpressionImpl {
 
 class Base {
 protected:
-    PracticalSemanticAnalyzer::StaticType::CPtr type;
+    struct ExpressionMetadata {
+        PracticalSemanticAnalyzer::StaticType::CPtr type;
+        ValueRangeBase::CPtr valueRange;
+    } metadata;
 
 public:
     static PracticalSemanticAnalyzer::ExpressionId allocateId();
@@ -25,7 +29,15 @@ public:
     virtual ~Base() = 0;
 
     PracticalSemanticAnalyzer::StaticType::CPtr getType() const {
-        return type;
+        return metadata.type;
+    }
+
+    ValueRangeBase::CPtr getValueRange() const {
+        return metadata.valueRange;
+    }
+
+    const ExpressionMetadata &getMetadata() const {
+        return metadata;
     }
 
     virtual void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) = 0;
