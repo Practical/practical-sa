@@ -18,4 +18,38 @@ ExpressionId Base::allocateId() {
 
 Base::~Base() {}
 
+PracticalSemanticAnalyzer::StaticType::CPtr Base::getType() const {
+    if( castOp )
+        return castOp->getType();
+
+    return metadata.type;
+}
+
+void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+    buildASTImpl( lookupContext, expectedResult );
+
+    if( !expectedResult || *expectedResult.getType()==*metadata.type )
+        return;
+
+    auto castFunction = lookupContext.lookupCast( metadata.type, expectedResult.getType(), true );
+    if( castFunction ) {
+        castOp = safenew<CastOperation>( castFunction, metadata.type, expectedResult.getType() );
+
+        return;
+    }
+
+    if( expectedResult.isMandatory() ) {
+        ABORT()<<"TODO implement multi-step casts";
+    }
+}
+
+ExpressionId Base::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+    ExpressionId ret = codeGenImpl( functionGen );
+
+    if( castOp )
+        ret = castOp->codeGen( ret, functionGen );
+
+    return ret;
+}
+
 } // namespace AST::ExpressionImpl

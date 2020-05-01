@@ -107,3 +107,37 @@ int compile(std::string path, const CompilerArguments *arguments, ModuleGen *cod
 }
 
 } // PracticalSemanticAnalyzer
+
+using namespace PracticalSemanticAnalyzer;
+
+namespace std {
+
+static constexpr size_t FibonacciHashMultiplier = static_cast<size_t>(-1) / GoldenRatio;
+
+size_t hash< StaticType >::operator()(const StaticType &type) const {
+    auto typeType = type.getType();
+
+    struct Visitor {
+        size_t operator()( const StaticType::Scalar *scalar ) {
+            return hash<String>{}( scalar->getName() );
+        }
+
+        size_t operator()( const StaticType::Function *function ) {
+            size_t result = 0;
+
+            auto numArguments = function->getNumArguments();
+            for( unsigned i=0; i<numArguments; ++i ) {
+                result += hash{}( *function->getArgumentType(i) );
+                result *= FibonacciHashMultiplier;
+            }
+
+            result += hash{}( *function->getReturnType() );
+
+            return result;
+        }
+    };
+
+    return typeType.index() * FibonacciHashMultiplier + std::visit( Visitor{}, typeType );
+}
+
+} // namespace std

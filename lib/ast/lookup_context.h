@@ -16,6 +16,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace AST {
 
@@ -27,12 +28,34 @@ public:
         ExpressionId lvalueId;
     };
 
+    using CodeGenCast = ExpressionId (*)(
+            PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
+            PracticalSemanticAnalyzer::StaticType::CPtr destType,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen);
+
 private:
+    using CalcValueRangeCast = ValueRangeBase::CPtr (*)(
+            PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
+            ValueRangeBase::CPtr sourceRange,
+            PracticalSemanticAnalyzer::StaticType::CPtr destType);
+
     // Members
     std::unordered_map< std::string, StaticTypeImpl::CPtr > types;
     const LookupContext *parent = nullptr;
 
     std::unordered_map< String, Symbol > symbols;
+    std::unordered_map<
+            PracticalSemanticAnalyzer::StaticType::CPtr,
+            std::unordered_map<
+                    PracticalSemanticAnalyzer::StaticType::CPtr,
+                    CodeGenCast
+            >
+    > typeConversionsFrom;
+
+    std::unordered_map<
+            PracticalSemanticAnalyzer::StaticType::CPtr,
+            std::unordered_set< PracticalSemanticAnalyzer::StaticType::CPtr >
+    > typeConversionsTo;
 
 public:
     explicit LookupContext(const LookupContext *parent = nullptr) :
@@ -54,6 +77,16 @@ public:
     void addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue );
 
     const Symbol *lookupSymbol( String name ) const;
+
+    void addCast(
+            PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
+            PracticalSemanticAnalyzer::StaticType::CPtr destType,
+            CodeGenCast codeGenCast, bool implicitAllowed );
+
+    CodeGenCast lookupCast(
+            PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
+            PracticalSemanticAnalyzer::StaticType::CPtr destType,
+            bool implicit ) const;
 };
 
 } // End namespace AST

@@ -9,6 +9,7 @@
 #ifndef AST_EXPRESSION_BASE_H
 #define AST_EXPRESSION_BASE_H
 
+#include "ast/cast_op.h"
 #include "ast/expected_result.h"
 #include "ast/lookup_context.h"
 #include "ast/value_range_base.h"
@@ -17,6 +18,9 @@
 namespace AST::ExpressionImpl {
 
 class Base {
+private:
+    std::unique_ptr<CastOperation> castOp;
+
 protected:
     struct ExpressionMetadata {
         PracticalSemanticAnalyzer::StaticType::CPtr type;
@@ -26,22 +30,24 @@ protected:
 public:
     static PracticalSemanticAnalyzer::ExpressionId allocateId();
 
+    Base() = default;
+    Base(Base &&rhs) = default;
+    Base &operator=(Base &&rhs) = default;
+
     virtual ~Base() = 0;
 
-    PracticalSemanticAnalyzer::StaticType::CPtr getType() const {
-        return metadata.type;
-    }
+    PracticalSemanticAnalyzer::StaticType::CPtr getType() const;
 
     ValueRangeBase::CPtr getValueRange() const {
         return metadata.valueRange;
     }
 
-    const ExpressionMetadata &getMetadata() const {
-        return metadata;
-    }
+    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult );
+    ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen );
 
-    virtual void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) = 0;
-    virtual ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) = 0;
+protected:
+    virtual void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) = 0;
+    virtual ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) = 0;
 };
 
 } // namespace AST::ExpressionImpl

@@ -21,7 +21,7 @@ Expression::Expression( const NonTerminals::Expression &parserExpression ) :
 {
 }
 
-void Expression::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+void Expression::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
     struct Visitor {
         Expression *_this;
         LookupContext &lookupContext;
@@ -73,10 +73,11 @@ void Expression::buildAST( LookupContext &lookupContext, ExpectedResult expected
             Visitor{ ._this = this, .lookupContext = lookupContext, .expectedResult = expectedResult },
             parserExpression.value );
 
-    metadata = actualExpression->getMetadata();
+    metadata.type = actualExpression->getType();
+    metadata.valueRange = actualExpression->getValueRange();
 }
 
-ExpressionId Expression::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Expression::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
     return actualExpression->codeGen( functionGen );
 }
 

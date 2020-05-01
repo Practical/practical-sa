@@ -17,7 +17,8 @@ FunctionCall::FunctionCall( const NonTerminals::Expression::FunctionCall &parser
 {
 }
 
-void FunctionCall::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+// protected methods
+void FunctionCall::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
     functionId.emplace( *parserFunctionCall.expression );
     functionId->buildAST( lookupContext, ExpectedResult() );
 
@@ -35,15 +36,12 @@ void FunctionCall::buildAST( LookupContext &lookupContext, ExpectedResult expect
         argument.buildAST( lookupContext, ExpectedResult( (*functionType)->getArgumentType(argumentNum) ) );
     }
 
-    if( !expectedResult || *expectedResult.getType() == *(*functionType)->getReturnType() ) {
-        returnType = (*functionType)->getReturnType();
-        return;
-    }
-
-    ABORT()<<"TODO implement casting result";
+    StaticTypeImpl::CPtr returnType = static_cast<const StaticTypeImpl *>( (*functionType)->getReturnType().get() );
+    metadata.valueRange = returnType->defaultRange();
+    metadata.type = std::move(returnType);
 }
 
-ExpressionId FunctionCall::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
     ASSERT( functionName )<<"TODO implement overloads and callable expressions";
 
     ExpressionId resultId = Expression::allocateId();
@@ -53,7 +51,7 @@ ExpressionId FunctionCall::codeGen( PracticalSemanticAnalyzer::FunctionGen *func
     }
 
     functionGen->callFunctionDirect(
-            resultId, functionName, Slice(argumentExpressionIds, arguments.size()), returnType );
+            resultId, functionName, Slice(argumentExpressionIds, arguments.size()), metadata.type );
 
     return resultId;
 }

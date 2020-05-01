@@ -197,4 +197,37 @@ namespace PracticalSemanticAnalyzer {
     int compile(std::string path, const CompilerArguments *arguments, ModuleGen *codeGen);
 } // End namespace PracticalSemanticAnalyzer
 
+namespace std {
+    template<>
+    struct hash< PracticalSemanticAnalyzer::StaticType > {
+        size_t operator()(const PracticalSemanticAnalyzer::StaticType &type) const;
+    };
+
+    template<>
+    struct hash< PracticalSemanticAnalyzer::StaticType::CPtr > {
+        size_t operator()(const PracticalSemanticAnalyzer::StaticType::CPtr &type) const {
+            hash<PracticalSemanticAnalyzer::StaticType> realHash;
+            return realHash( *type );
+        }
+    };
+
+    template<>
+    struct equal_to< PracticalSemanticAnalyzer::StaticType::CPtr > {
+        constexpr bool operator()(
+                const PracticalSemanticAnalyzer::StaticType::CPtr &lhs,
+                const PracticalSemanticAnalyzer::StaticType::CPtr &rhs
+        ) const noexcept
+        {
+            if( !lhs && !rhs )
+                return true;
+
+            if( !lhs || !rhs )
+                return false;
+
+            return *lhs==*rhs;
+        }
+    };
+
+} // namespace std
+
 #endif // LIB_PRACTICAL_SA_H

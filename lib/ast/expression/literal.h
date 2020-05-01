@@ -29,8 +29,9 @@ class Literal final : public Base {
 public:
     explicit Literal( const NonTerminals::Literal &parserLiteral );
 
-    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
-    ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
+protected:
+    void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
+    ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
 
 private:
     class LiteralInt final : public Impl {

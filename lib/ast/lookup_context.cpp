@@ -75,4 +75,46 @@ void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::
     }
 }
 
+void LookupContext::addCast(
+        PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
+        PracticalSemanticAnalyzer::StaticType::CPtr destType,
+        CodeGenCast codeGenCast, bool implicitAllowed )
+{
+    ASSERT( getParent()==nullptr )<<"Non-builtin lookups not yet implemented";
+    ASSERT( implicitAllowed )<<"TODO implement non-implicit casts";
+
+    {
+        auto &sourceTypeMap = typeConversionsFrom[sourceType];
+
+        auto insertIterator = sourceTypeMap.emplace( destType, codeGenCast );
+        ASSERT( insertIterator.second );
+    }
+
+    {
+        auto &destTypeSet = typeConversionsTo[destType];
+
+        auto insertIterator = destTypeSet.emplace( sourceType );
+        ASSERT( insertIterator.second );
+    }
+}
+
+LookupContext::CodeGenCast LookupContext::lookupCast(
+        PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
+        PracticalSemanticAnalyzer::StaticType::CPtr destType,
+        bool implicit ) const
+{
+    auto conversionIter = typeConversionsFrom.find( sourceType );
+    if( conversionIter!=typeConversionsFrom.end() ) {
+        auto conversionFuncIter = conversionIter->second.find( destType );
+        if( conversionFuncIter!=conversionIter->second.end() ) {
+            return conversionFuncIter->second;
+        }
+    }
+
+    if( getParent()==nullptr )
+        return nullptr;
+
+    return getParent()->lookupCast( sourceType, destType, implicit );
+}
+
 } // End namespace AST

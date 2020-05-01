@@ -19,7 +19,7 @@ Identifier::Identifier( const NonTerminals::Identifier &parserIdentifier ) :
 {
 }
 
-void Identifier::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+void Identifier::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
     symbol = lookupContext.lookupSymbol( parserIdentifier.identifier->text );
 
     if( symbol==nullptr ) {
@@ -27,16 +27,11 @@ void Identifier::buildAST( LookupContext &lookupContext, ExpectedResult expected
                 parserIdentifier.identifier->text, parserIdentifier.identifier->line, parserIdentifier.identifier->col );
     }
 
-    if( !expectedResult || *expectedResult.getType()==*symbol->type ) {
-        metadata.type = symbol->type;
-        metadata.valueRange = symbol->type->defaultRange();
-        return;
-    }
-
-    ABORT()<<"TODO implement casts";
+    metadata.type = symbol->type;
+    metadata.valueRange = symbol->type->defaultRange();
 }
 
-ExpressionId Identifier::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Identifier::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
     if( symbol->lvalueId!=ExpressionId() ) {
         ExpressionId resultId = allocateId();
 
@@ -45,7 +40,7 @@ ExpressionId Identifier::codeGen( PracticalSemanticAnalyzer::FunctionGen *functi
         return resultId;
     }
 
-    ABORT()<<"TODO implement";
+    ABORT()<<"TODO implement by name identifier lookup";
 }
 
 } // namespace AST::ExpressionImpl

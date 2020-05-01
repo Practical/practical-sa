@@ -23,7 +23,7 @@ Literal::Literal( const NonTerminals::Literal &parserLiteral ) :
 {
 }
 
-void Literal::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+void Literal::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
     switch( parserLiteral.token.token ) {
     case Tokenizer::Tokens::LITERAL_INT_10:
         {
@@ -44,7 +44,7 @@ void Literal::buildAST( LookupContext &lookupContext, ExpectedResult expectedRes
     }
 }
 
-ExpressionId Literal::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Literal::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
     ASSERT( impl )<<"Literal::codeGen called without calling buildAST first";
     return impl->codeGen( this, functionGen );
 }
@@ -130,12 +130,6 @@ void Literal::LiteralInt::parseInt( Literal *owner, ExpectedResult expectedResul
             }
         }
     }
-
-    // Couldn't set it directly, but it's not mandatory
-    if( !expectedResult.isMandatory() )
-        return;
-
-    ABORT()<<"TODO implement casts";
 }
 
 } // namespace AST::ExpressionImpl

@@ -19,14 +19,14 @@ class FunctionCall : public Base {
     const NonTerminals::Expression::FunctionCall &parserFunctionCall;
     std::optional<Expression> functionId;
     std::vector<Expression> arguments;
-    PracticalSemanticAnalyzer::StaticType::CPtr returnType;
     String functionName;
 
 public:
     explicit FunctionCall( const NonTerminals::Expression::FunctionCall &parserFunctionCall );
 
-    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
-    ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
+protected:
+    void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
+    ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
 };
 
 } // namespace AST::ExpressionImpl

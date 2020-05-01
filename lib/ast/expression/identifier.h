@@ -21,8 +21,9 @@ class Identifier : public Base {
 public:
     explicit Identifier( const NonTerminals::Identifier &parserIdentifier );
 
-    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
-    ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
+protected:
+    void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
+    ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
 };
 
 } // namespace AST::ExpressionImpl
