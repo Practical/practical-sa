@@ -221,7 +221,8 @@ public:
     using Slice::Slice;
 
     /* implicit */ String( Slice<const char> slice ) : Slice(slice) {}
-    String( const char *string ) : Slice( string, strlen(string) ) {}
+    /* implicit */ String( const char *string ) : Slice( string, strlen(string) ) {}
+    explicit String( const std::string &string ) : Slice( string.c_str(), string.size() ) {}
 };
 
 static inline std::string sliceToString( const String &src ) {

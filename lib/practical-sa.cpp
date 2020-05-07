@@ -34,6 +34,20 @@ bool StaticType::Function::operator==( const Function &rhs ) const {
     ABORT()<<"TODO implement";
 }
 
+String StaticType::getMangledName() const {
+    struct Visitor {
+        String operator()( const Function *function ) {
+            return function->getMangledName();
+        }
+
+        String operator()( const Scalar *scalar ) {
+            return scalar->getMangledName();
+        }
+    };
+
+    return std::visit( Visitor{}, getType() );
+}
+
 bool StaticType::operator==( const StaticType &rhs ) const {
     auto leftType = getType();
     auto rightType = rhs.getType();

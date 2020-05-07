@@ -26,6 +26,11 @@ class Expression final : public ExpressionImpl::Base {
 public:
     explicit Expression( const NonTerminals::Expression &parserExpression );
 
+    template<typename T>
+    const T *tryGetActualExpression() const {
+        return dynamic_cast<const T *>(actualExpression.get());
+    }
+
 protected:
     void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;

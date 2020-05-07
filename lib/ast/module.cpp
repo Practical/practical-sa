@@ -43,8 +43,7 @@ void Module::symbolsPass2() {
                 StaticTypeImpl::allocate(
                     FunctionTypeImpl(
                         std::move(returnType),
-                        std::move(arguments),
-                        decl.name.identifier->text
+                        std::move(arguments)
                     )
                 ) );
     }

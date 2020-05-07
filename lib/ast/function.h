@@ -17,8 +17,10 @@ namespace AST {
 class Function : private NoCopy {
     const NonTerminals::FuncDef &parserFunction;
     String name;
+    std::string mangledName;
     LookupContext lookupCtx;
-    StaticTypeImpl::CPtr returnType;
+    StaticTypeImpl::CPtr functionType;
+    // XXX Should ArgumentDeclaration contain the type, being as it is that functionType contains it too?
     std::vector< PracticalSemanticAnalyzer::ArgumentDeclaration > arguments;
 
 public:
@@ -26,6 +28,8 @@ public:
 
     void codeGen( std::shared_ptr<PracticalSemanticAnalyzer::FunctionGen> functionGen );
     void codeGen( const NonTerminals::StatementList &statementList, PracticalSemanticAnalyzer::FunctionGen *functionGen );
+
+    StaticTypeImpl::CPtr getReturnType() const;
 };
 
 } // namespace AST

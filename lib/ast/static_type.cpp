@@ -8,24 +8,28 @@
  */
 #include "static_type.h"
 
+#include <sstream>
+
 using namespace PracticalSemanticAnalyzer;
 
 namespace AST {
 
 ScalarTypeImpl::ScalarTypeImpl(
-        String name, size_t size, size_t alignment, Scalar::Type type, PracticalSemanticAnalyzer::TypeId backendType ) :
+        String name, String mangledName, size_t size, size_t alignment, Scalar::Type type,
+        PracticalSemanticAnalyzer::TypeId backendType
+) :
     PracticalSemanticAnalyzer::StaticType::Scalar( size, alignment, type, backendType ),
-    name( sliceToString(name) )
+    name( sliceToString(name) ),
+    mangledName( sliceToString(mangledName) )
 {
 }
 
 FunctionTypeImpl::FunctionTypeImpl(
         boost::intrusive_ptr<const StaticTypeImpl> &&returnType,
-        std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes,
-        String functionName ) :
+        std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes
+) :
     returnType( std::move(returnType) ),
-    argumentTypes( std::move(argumentTypes) ),
-    functionName( functionName )
+    argumentTypes( std::move(argumentTypes) )
 {
 }
 
@@ -53,8 +57,22 @@ StaticType::Types StaticTypeImpl::getType() const {
     return std::visit( Visitor{ ._this=this }, content );
 }
 
-String FunctionTypeImpl::getFunctionName() const {
-    return functionName;
+String FunctionTypeImpl::getMangledName() const {
+    if( mangledNameCache.empty() ) {
+        std::ostringstream formatter;
+        // Return value
+        formatter<<"R"<<getReturnType()->getMangledName()<<"E";
+        // Parameters
+        formatter<<"P";
+        for( unsigned i=0; i<getNumArguments(); ++i ) {
+            formatter<<getArgumentType(i)->getMangledName();
+        }
+        formatter<<"E";
+
+        mangledNameCache = std::move(formatter).str();
+    }
+
+    return mangledNameCache.c_str();
 }
 
 StaticTypeImpl::StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange ) :

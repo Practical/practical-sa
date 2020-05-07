@@ -10,6 +10,7 @@
 
 #include "ast/ast.h"
 #include "ast/expression.h"
+#include "ast/mangle.h"
 #include "ast/statement_list.h"
 
 using namespace PracticalSemanticAnalyzer;
@@ -19,7 +20,7 @@ namespace AST {
 Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupContext &parentCtx ) :
     parserFunction( parserFunction ),
     name( parserFunction.decl.name.identifier->text ),
-    lookupCtx( parentCtx )
+    lookupCtx( &parentCtx )
 {
     const LookupContext::Symbol *funcType = parentCtx.lookupSymbol( name );
     ASSERT( funcType );
@@ -27,27 +28,35 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
     auto function = std::get_if< const StaticType::Function * >(&type);
     ASSERT( function!=nullptr );
 
-    returnType = static_cast<const StaticTypeImpl *>( (*function)->getReturnType().get() );
+    StaticTypeImpl::CPtr returnType = static_cast<const StaticTypeImpl *>( (*function)->getReturnType().get() );
+    std::vector<StaticTypeImpl::CPtr> argumentTypes;
+
     size_t numArguments = (*function)->getNumArguments();
     arguments.reserve( numArguments );
+    argumentTypes.reserve( numArguments );
     for( unsigned i=0; i<numArguments; ++i ) {
         ExpressionId varExpressionId = Expression::allocateId();
+        StaticTypeImpl::CPtr argumentType = static_cast<const StaticTypeImpl *>( (*function)->getArgumentType(i).get() );
         lookupCtx.addLocalVar(
                 parserFunction.decl.arguments.arguments[i].name.identifier,
-                static_cast<const StaticTypeImpl *>( (*function)->getArgumentType(i).get() ),
+                argumentType,
                 varExpressionId );
         arguments.emplace_back(
                 (*function)->getArgumentType( i ),
                 parserFunction.decl.arguments.arguments[i].name.identifier->text,
                 varExpressionId
         );
+        argumentTypes.emplace_back( argumentType );
     }
+
+    functionType = StaticTypeImpl::allocate( FunctionTypeImpl( std::move(returnType), std::move(argumentTypes) ) );
+    mangledName = getFunctionMangledName( name, functionType );
 }
 
 void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {
     functionGen->functionEnter(
-            name,
-            returnType,
+            String(mangledName),
+            getReturnType(),
             arguments,
             "",
             parserFunction.decl.name.identifier->line,
@@ -66,7 +75,7 @@ void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {
 
             Expression expression( parserExpression.expression );
 
-            expression.buildAST( _this->lookupCtx, _this->returnType );
+            expression.buildAST( _this->lookupCtx, _this->getReturnType() );
 
             functionGen->returnValue( expression.codeGen( functionGen ) );
         }
@@ -89,6 +98,11 @@ void Function::codeGen(
     StatementList sl( statementList );
 
     sl.codeGen( lookupCtx, functionGen );
+}
+
+StaticTypeImpl::CPtr Function::getReturnType() const {
+    auto parentPtr = std::get<const StaticType::Function *>( functionType->getType() )->getReturnType();
+    return static_cast<const StaticTypeImpl *>( parentPtr.get() );
 }
 
 } // namespace AST

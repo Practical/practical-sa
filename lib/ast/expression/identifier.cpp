@@ -19,6 +19,10 @@ Identifier::Identifier( const NonTerminals::Identifier &parserIdentifier ) :
 {
 }
 
+String Identifier::getName() const {
+    return parserIdentifier.identifier->text;
+}
+
 void Identifier::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
     symbol = lookupContext.lookupSymbol( parserIdentifier.identifier->text );
 

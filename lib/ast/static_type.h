@@ -22,39 +22,44 @@ class StaticTypeImpl;
 
 class ScalarTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Scalar, private NoCopy {
     std::string name;
+    std::string mangledName;
 
 public:
     explicit ScalarTypeImpl(
             String name,
+            String mangledName,
             size_t size,
             size_t alignment,
             Scalar::Type type,
             PracticalSemanticAnalyzer::TypeId backendType );
     ScalarTypeImpl( ScalarTypeImpl &&that ) :
         PracticalSemanticAnalyzer::StaticType::Scalar( that ),
-        name( std::move(that.name) )
+        name( std::move(that.name) ),
+        mangledName( std::move(that.mangledName) )
     {}
 
-    virtual String getName() const override final {
+    virtual String getName() const override {
         return name.c_str();
+    }
+
+    virtual String getMangledName() const override {
+        return mangledName.c_str();
     }
 };
 
 class FunctionTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Function, private NoCopy {
     boost::intrusive_ptr<const StaticTypeImpl> returnType;
     std::vector< boost::intrusive_ptr<const StaticTypeImpl> > argumentTypes;
-    String functionName;
+    mutable std::string mangledNameCache;
 
 public:
     explicit FunctionTypeImpl(
             boost::intrusive_ptr<const StaticTypeImpl> &&returnType,
-            std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes,
-            String functionName );
+            std::vector< boost::intrusive_ptr<const StaticTypeImpl> > &&argumentTypes);
 
     FunctionTypeImpl( FunctionTypeImpl &&that ) :
         returnType( std::move(that.returnType) ),
-        argumentTypes( std::move(that.argumentTypes) ),
-        functionName( that.functionName )
+        argumentTypes( std::move(that.argumentTypes) )
     {}
 
     PracticalSemanticAnalyzer::StaticType::CPtr getReturnType() const override;
@@ -65,7 +70,7 @@ public:
 
     PracticalSemanticAnalyzer::StaticType::CPtr getArgumentType( unsigned index ) const override;
 
-    String getFunctionName() const override;
+    String getMangledName() const override;
 };
 
 class StaticTypeImpl final : public PracticalSemanticAnalyzer::StaticType {

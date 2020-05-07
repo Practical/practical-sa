@@ -8,6 +8,9 @@
  */
 #include "function_call.h"
 
+#include "ast/expression/identifier.h"
+#include "ast/mangle.h"
+
 using namespace PracticalSemanticAnalyzer;
 
 namespace AST::ExpressionImpl {
@@ -22,12 +25,14 @@ void FunctionCall::buildASTImpl( LookupContext &lookupContext, ExpectedResult ex
     functionId.emplace( *parserFunctionCall.expression );
     functionId->buildAST( lookupContext, ExpectedResult() );
 
+    const Identifier *identifier = functionId->tryGetActualExpression<Identifier>();
+    ASSERT(identifier)<<"TODO calling function through generic pointer expression not yet implemented";
+
     StaticType::Types functionIdType = functionId->getType()->getType();
     auto functionType = std::get_if<const StaticType::Function *>( &functionIdType );
 
     ASSERT( functionType!=nullptr )<<"TODO implement calling non function identifiers";
 
-    functionName = (*functionType)->getFunctionName();
     ASSERT( arguments.size()==0 )<<"buildAST called twice";
     arguments.reserve( (*functionType)->getNumArguments() );
 
@@ -39,10 +44,12 @@ void FunctionCall::buildASTImpl( LookupContext &lookupContext, ExpectedResult ex
     StaticTypeImpl::CPtr returnType = static_cast<const StaticTypeImpl *>( (*functionType)->getReturnType().get() );
     metadata.valueRange = returnType->defaultRange();
     metadata.type = std::move(returnType);
+
+    functionName = getFunctionMangledName( identifier->getName(), functionId->getType() );
 }
 
 ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
-    ASSERT( functionName )<<"TODO implement overloads and callable expressions";
+    ASSERT( !functionName.empty() )<<"TODO implement overloads and callable expressions";
 
     ExpressionId resultId = Expression::allocateId();
     ExpressionId argumentExpressionIds[arguments.size()];
@@ -51,7 +58,7 @@ ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *
     }
 
     functionGen->callFunctionDirect(
-            resultId, functionName, Slice(argumentExpressionIds, arguments.size()), metadata.type );
+            resultId, String(functionName), Slice(argumentExpressionIds, arguments.size()), metadata.type );
 
     return resultId;
 }

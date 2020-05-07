@@ -44,9 +44,7 @@ StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type, V
 }
 
 void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {
-    symbols.emplace(
-            token->text,
-            Symbol{ .token = token } );
+    symbols.emplace( token->text, Symbol(token) );
 }
 
 void LookupContext::addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type ) {
@@ -68,7 +66,7 @@ const LookupContext::Symbol *LookupContext::lookupSymbol( String name ) const {
 }
 
 void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue ) {
-    auto iter = symbols.emplace( token->text, Symbol{ .token=token, .type=type, .lvalueId=lvalue } );
+    auto iter = symbols.emplace( token->text, Symbol(token, type, lvalue) );
 
     if( !iter.second ) {
         throw SymbolRedefined(token->text, token->line, token->col);

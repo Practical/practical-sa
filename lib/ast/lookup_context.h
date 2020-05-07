@@ -20,12 +20,17 @@
 
 namespace AST {
 
-class LookupContext {
+class LookupContext : private NoCopy {
 public:
     struct Symbol {
         const Tokenizer::Token *token;
         StaticTypeImpl::CPtr type;
         ExpressionId lvalueId;
+
+        explicit Symbol( const Tokenizer::Token *token ) : token(token) {}
+        explicit Symbol( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalueId ) :
+            token(token), type(type), lvalueId(lvalueId)
+        {}
     };
 
     using CodeGenCast = ExpressionId (*)(

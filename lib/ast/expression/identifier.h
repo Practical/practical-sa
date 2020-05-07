@@ -21,6 +21,8 @@ class Identifier : public Base {
 public:
     explicit Identifier( const NonTerminals::Identifier &parserIdentifier );
 
+    String getName() const;
+
 protected:
     void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;

@@ -63,6 +63,7 @@ namespace PracticalSemanticAnalyzer {
             {}
 
             virtual String getName() const = 0;
+            virtual String getMangledName() const = 0;
 
             size_t getSize() const {
                 return size;
@@ -90,7 +91,7 @@ namespace PracticalSemanticAnalyzer {
             virtual CPtr getReturnType() const = 0;
             virtual size_t getNumArguments() const = 0;
             virtual CPtr getArgumentType( unsigned index ) const = 0;
-            virtual String getFunctionName() const = 0;
+            virtual String getMangledName() const = 0;
 
             bool operator==( const Function &rhs ) const;
         };
@@ -100,6 +101,8 @@ namespace PracticalSemanticAnalyzer {
         virtual ~StaticType() {}
 
         virtual Types getType() const = 0;
+
+        String getMangledName() const;
 
         bool operator==( const StaticType &rhs ) const;
         bool operator!=( const StaticType &rhs ) const {
@@ -213,7 +216,7 @@ namespace std {
 
     template<>
     struct equal_to< PracticalSemanticAnalyzer::StaticType::CPtr > {
-        constexpr bool operator()(
+        bool operator()(
                 const PracticalSemanticAnalyzer::StaticType::CPtr &lhs,
                 const PracticalSemanticAnalyzer::StaticType::CPtr &rhs
         ) const noexcept

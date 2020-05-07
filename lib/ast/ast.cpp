@@ -42,34 +42,34 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
 
     // Types
     auto voidType = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "Void", 0, 1, ScalarTypeImpl::Type::Void, ctxGen->registerVoidType() ),
+            ScalarTypeImpl( "Void", "v", 0, 1, ScalarTypeImpl::Type::Void, ctxGen->registerVoidType() ),
             nullptr );
     auto boolType = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "Bool", 1, 1, ScalarTypeImpl::Type::Bool, ctxGen->registerBoolType() ),
+            ScalarTypeImpl( "Bool", "b", 1, 1, ScalarTypeImpl::Type::Bool, ctxGen->registerBoolType() ),
             BoolValueRange::allocate() );
     auto s8Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "S8", 8, 1, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 8, 1, true ) ),
+            ScalarTypeImpl( "S8", "s1", 8, 1, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 8, 1, true ) ),
             SignedIntValueRange::allocate<int8_t>() );
     auto s16Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "S16", 16, 2, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 16, 2, true ) ),
+            ScalarTypeImpl( "S16", "s2", 16, 2, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 16, 2, true ) ),
             SignedIntValueRange::allocate<int16_t>() );
     auto s32Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "S32", 32, 4, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 32, 4, true ) ),
+            ScalarTypeImpl( "S32", "s4", 32, 4, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 32, 4, true ) ),
             SignedIntValueRange::allocate<int32_t>() );
     auto s64Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "S64", 64, 8, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 64, 8, true ) ),
+            ScalarTypeImpl( "S64", "s8", 64, 8, ScalarTypeImpl::Type::SignedInt, ctxGen->registerIntegerType( 64, 8, true ) ),
             SignedIntValueRange::allocate<int64_t>() );
     auto u8Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "U8", 8, 1, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 8, 1, false ) ),
+            ScalarTypeImpl( "U8", "u1", 8, 1, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 8, 1, false ) ),
             UnsignedIntValueRange::allocate<uint8_t>() );
     auto u16Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "U16", 16, 2, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 16, 2, false ) ),
+            ScalarTypeImpl( "U16", "u2", 16, 2, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 16, 2, false ) ),
             UnsignedIntValueRange::allocate<uint16_t>() );
     auto u32Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "U32", 32, 4, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 32, 4, false ) ),
+            ScalarTypeImpl( "U32", "u4", 32, 4, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 32, 4, false ) ),
             UnsignedIntValueRange::allocate<uint32_t>() );
     auto u64Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "U64", 64, 8, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 64, 8, false ) ),
+            ScalarTypeImpl( "U64", "u8", 64, 8, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 64, 8, false ) ),
             UnsignedIntValueRange::allocate<uint64_t>() );
 
     // Implicit conversions
