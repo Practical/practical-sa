@@ -576,20 +576,14 @@ size_t FuncDeclArg::parse(Slice<const Tokenizer::Token> source) {
 size_t FuncDeclArgsNonEmpty::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
-    bool done = false;
+    bool more = false;
     do {
         FuncDeclArg arg;
-        tokensConsumed += arg.parse(source);
+        tokensConsumed += arg.parse(source.subslice(tokensConsumed));
         arguments.emplace_back(arg);
 
-        skipWS( source, tokensConsumed );
-
-        if( tokensConsumed < source.size() && source[tokensConsumed].token == Tokenizer::Tokens::COMMA ) {
-            tokensConsumed++;
-        } else {
-            done = true;
-        }
-    } while( !done );
+        more = wishForToken( Tokenizer::Tokens::COMMA, source, tokensConsumed, true );
+    } while( more );
 
     RULE_LEAVE();
 }
