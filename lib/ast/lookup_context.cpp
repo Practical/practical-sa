@@ -44,29 +44,48 @@ StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type, V
 }
 
 void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {
-    symbols.emplace( token->text, Symbol(token) );
+    auto iter = symbols.find( token->text );
+
+    Function *function = nullptr;
+    if( iter!=symbols.end() ) {
+        function = std::get_if<Function>( &iter->second );
+        if( function==nullptr )
+            throw pass1_error( "Function is trying to overload a variable", token->line, token->col );
+            // More info: where variable was first declared
+    } else {
+        auto inserter = symbols.emplace( token->text, Function{} );
+        function = &std::get<Function>(inserter.first->second);
+    }
+
+    function->overloads.emplace( token, token );
 }
 
 void LookupContext::addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type ) {
     auto iter = symbols.find( token->text );
     ASSERT( iter!=symbols.end() )<<"addFunctionPass2 called for "<<token->text<<", but not for addFunctionPass1";
+    Function *function = std::get_if<Function>( &iter->second );
+    ASSERT( function!=nullptr );
 
-    iter->second.type = std::move(type);
+    auto definition = function->overloads.find( token );
+    ASSERT( definition!=function->overloads.end() );
+
+    definition->second.type = std::move(type);
 }
 
-const LookupContext::Symbol *LookupContext::lookupSymbol( String name ) const {
+const LookupContext::Identifier *LookupContext::lookupIdentifier( String name ) const {
     auto iter = symbols.find(name);
-    if( iter!=symbols.end() )
-        return &iter->second;
+    if( iter==symbols.end() ) {
+        if( getParent()==nullptr )
+            return nullptr;
 
-    if( getParent()==nullptr )
-        return nullptr;
+        return getParent()->lookupIdentifier( name );
+    }
 
-    return getParent()->lookupSymbol( name );
+    return &iter->second;
 }
 
 void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue ) {
-    auto iter = symbols.emplace( token->text, Symbol(token, type, lvalue) );
+    auto iter = symbols.emplace( token->text, Variable(token, type, lvalue) );
 
     if( !iter.second ) {
         throw SymbolRedefined(token->text, token->line, token->col);

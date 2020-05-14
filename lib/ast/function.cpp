@@ -22,10 +22,14 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
     name( parserFunction.decl.name.identifier->text ),
     lookupCtx( &parentCtx )
 {
-    const LookupContext::Symbol *funcType = parentCtx.lookupSymbol( name );
-    ASSERT( funcType );
-    StaticType::Types type = funcType->type->getType();
-    auto function = std::get_if< const StaticType::Function * >(&type);
+    const LookupContext::Identifier *identifierDef = parentCtx.lookupIdentifier( name );
+    ASSERT( identifierDef );
+    const LookupContext::Function *funcDef = std::get_if<LookupContext::Function>( identifierDef );
+    ASSERT( funcDef );
+    auto overload = funcDef->overloads.find( parserFunction.decl.name.identifier );
+    ASSERT( overload!=funcDef->overloads.end() );
+    auto funcType = overload->second.type->getType();
+    auto function = std::get_if< const StaticType::Function * >( &funcType );
     ASSERT( function!=nullptr );
 
     StaticTypeImpl::CPtr returnType = static_cast<const StaticTypeImpl *>( (*function)->getReturnType().get() );

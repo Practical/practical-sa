@@ -77,4 +77,10 @@ TryToCallNonCallable::TryToCallNonCallable(const Tokenizer::Token *identifier) :
     setMsg( buf.str().c_str() );
 }
 
+NoMatchingOverload::NoMatchingOverload(const Tokenizer::Token *identifier) :
+    compile_error(identifier->line, identifier->col)
+{
+    setMsg( "Trying to call function with no matching overload" );
+}
+
 } // namespace PracticalSemanticAnalyzer

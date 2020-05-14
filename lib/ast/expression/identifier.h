@@ -16,12 +16,16 @@ namespace AST::ExpressionImpl {
 
 class Identifier : public Base {
     const NonTerminals::Identifier &parserIdentifier;
-    const LookupContext::Symbol *symbol = nullptr;
+    const LookupContext::Identifier *identifier = nullptr;
 
 public:
     explicit Identifier( const NonTerminals::Identifier &parserIdentifier );
 
     String getName() const;
+
+    const LookupContext::Identifier *getCtxIdentifier() const {
+        return identifier;
+    }
 
 protected:
     void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;

@@ -27,6 +27,17 @@ public:
 protected:
     void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
+
+private:
+    void resolveOverloads(
+            LookupContext &lookupContext,
+            ExpectedResult expectedResult,
+            const std::unordered_map<const Tokenizer::Token *, LookupContext::Function::Definition> &overloads
+            );
+
+    void buildActualCall(
+            LookupContext &lookupContext, ExpectedResult expectedResult,
+            const LookupContext::Function::Definition *definition );
 };
 
 } // namespace AST::ExpressionImpl

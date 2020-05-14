@@ -101,6 +101,7 @@ namespace NonTerminals {
         };
 
         struct FunctionCall {
+            const Tokenizer::Token *op;
             std::unique_ptr<Expression> expression;
             FunctionArguments arguments;
         };

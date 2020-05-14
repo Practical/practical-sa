@@ -24,27 +24,52 @@ String Identifier::getName() const {
 }
 
 void Identifier::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
-    symbol = lookupContext.lookupSymbol( parserIdentifier.identifier->text );
+    identifier = lookupContext.lookupIdentifier( parserIdentifier.identifier->text );
 
-    if( symbol==nullptr ) {
+    if( identifier==nullptr ) {
         throw SymbolNotFound(
                 parserIdentifier.identifier->text, parserIdentifier.identifier->line, parserIdentifier.identifier->col );
     }
 
-    metadata.type = symbol->type;
-    metadata.valueRange = symbol->type->defaultRange();
+    struct Visitor {
+        Identifier *_this;
+        ExpectedResult &expectedResult;
+
+        void operator()( const LookupContext::Variable &var ) {
+            _this->metadata.type = var.type;
+            _this->metadata.valueRange = var.type->defaultRange();
+        }
+
+        void operator()( const LookupContext::Function &func ) {
+            ASSERT( !expectedResult )<<"TODO implement choosing overload based on expected result";
+        }
+    };
+
+    std::visit( Visitor{._this=this, .expectedResult=expectedResult}, *identifier );
 }
 
 ExpressionId Identifier::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
-    if( symbol->lvalueId!=ExpressionId() ) {
-        ExpressionId resultId = allocateId();
+    struct Visitor {
+        PracticalSemanticAnalyzer::FunctionGen *functionGen;
 
-        functionGen->dereferencePointer( resultId, symbol->type, symbol->lvalueId );
+        ExpressionId operator()( const LookupContext::Variable &var ) {
+            if( var.lvalueId!=ExpressionId() ) {
+                ExpressionId resultId = allocateId();
 
-        return resultId;
-    }
+                functionGen->dereferencePointer( resultId, var.type, var.lvalueId );
 
-    ABORT()<<"TODO implement by name identifier lookup";
+                return resultId;
+            }
+
+            ABORT()<<"TODO implement by name identifier lookup";
+        }
+
+        ExpressionId operator()( const LookupContext::Function &func ) {
+            ABORT()<<"Code gen called for function name";
+        }
+    };
+
+    return std::visit( Visitor{.functionGen = functionGen}, *identifier );
 }
 
 } // namespace AST::ExpressionImpl

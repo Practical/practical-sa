@@ -108,6 +108,11 @@ public:
     TryToCallNonCallable(const Tokenizer::Token *identifier);
 };
 
+class NoMatchingOverload : public compile_error {
+public:
+    NoMatchingOverload(const Tokenizer::Token *identifier);
+};
+
 } // PracticalSemanticAnalyzer
 
 #endif // PRACTICAL_ERRORS_H

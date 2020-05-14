@@ -22,16 +22,29 @@ namespace AST {
 
 class LookupContext : private NoCopy {
 public:
-    struct Symbol {
+    struct Variable {
         const Tokenizer::Token *token;
         StaticTypeImpl::CPtr type;
         ExpressionId lvalueId;
 
-        explicit Symbol( const Tokenizer::Token *token ) : token(token) {}
-        explicit Symbol( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalueId ) :
+        explicit Variable( const Tokenizer::Token *token ) : token(token) {}
+        explicit Variable( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalueId ) :
             token(token), type(type), lvalueId(lvalueId)
         {}
     };
+
+    struct Function {
+        struct Definition {
+            const Tokenizer::Token *token;
+            StaticTypeImpl::CPtr type;
+
+            explicit Definition( const Tokenizer::Token *token ) : token(token) {}
+        };
+
+        std::unordered_map<const Tokenizer::Token *, Definition> overloads;
+    };
+
+    using Identifier = std::variant<Variable, Function>;
 
     using CodeGenCast = ExpressionId (*)(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
@@ -48,7 +61,7 @@ private:
     std::unordered_map< std::string, StaticTypeImpl::CPtr > types;
     const LookupContext *parent = nullptr;
 
-    std::unordered_map< String, Symbol > symbols;
+    std::unordered_map< String, Identifier > symbols;
     std::unordered_map<
             PracticalSemanticAnalyzer::StaticType::CPtr,
             std::unordered_map<
@@ -81,7 +94,7 @@ public:
 
     void addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue );
 
-    const Symbol *lookupSymbol( String name ) const;
+    const Identifier *lookupIdentifier( String name ) const;
 
     void addCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,

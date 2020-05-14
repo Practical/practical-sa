@@ -388,6 +388,7 @@ size_t Expression::parsePostfixOp(
         case Operators::OperatorType::Function:
             {
                 FunctionCall funcCall;
+                funcCall.op = op.op;
                 funcCall.expression = safenew< Expression >( std::move( *this ) );
                 tokensConsumed += funcCall.arguments.parse( source.subslice(tokensConsumed) );
                 value = std::move( funcCall );
