@@ -222,7 +222,7 @@ public:
 
     /* implicit */ String( Slice<const char> slice ) : Slice(slice) {}
     /* implicit */ String( const char *string ) : Slice( string, strlen(string) ) {}
-    explicit String( const std::string &string ) : Slice( string.c_str(), string.size() ) {}
+    /* implicit */ String( const std::string &string ) : Slice( string.c_str(), string.size() ) {}
 };
 
 static inline std::string sliceToString( const String &src ) {

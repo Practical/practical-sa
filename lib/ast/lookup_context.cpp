@@ -8,6 +8,9 @@
  */
 #include "lookup_context.h"
 
+#include "ast/expression.h"
+#include "ast/mangle.h"
+
 #include <asserts.h>
 
 #include <practical-errors.h>
@@ -69,7 +72,9 @@ void LookupContext::addFunctionPass2( const Tokenizer::Token *token, StaticTypeI
     auto definition = function->overloads.find( token );
     ASSERT( definition!=function->overloads.end() );
 
+    definition->second.mangledName = getFunctionMangledName( token->text, type );
     definition->second.type = std::move(type);
+    definition->second.codeGen = globalFunctionCall;
 }
 
 const LookupContext::Identifier *LookupContext::lookupIdentifier( String name ) const {
@@ -132,6 +137,24 @@ LookupContext::CodeGenCast LookupContext::lookupCast(
         return nullptr;
 
     return getParent()->lookupCast( sourceType, destType, implicit );
+}
+
+// Private methods
+ExpressionId LookupContext::globalFunctionCall(
+        Slice<Expression> arguments, const Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ExpressionId resultId = Expression::allocateId();
+    ExpressionId argumentExpressionIds[arguments.size()];
+    for( unsigned argIdx=0; argIdx<arguments.size(); ++argIdx ) {
+        argumentExpressionIds[argIdx] = arguments[argIdx].codeGen( functionGen );
+    }
+
+    functionGen->callFunctionDirect(
+            resultId, definition->mangledName, Slice(argumentExpressionIds, arguments.size()),
+            std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
+
+    return resultId;
 }
 
 } // End namespace AST

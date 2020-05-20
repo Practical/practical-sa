@@ -9,7 +9,6 @@
 #include "function_call.h"
 
 #include "ast/expression/identifier.h"
-#include "ast/mangle.h"
 
 #include <practical-errors.h>
 
@@ -50,18 +49,7 @@ void FunctionCall::buildASTImpl( LookupContext &lookupContext, ExpectedResult ex
 }
 
 ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
-    ASSERT( !functionName.empty() )<<"TODO implement overloads and callable expressions";
-
-    ExpressionId resultId = Expression::allocateId();
-    ExpressionId argumentExpressionIds[arguments.size()];
-    for( unsigned argIdx=0; argIdx<arguments.size(); ++argIdx ) {
-        argumentExpressionIds[argIdx] = arguments[argIdx].codeGen( functionGen );
-    }
-
-    functionGen->callFunctionDirect(
-            resultId, String(functionName), Slice(argumentExpressionIds, arguments.size()), metadata.type );
-
-    return resultId;
+    return definition->codeGen( arguments, definition, functionGen );
 }
 
 // Private
@@ -119,7 +107,7 @@ void FunctionCall::buildActualCall(
     metadata.valueRange = returnType->defaultRange();
     metadata.type = std::move(returnType);
 
-    functionName = getFunctionMangledName( definition->token->text, definition->type );
+    this->definition = definition;
 }
 
 } // namespace AST::ExpressionImpl

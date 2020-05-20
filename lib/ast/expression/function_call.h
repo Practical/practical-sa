@@ -19,7 +19,7 @@ class FunctionCall : public Base {
     const NonTerminals::Expression::FunctionCall &parserFunctionCall;
     std::optional<Expression> functionId;
     std::vector<Expression> arguments;
-    std::string functionName;
+    const LookupContext::Function::Definition *definition;
 
 public:
     explicit FunctionCall( const NonTerminals::Expression::FunctionCall &parserFunctionCall );

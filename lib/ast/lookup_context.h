@@ -20,6 +20,8 @@
 
 namespace AST {
 
+class Expression;
+
 class LookupContext : private NoCopy {
 public:
     struct Variable {
@@ -37,8 +39,17 @@ public:
         struct Definition {
             const Tokenizer::Token *token;
             StaticTypeImpl::CPtr type;
+            std::string mangledName;
 
             explicit Definition( const Tokenizer::Token *token ) : token(token) {}
+
+            std::function<
+                    ExpressionId(
+                            Slice<Expression>,
+                            const Definition *definition,
+                            PracticalSemanticAnalyzer::FunctionGen *functionGen
+                        )
+                > codeGen;
         };
 
         std::unordered_map<const Tokenizer::Token *, Definition> overloads;
@@ -105,6 +116,12 @@ public:
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             bool implicit ) const;
+
+private:
+    static ExpressionId globalFunctionCall(
+            Slice<Expression>,
+            const Function::Definition *definition,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen);
 };
 
 } // End namespace AST
