@@ -15,6 +15,8 @@ namespace AST {
 
 using PracticalSemanticAnalyzer::ExpressionId;
 
+static constexpr unsigned BuiltingBaseCastWeight = 10;
+
 ExpressionId signedExpansionCast( 
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,

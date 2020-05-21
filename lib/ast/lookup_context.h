@@ -62,6 +62,16 @@ public:
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             PracticalSemanticAnalyzer::FunctionGen *functionGen);
 
+    struct CastDescriptor {
+        CodeGenCast codeGen;
+        unsigned weight;
+
+        CastDescriptor( CodeGenCast codeGen, unsigned weight ) :
+            codeGen(codeGen),
+            weight(weight)
+        {}
+    };
+
 private:
     using CalcValueRangeCast = ValueRangeBase::CPtr (*)(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
@@ -73,12 +83,10 @@ private:
     const LookupContext *parent = nullptr;
 
     std::unordered_map< String, Identifier > symbols;
+
     std::unordered_map<
             PracticalSemanticAnalyzer::StaticType::CPtr,
-            std::unordered_map<
-                    PracticalSemanticAnalyzer::StaticType::CPtr,
-                    CodeGenCast
-            >
+            std::unordered_map< PracticalSemanticAnalyzer::StaticType::CPtr, CastDescriptor >
     > typeConversionsFrom;
 
     std::unordered_map<
@@ -110,7 +118,7 @@ public:
     void addCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
-            CodeGenCast codeGenCast, bool implicitAllowed );
+            unsigned weight, CodeGenCast codeGenCast, bool implicitAllowed );
 
     CodeGenCast lookupCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
