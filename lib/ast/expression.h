@@ -32,7 +32,9 @@ public:
     }
 
 protected:
-    void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
+    void buildASTImpl(
+            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
+        ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
 };
 

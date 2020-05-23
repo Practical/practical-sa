@@ -25,18 +25,22 @@ public:
     explicit FunctionCall( const NonTerminals::Expression::FunctionCall &parserFunctionCall );
 
 protected:
-    void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) override;
+    void buildASTImpl(
+            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
+        ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
 
 private:
     void resolveOverloads(
             LookupContext &lookupContext,
             ExpectedResult expectedResult,
-            const std::unordered_map<const Tokenizer::Token *, LookupContext::Function::Definition> &overloads
-            );
+            const std::unordered_map<const Tokenizer::Token *, LookupContext::Function::Definition> &overloads,
+            unsigned &weight,
+            unsigned weightLimit
+        );
 
     void buildActualCall(
-            LookupContext &lookupContext, ExpectedResult expectedResult,
+            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit,
             const LookupContext::Function::Definition *definition );
 };
 

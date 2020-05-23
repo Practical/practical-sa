@@ -21,11 +21,15 @@ Expression::Expression( const NonTerminals::Expression &parserExpression ) :
 {
 }
 
-void Expression::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+void Expression::buildASTImpl(
+        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+{
     struct Visitor {
         Expression *_this;
         LookupContext &lookupContext;
         ExpectedResult expectedResult;
+        unsigned &weight;
+        const unsigned weightLimit;
 
         void operator()( const std::unique_ptr<NonTerminals::CompoundExpression> &expression ) {
             ABORT()<<"TODO implement";
@@ -34,14 +38,14 @@ void Expression::buildASTImpl( LookupContext &lookupContext, ExpectedResult expe
         void operator()( const NonTerminals::Literal &parserLiteral ) {
             auto literal = safenew<ExpressionImpl::Literal>( parserLiteral );
 
-            literal->buildAST( lookupContext, expectedResult );
+            literal->buildAST( lookupContext, expectedResult, weight, weightLimit );
             _this->actualExpression = std::move(literal);
         }
 
         void operator()( const NonTerminals::Identifier &parserIdentifier ) {
             auto identifier = safenew<ExpressionImpl::Identifier>( parserIdentifier );
 
-            identifier->buildAST( lookupContext, expectedResult );
+            identifier->buildAST( lookupContext, expectedResult, weight, weightLimit );
             _this->actualExpression = std::move(identifier);
         }
 
@@ -56,7 +60,7 @@ void Expression::buildASTImpl( LookupContext &lookupContext, ExpectedResult expe
         void operator()( const NonTerminals::Expression::FunctionCall &parserFuncCall ) {
             auto functionCall = safenew<ExpressionImpl::FunctionCall>( parserFuncCall );
 
-            functionCall->buildAST( lookupContext, expectedResult );
+            functionCall->buildAST( lookupContext, expectedResult, weight, weightLimit );
             _this->actualExpression = std::move(functionCall);
         }
 
@@ -70,7 +74,10 @@ void Expression::buildASTImpl( LookupContext &lookupContext, ExpectedResult expe
     };
 
     std::visit(
-            Visitor{ ._this = this, .lookupContext = lookupContext, .expectedResult = expectedResult },
+            Visitor{
+                ._this = this, .lookupContext = lookupContext, .expectedResult = expectedResult,
+                .weight = weight, .weightLimit = weightLimit
+            },
             parserExpression.value );
 
     metadata.type = actualExpression->getType();

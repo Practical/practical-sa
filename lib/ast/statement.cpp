@@ -34,7 +34,8 @@ void Statement::codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::Fu
             auto varType = lookupCtx.lookupType( varDef.body.type );
 
             Expression initValue( *varDef.initValue );
-            initValue.buildAST(lookupCtx, varType);
+            unsigned weight = 0;
+            initValue.buildAST(lookupCtx, varType, weight, Expression::NoWeightLimit);
             ExpressionId initValueExpressionId = initValue.codeGen(functionGen);
 
             lookupCtx.addLocalVar( varDef.body.name.identifier, varType, varExpressionId );

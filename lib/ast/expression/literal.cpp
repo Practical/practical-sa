@@ -23,7 +23,9 @@ Literal::Literal( const NonTerminals::Literal &parserLiteral ) :
 {
 }
 
-void Literal::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+void Literal::buildASTImpl(
+        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+{
     switch( parserLiteral.token.token ) {
     case Tokenizer::Tokens::LITERAL_INT_10:
         {

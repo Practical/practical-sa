@@ -23,7 +23,9 @@ String Identifier::getName() const {
     return parserIdentifier.identifier->text;
 }
 
-void Identifier::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+void Identifier::buildASTImpl(
+        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+{
     identifier = lookupContext.lookupIdentifier( parserIdentifier.identifier->text );
 
     if( identifier==nullptr ) {

@@ -22,9 +22,11 @@ FunctionCall::FunctionCall( const NonTerminals::Expression::FunctionCall &parser
 }
 
 // protected methods
-void FunctionCall::buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) {
+void FunctionCall::buildASTImpl(
+        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+{
     functionId.emplace( *parserFunctionCall.expression );
-    functionId->buildAST( lookupContext, ExpectedResult() );
+    functionId->buildAST( lookupContext, ExpectedResult(), weight, weightLimit );
 
     const Identifier *identifier = functionId->tryGetActualExpression<Identifier>();
     ASSERT(identifier)<<"TODO calling function through generic pointer expression not yet implemented";
@@ -33,19 +35,25 @@ void FunctionCall::buildASTImpl( LookupContext &lookupContext, ExpectedResult ex
         FunctionCall *_this;
         LookupContext &lookupContext;
         ExpectedResult &expectedResult;
+        unsigned &weight;
+        const unsigned weightLimit;
 
         void operator()( const LookupContext::Variable &var ) {
             ABORT()<<"TODO calling function through a variable not yet implemented";
         }
 
         void operator()( const LookupContext::Function &function ) {
-            _this->resolveOverloads( lookupContext, expectedResult, function.overloads );
+            _this->resolveOverloads( lookupContext, expectedResult, function.overloads, weight, weightLimit );
         }
     };
 
     std::visit(
-            Visitor{ ._this=this, .lookupContext=lookupContext, .expectedResult=expectedResult },
-            *identifier->getCtxIdentifier() );
+            Visitor{
+                ._this=this, .lookupContext=lookupContext, .expectedResult=expectedResult,
+                .weight=weight, .weightLimit=weightLimit
+            },
+            *identifier->getCtxIdentifier()
+        );
 }
 
 ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
@@ -56,8 +64,10 @@ ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *
 void FunctionCall::resolveOverloads(
         LookupContext &lookupContext,
         ExpectedResult expectedResult,
-        const std::unordered_map<const Tokenizer::Token *, LookupContext::Function::Definition> &overloads
-        )
+        const std::unordered_map<const Tokenizer::Token *, LookupContext::Function::Definition> &overloads,
+        unsigned &weight,
+        unsigned weightLimit
+    )
 {
     std::vector< const LookupContext::Function::Definition * > relevantOverloads;
     std::vector< const LookupContext::Function::Definition * > preciseResultOverloads;
@@ -79,17 +89,17 @@ void FunctionCall::resolveOverloads(
 
     if( relevantOverloads.size()==1 ) {
         // It's the only one that might match. Either it matches or compile error.
-        buildActualCall( lookupContext, expectedResult, relevantOverloads[0] );
+        buildActualCall( lookupContext, expectedResult, weight, weightLimit, relevantOverloads[0] );
         return;
     }
 
     ASSERT( preciseResultOverloads.size()==1 )<<"TODO actual overload _resolution_ is not yet implemented";
 
-    buildActualCall( lookupContext, expectedResult, preciseResultOverloads[0] );
+    buildActualCall( lookupContext, expectedResult, weight, weightLimit, preciseResultOverloads[0] );
 }
 
 void FunctionCall::buildActualCall(
-            LookupContext &lookupContext, ExpectedResult expectedResult,
+            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit,
             const LookupContext::Function::Definition *definition )
 {
     auto functionType = std::get<const StaticType::Function *>( definition->type->getType() );
@@ -98,9 +108,15 @@ void FunctionCall::buildActualCall(
 
     arguments.reserve( numArguments );
 
-   for( unsigned argumentNum=0; argumentNum<numArguments; ++argumentNum ) {
+    for( unsigned argumentNum=0; argumentNum<numArguments; ++argumentNum ) {
         Expression &argument = arguments.emplace_back( parserFunctionCall.arguments.arguments[argumentNum] );
-        argument.buildAST( lookupContext, ExpectedResult( functionType->getArgumentType(argumentNum) ) );
+        unsigned additionalWeight = 0;
+        argument.buildAST(
+                lookupContext, ExpectedResult( functionType->getArgumentType(argumentNum) ),
+                additionalWeight, weightLimit );
+        ASSERT( additionalWeight<=weightLimit );
+        weight+=additionalWeight;
+        weightLimit-=additionalWeight;
     }
 
     StaticTypeImpl::CPtr returnType = static_cast<const StaticTypeImpl *>( functionType->getReturnType().get() );

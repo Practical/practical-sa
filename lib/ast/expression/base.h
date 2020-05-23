@@ -27,7 +27,16 @@ protected:
         ValueRangeBase::CPtr valueRange;
     } metadata;
 
+    class ExpressionTooExpensive : public std::exception {
+    public:
+        const char *what() const noexcept {
+            return "Expression too expensive";
+        }
+    };
+
 public:
+    static constexpr unsigned NoWeightLimit = std::numeric_limits<unsigned>::max();
+
     static PracticalSemanticAnalyzer::ExpressionId allocateId();
 
     Base() = default;
@@ -42,11 +51,12 @@ public:
         return metadata.valueRange;
     }
 
-    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult );
+    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit );
     ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen );
 
 protected:
-    virtual void buildASTImpl( LookupContext &lookupContext, ExpectedResult expectedResult ) = 0;
+    virtual void buildASTImpl(
+            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit ) = 0;
     virtual ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) = 0;
 };
 

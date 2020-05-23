@@ -25,8 +25,9 @@ PracticalSemanticAnalyzer::StaticType::CPtr Base::getType() const {
     return metadata.type;
 }
 
-void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult ) {
-    buildASTImpl( lookupContext, expectedResult );
+void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+{
+    buildASTImpl( lookupContext, expectedResult, weight, weightLimit );
 
     if( !expectedResult || *expectedResult.getType()==*metadata.type )
         return;
