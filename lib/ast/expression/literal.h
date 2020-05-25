@@ -38,11 +38,12 @@ protected:
 private:
     class LiteralInt final : public Impl {
         LongEnoughInt result = 0;
+
     public:
         ExpressionId codeGen( Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
 
-        void parseInt10( Literal *owner, ExpectedResult expectedResult );
-        void parseInt( Literal *owner, ExpectedResult expectedResult );
+        void parseInt10( Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult );
+        void parseInt( Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult );
     };
 };
 

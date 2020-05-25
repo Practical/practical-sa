@@ -31,7 +31,8 @@ public:
             size_t size,
             size_t alignment,
             Scalar::Type type,
-            PracticalSemanticAnalyzer::TypeId backendType );
+            PracticalSemanticAnalyzer::TypeId backendType,
+            unsigned literalWeight );
     ScalarTypeImpl( ScalarTypeImpl &&that ) :
         PracticalSemanticAnalyzer::StaticType::Scalar( that ),
         name( std::move(that.name) ),

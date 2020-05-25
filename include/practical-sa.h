@@ -56,10 +56,11 @@ namespace PracticalSemanticAnalyzer {
             size_t size=0, alignment=1;
             TypeId typeId;
             Type type;
+            unsigned literalWeight;
 
         public:
-            Scalar( size_t size, size_t alignment, Type type, TypeId typeId ) :
-                size(size), alignment(alignment), typeId(typeId), type(type)
+            Scalar( size_t size, size_t alignment, Type type, TypeId typeId, unsigned literalWeight ) :
+                size(size), alignment(alignment), typeId(typeId), type(type), literalWeight(literalWeight)
             {}
 
             virtual String getName() const = 0;
@@ -79,6 +80,10 @@ namespace PracticalSemanticAnalyzer {
 
             TypeId getTypeId()  const {
                 return typeId;
+            }
+
+            unsigned getLiteralWeight() const {
+                return literalWeight;
             }
 
             bool operator==( const Scalar &rhs ) const;

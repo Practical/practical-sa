@@ -32,7 +32,7 @@ void Literal::buildASTImpl(
             auto ptr = safenew< LiteralInt >();
             LiteralInt *literalInt = ptr.get();
             impl = std::move( ptr );
-            literalInt->parseInt10( this, expectedResult );
+            literalInt->parseInt10( this, weight, weightLimit, expectedResult );
         }
         break;
     case Tokenizer::Tokens::LITERAL_INT_16:
@@ -60,7 +60,9 @@ ExpressionId Literal::LiteralInt::codeGen( Literal *owner, PracticalSemanticAnal
     return id;
 }
 
-void Literal::LiteralInt::parseInt10( Literal *owner, ExpectedResult expectedResult ) {
+void Literal::LiteralInt::parseInt10(
+        Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult )
+{
     result = 0;
 
     for( char c: owner->parserLiteral.token.text ) {
@@ -78,31 +80,42 @@ void Literal::LiteralInt::parseInt10( Literal *owner, ExpectedResult expectedRes
         result += c-'0';
     }
 
-    parseInt( owner, expectedResult );
+    parseInt( owner, weight, weightLimit, expectedResult );
 }
 
-void Literal::LiteralInt::parseInt( Literal *owner, ExpectedResult expectedResult ) {
+void Literal::LiteralInt::parseInt(
+        Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult )
+{
     ASSERT( !owner->metadata.type )<<"Cannot reuse AST nodes";
 
-    String naturalTypeName;
+    PracticalSemanticAnalyzer::StaticType::CPtr naturalType;
     if( result>std::numeric_limits<uint32_t>::max() ) {
         ASSERT( result<=std::numeric_limits<uint64_t>::max() );
-        naturalTypeName = "U64";
+        naturalType = AST::getBuiltinCtx().lookupType("U64");
     } else if( result>std::numeric_limits<uint16_t>::max() ) {
-        naturalTypeName = "U32";
+        naturalType = AST::getBuiltinCtx().lookupType("U32");
     } else if( result>std::numeric_limits<uint8_t>::max() ) {
-        naturalTypeName = "U16";
+        naturalType = AST::getBuiltinCtx().lookupType("U16");
     } else {
-        naturalTypeName = "U8";
+        naturalType = AST::getBuiltinCtx().lookupType("U8");
     }
+    ASSERT( naturalType );
 
-    owner->metadata.type = AST::getBuiltinCtx().lookupType( naturalTypeName );
-    ASSERT( owner->metadata.type );
     owner->metadata.valueRange = UnsignedIntValueRange::allocate( result, result );
 
-    // Check if a cast to the expected type is even necessary, or we can just create it in the right type
-    if( !expectedResult )
+    if( !expectedResult ) {
+        static const PracticalSemanticAnalyzer::StaticType::CPtr DefaultLiteralIntType =
+                AST::getBuiltinCtx().lookupType("U64");
+        static const unsigned DefaultLiteralIntWeight =
+                std::get< const StaticType::Scalar *>( DefaultLiteralIntType->getType() )->getLiteralWeight();
+
+        // If nothing is expected, return the maximal unsigned type
+        owner->metadata.type =  DefaultLiteralIntType;
+        ASSERT( owner->metadata.type );
+
+        weight += DefaultLiteralIntWeight;
         return;
+    }
 
     auto expectedType = expectedResult.getType()->getType();
     auto expectedScalar = std::get_if< const StaticType::Scalar * >(&expectedType);
@@ -113,10 +126,15 @@ void Literal::LiteralInt::parseInt( Literal *owner, ExpectedResult expectedResul
             if( result<limit ) {
                 owner->metadata.type = expectedResult.getType();
                 owner->metadata.valueRange = SignedIntValueRange::allocate( result, result );
+
+                weight += (*expectedScalar)->getLiteralWeight();
+
                 return;
             }
         } else if( (*expectedScalar)->getType() == StaticType::Scalar::Type::UnsignedInt ) {
             ASSERT( (*expectedScalar)->getSize()<=64 );
+
+            weight += (*expectedScalar)->getLiteralWeight();
 
             if( (*expectedScalar)->getSize()==64 ) {
                 owner->metadata.type = expectedResult.getType();
@@ -131,6 +149,12 @@ void Literal::LiteralInt::parseInt( Literal *owner, ExpectedResult expectedResul
                 return;
             }
         }
+    } else {
+        // A type is expected, but it is not a scalar. Put in the default type and let the caller try a cast
+        owner->metadata.type = naturalType;
+        ASSERT( owner->metadata.type );
+
+        weight += std::get< const StaticType::Scalar *>( naturalType->getType() )->getLiteralWeight();
     }
 }
 

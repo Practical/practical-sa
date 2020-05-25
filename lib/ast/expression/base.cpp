@@ -29,12 +29,19 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
 {
     buildASTImpl( lookupContext, expectedResult, weight, weightLimit );
 
+    if( weight>weightLimit )
+        throw ExpressionTooExpensive();
+
     if( !expectedResult || *expectedResult.getType()==*metadata.type )
         return;
 
-    auto castFunction = lookupContext.lookupCast( metadata.type, expectedResult.getType(), true );
-    if( castFunction ) {
-        castOp = safenew<CastOperation>( castFunction, metadata.type, expectedResult.getType() );
+    auto castDescptor = lookupContext.lookupCast( metadata.type, expectedResult.getType(), true );
+    if( castDescptor ) {
+        weight += castDescptor->weight;
+        if( weight>weightLimit )
+            throw ExpressionTooExpensive();
+
+        castOp = safenew<CastOperation>( castDescptor->codeGen, metadata.type, expectedResult.getType() );
 
         return;
     }

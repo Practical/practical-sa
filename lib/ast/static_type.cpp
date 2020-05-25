@@ -16,9 +16,9 @@ namespace AST {
 
 ScalarTypeImpl::ScalarTypeImpl(
         String name, String mangledName, size_t size, size_t alignment, Scalar::Type type,
-        PracticalSemanticAnalyzer::TypeId backendType
+        PracticalSemanticAnalyzer::TypeId backendType, unsigned literalWeight
 ) :
-    PracticalSemanticAnalyzer::StaticType::Scalar( size, alignment, type, backendType ),
+    PracticalSemanticAnalyzer::StaticType::Scalar( size, alignment, type, backendType, literalWeight ),
     name( sliceToString(name) ),
     mangledName( sliceToString(mangledName) )
 {

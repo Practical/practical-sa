@@ -123,7 +123,7 @@ void LookupContext::addCast(
     }
 }
 
-LookupContext::CodeGenCast LookupContext::lookupCast(
+const LookupContext::CastDescriptor *LookupContext::lookupCast(
         PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
         PracticalSemanticAnalyzer::StaticType::CPtr destType,
         bool implicit ) const
@@ -132,7 +132,7 @@ LookupContext::CodeGenCast LookupContext::lookupCast(
     if( conversionIter!=typeConversionsFrom.end() ) {
         auto conversionFuncIter = conversionIter->second.find( destType );
         if( conversionFuncIter!=conversionIter->second.end() ) {
-            return conversionFuncIter->second.codeGen;
+            return &conversionFuncIter->second;
         }
     }
 

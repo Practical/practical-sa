@@ -120,7 +120,7 @@ public:
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             unsigned weight, CodeGenCast codeGenCast, bool implicitAllowed );
 
-    CodeGenCast lookupCast(
+    const CastDescriptor *lookupCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             bool implicit ) const;
