@@ -8,6 +8,7 @@
  */
 #include "ast.h"
 
+#include "ast/expression/binary_op.h"
 #include "ast/bool_value_range.h"
 #include "ast/casts.h"
 #include "ast/signed_int_value_range.h"
@@ -93,6 +94,20 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
     builtinCtx.addCast( u16Type, s32Type, BuiltingBaseCastWeight+3, unsignedExpansionCast, true );
     builtinCtx.addCast( u16Type, s64Type, BuiltingBaseCastWeight+5, unsignedExpansionCast, true );
     builtinCtx.addCast( u32Type, s64Type, BuiltingBaseCastWeight+7, unsignedExpansionCast, true );
+
+#if 0
+    // Operators
+    UnaryOp::registerOpName( Tokenizer::Tokens::OP_AMPERSAND, "__opAmpersand" );
+    UnaryOp::registerOpName( Tokenizer::Tokens::OP_ASTERISK, "__opDereference" );
+    UnaryOp::registerOpName( Tokenizer::Tokens::OP_BIT_NOT, "__opOneComplement" );
+    UnaryOp::registerOpName( Tokenizer::Tokens::OP_MINUS, "__opMinus" );
+    UnaryOp::registerOpName( Tokenizer::Tokens::OP_MINUS_MINUS, "__opMinusMinus" );
+    UnaryOp::registerOpName( Tokenizer::Tokens::OP_PLUS, "__opPlus" );
+    UnaryOp::registerOpName( Tokenizer::Tokens::OP_PLUS_PLUS, "__opPlus" );
+    UnaryOp::registerOpName( Tokenizer::Tokens::OP_LOGIC_NOT, "__opNot" );
+#endif
+
+    ExpressionImpl::BinaryOp::init(builtinCtx);
 }
 
 } // End namespace AST

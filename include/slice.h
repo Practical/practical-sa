@@ -29,9 +29,9 @@ class Slice {
         >;
 public:
     // No ownership, default copy ctr is fine
-    Slice(const Slice &rhs) = default;
-    Slice &operator=(const Slice &rhs) = default;
-    Slice() = default;
+    constexpr Slice(const Slice &rhs) = default;
+    constexpr Slice &operator=(const Slice &rhs) = default;
+    constexpr Slice() = default;
 
     constexpr Slice(T *ptr, size_t length) : ptr(ptr), len(length) {
     }
@@ -53,6 +53,15 @@ public:
         ptr(vector.data()), len(vector.size())
     {
     }
+
+    /* implicit */ Slice( std::initializer_list<T> list ) :
+        ptr(list.begin()), len(list.size())
+    {}
+
+    template<size_t Size>
+    /* implicit */ Slice( const std::array<T, Size> &array ) :
+        ptr(&array[0]), len(array.size())
+    {}
 
     // Accessors
     size_t size() const {
@@ -103,6 +112,12 @@ public:
         assert(end<=len);
 
         return Slice<const T>(ptr+start, end - start);
+    }
+
+    void copy( const Slice source ) {
+        for( size_t i=0; i<size(); ++i ) {
+            (*this)[i] = source[i];
+        }
     }
 
     // Compare the data pointed by the two slices. Allows using slice as key in hash

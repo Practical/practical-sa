@@ -46,6 +46,32 @@ StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type, V
     return iter.first->second;
 }
 
+void LookupContext::addBuiltinFunction(
+        const std::string &name, StaticTypeImpl::CPtr returnType, Slice<const StaticTypeImpl::CPtr> argumentTypes,
+        ExpressionId(*)(Slice<Expression>, const Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *) )
+{
+    auto iter = symbols.find( name );
+
+    Function *function = nullptr;
+    if( iter!=symbols.end() ) {
+        function = std::get_if<Function>( &iter->second );
+        ASSERT( function!=nullptr );
+    } else {
+        auto inserter = symbols.emplace( name, Function{} );
+        function = &std::get<Function>(inserter.first->second);
+    }
+
+    Function::Definition &definition = function->overloads.emplace_back(name);
+    std::vector<StaticTypeImpl::CPtr> arguments( argumentTypes.begin(), argumentTypes.end() );
+    definition.type =
+                StaticTypeImpl::allocate(
+                    FunctionTypeImpl(
+                        std::move(returnType),
+                        std::move(arguments)
+                    )
+                );
+}
+
 void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {
     auto iter = symbols.find( token->text );
 

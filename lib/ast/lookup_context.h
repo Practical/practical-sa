@@ -41,6 +41,7 @@ public:
             StaticTypeImpl::CPtr type;
             std::string mangledName;
 
+            Definition( const std::string &name ) : mangledName(name) {}
             explicit Definition( const Tokenizer::Token *token ) : token(token) {}
 
             std::function<
@@ -108,6 +109,10 @@ public:
     StaticTypeImpl::CPtr lookupType( const NonTerminals::Type &type ) const;
 
     StaticTypeImpl::CPtr registerScalarType( ScalarTypeImpl &&type, ValueRangeBase::CPtr defaultValueRange );
+
+    void addBuiltinFunction(
+            const std::string &name, StaticTypeImpl::CPtr returnType, Slice<const StaticTypeImpl::CPtr> argumentTypes,
+            ExpressionId(*)(Slice<Expression>, const Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *) );
 
     void addFunctionPass1( const Tokenizer::Token *token );
     void addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type );

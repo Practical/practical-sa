@@ -8,6 +8,7 @@
  */
 #include "ast/expression.h"
 
+#include "ast/expression/binary_op.h"
 #include "ast/expression/identifier.h"
 #include "ast/expression/function_call.h"
 #include "ast/expression/literal.h"
@@ -54,7 +55,10 @@ void Expression::buildASTImpl(
         }
 
         void operator()( const NonTerminals::Expression::BinaryOperator &op ) {
-            ABORT()<<"TODO implement";
+            auto binaryOp = safenew<ExpressionImpl::BinaryOp>(op);
+
+            binaryOp->buildAST( lookupContext, expectedResult, weight, weightLimit );
+            _this->actualExpression = std::move(binaryOp);
         }
 
         void operator()( const NonTerminals::Expression::FunctionCall &parserFuncCall ) {
