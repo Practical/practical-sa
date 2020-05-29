@@ -60,7 +60,8 @@ void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {
         function = &std::get<Function>(inserter.first->second);
     }
 
-    function->overloads.emplace( token, token );
+    function->overloads.emplace_back( token );
+    function->firstPassOverloads.emplace( token, function->overloads.size()-1 );
 }
 
 void LookupContext::addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type ) {
@@ -69,12 +70,13 @@ void LookupContext::addFunctionPass2( const Tokenizer::Token *token, StaticTypeI
     Function *function = std::get_if<Function>( &iter->second );
     ASSERT( function!=nullptr );
 
-    auto definition = function->overloads.find( token );
-    ASSERT( definition!=function->overloads.end() );
+    auto definitionIdx = function->firstPassOverloads.find( token );
+    ASSERT( definitionIdx!=function->firstPassOverloads.end() );
 
-    definition->second.mangledName = getFunctionMangledName( token->text, type );
-    definition->second.type = std::move(type);
-    definition->second.codeGen = globalFunctionCall;
+    Function::Definition *definition = &function->overloads.at(definitionIdx->second);
+    definition->mangledName = getFunctionMangledName( token->text, type );
+    definition->type = std::move(type);
+    definition->codeGen = globalFunctionCall;
 }
 
 const LookupContext::Identifier *LookupContext::lookupIdentifier( String name ) const {

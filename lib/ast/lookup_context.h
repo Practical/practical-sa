@@ -52,7 +52,8 @@ public:
                 > codeGen;
         };
 
-        std::unordered_map<const Tokenizer::Token *, Definition> overloads;
+        std::unordered_map<const Tokenizer::Token *, unsigned> firstPassOverloads;
+        std::vector<Definition> overloads;
     };
 
     using Identifier = std::variant<Variable, Function>;

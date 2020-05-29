@@ -64,7 +64,7 @@ ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *
 void FunctionCall::resolveOverloads(
         LookupContext &lookupContext,
         ExpectedResult expectedResult,
-        const std::unordered_map<const Tokenizer::Token *, LookupContext::Function::Definition> &overloads,
+        const std::vector<LookupContext::Function::Definition> &overloads,
         unsigned &weight,
         unsigned weightLimit
     )
@@ -74,12 +74,12 @@ void FunctionCall::resolveOverloads(
 
     size_t numArguments = parserFunctionCall.arguments.arguments.size();
     for( auto &overload : overloads ) {
-        auto overloadType = std::get<const StaticType::Function *>(overload.second.type->getType());
+        auto overloadType = std::get<const StaticType::Function *>(overload.type->getType());
         if( overloadType->getNumArguments() == numArguments ) {
-            relevantOverloads.emplace_back( &overload.second );
+            relevantOverloads.emplace_back( &overload );
 
             if( expectedResult && expectedResult.getType() == overloadType->getReturnType() )
-                preciseResultOverloads.emplace_back( &overload.second );
+                preciseResultOverloads.emplace_back( &overload );
         }
     }
 

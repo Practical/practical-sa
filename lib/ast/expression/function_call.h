@@ -34,7 +34,7 @@ private:
     void resolveOverloads(
             LookupContext &lookupContext,
             ExpectedResult expectedResult,
-            const std::unordered_map<const Tokenizer::Token *, LookupContext::Function::Definition> &overloads,
+            const std::vector<LookupContext::Function::Definition> &overloads,
             unsigned &weight,
             unsigned weightLimit
         );

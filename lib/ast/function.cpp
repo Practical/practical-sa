@@ -26,9 +26,9 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
     ASSERT( identifierDef );
     const LookupContext::Function *funcDef = std::get_if<LookupContext::Function>( identifierDef );
     ASSERT( funcDef );
-    auto overload = funcDef->overloads.find( parserFunction.decl.name.identifier );
-    ASSERT( overload!=funcDef->overloads.end() );
-    auto funcType = overload->second.type->getType();
+    auto overloadIdx = funcDef->firstPassOverloads.find( parserFunction.decl.name.identifier );
+    ASSERT( overloadIdx!=funcDef->firstPassOverloads.end() );
+    auto funcType = funcDef->overloads.at(overloadIdx->second).type->getType();
     auto function = std::get_if< const StaticType::Function * >( &funcType );
     ASSERT( function!=nullptr );
 
