@@ -10,6 +10,7 @@
 #define AST_EXPRESSION_FUNCTION_CALL_H
 
 #include "ast/expression/base.h"
+#include "ast/expression/overload_resolver.h"
 #include "ast/expression.h"
 #include "parser.h"
 
@@ -18,8 +19,7 @@ namespace AST::ExpressionImpl {
 class FunctionCall : public Base {
     const NonTerminals::Expression::FunctionCall &parserFunctionCall;
     std::optional<Expression> functionId;
-    std::vector<Expression> arguments;
-    const LookupContext::Function::Definition *definition;
+    OverloadResolver resolver;
 
 public:
     explicit FunctionCall( const NonTerminals::Expression::FunctionCall &parserFunctionCall );
@@ -29,19 +29,6 @@ protected:
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
         ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
-
-private:
-    void resolveOverloads(
-            LookupContext &lookupContext,
-            ExpectedResult expectedResult,
-            const std::vector<LookupContext::Function::Definition> &overloads,
-            unsigned &weight,
-            unsigned weightLimit
-        );
-
-    void buildActualCall(
-            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit,
-            const LookupContext::Function::Definition *definition );
 };
 
 } // namespace AST::ExpressionImpl

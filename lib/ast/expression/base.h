@@ -18,14 +18,16 @@
 namespace AST::ExpressionImpl {
 
 class Base {
-private:
-    std::unique_ptr<CastOperation> castOp;
-
-protected:
+public:
     struct ExpressionMetadata {
         PracticalSemanticAnalyzer::StaticType::CPtr type;
         ValueRangeBase::CPtr valueRange;
-    } metadata;
+    };
+
+private:
+    std::unique_ptr<CastOperation> castOp;
+protected:
+    ExpressionMetadata metadata;
 
     class ExpressionTooExpensive : public std::exception {
     public:

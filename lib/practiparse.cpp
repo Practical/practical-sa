@@ -79,9 +79,9 @@ void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
         void operator()( const NonTerminals::Expression::BinaryOperator &op ) {
             indent( out, depth )<<"Binary "<<*op.op<<"\n";
             indent( out, depth )<<"Operand 1:\n";
-            dumpParseTree( *op.operand1, depth+1 );
+            dumpParseTree( *op.operands[0], depth+1 );
             indent( out, depth )<<"Operand 2:\n";
-            dumpParseTree( *op.operand2, depth+1 );
+            dumpParseTree( *op.operands[1], depth+1 );
         }
 
         void operator()( const NonTerminals::Expression::FunctionCall &func ) {

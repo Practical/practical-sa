@@ -43,87 +43,31 @@ void FunctionCall::buildASTImpl(
         }
 
         void operator()( const LookupContext::Function &function ) {
-            _this->resolveOverloads( lookupContext, expectedResult, function.overloads, weight, weightLimit );
+            size_t numArguments = _this->parserFunctionCall.arguments.arguments.size();
+            const NonTerminals::Expression *arguments[numArguments];
+
+            for( unsigned i=0; i<numArguments; ++i ) {
+                arguments[i] = &_this->parserFunctionCall.arguments.arguments[i];
+            }
+
+            _this->resolver.resolveOverloads(
+                    lookupContext, expectedResult, function.overloads,
+                    weight, weightLimit,
+                    _this->metadata, Slice(arguments, numArguments), _this->parserFunctionCall.op );
         }
     };
 
     std::visit(
             Visitor{
                 ._this=this, .lookupContext=lookupContext, .expectedResult=expectedResult,
-                .weight=weight, .weightLimit=weightLimit
+                .weight=weight, .weightLimit=weightLimit,
             },
             *identifier->getCtxIdentifier()
         );
 }
 
 ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
-    return definition->codeGen( arguments, definition, functionGen );
-}
-
-// Private
-void FunctionCall::resolveOverloads(
-        LookupContext &lookupContext,
-        ExpectedResult expectedResult,
-        const std::vector<LookupContext::Function::Definition> &overloads,
-        unsigned &weight,
-        unsigned weightLimit
-    )
-{
-    std::vector< const LookupContext::Function::Definition * > relevantOverloads;
-    std::vector< const LookupContext::Function::Definition * > preciseResultOverloads;
-
-    size_t numArguments = parserFunctionCall.arguments.arguments.size();
-    for( auto &overload : overloads ) {
-        auto overloadType = std::get<const StaticType::Function *>(overload.type->getType());
-        if( overloadType->getNumArguments() == numArguments ) {
-            relevantOverloads.emplace_back( &overload );
-
-            if( expectedResult && expectedResult.getType() == overloadType->getReturnType() )
-                preciseResultOverloads.emplace_back( &overload );
-        }
-    }
-
-    if( relevantOverloads.size()==0 ) {
-        throw NoMatchingOverload( parserFunctionCall.op );
-    }
-
-    if( relevantOverloads.size()==1 ) {
-        // It's the only one that might match. Either it matches or compile error.
-        buildActualCall( lookupContext, expectedResult, weight, weightLimit, relevantOverloads[0] );
-        return;
-    }
-
-    ASSERT( preciseResultOverloads.size()==1 )<<"TODO actual overload _resolution_ is not yet implemented";
-
-    buildActualCall( lookupContext, expectedResult, weight, weightLimit, preciseResultOverloads[0] );
-}
-
-void FunctionCall::buildActualCall(
-            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit,
-            const LookupContext::Function::Definition *definition )
-{
-    auto functionType = std::get<const StaticType::Function *>( definition->type->getType() );
-    size_t numArguments = functionType->getNumArguments();
-    ASSERT( numArguments==parserFunctionCall.arguments.arguments.size() );
-
-    arguments.reserve( numArguments );
-
-    for( unsigned argumentNum=0; argumentNum<numArguments; ++argumentNum ) {
-        Expression &argument = arguments.emplace_back( parserFunctionCall.arguments.arguments[argumentNum] );
-        unsigned additionalWeight = 0;
-        argument.buildAST(
-                lookupContext, ExpectedResult( functionType->getArgumentType(argumentNum) ),
-                additionalWeight, weightLimit );
-        ASSERT( additionalWeight<=weightLimit );
-        weight+=additionalWeight;
-        weightLimit-=additionalWeight;
-    }
-
-    StaticTypeImpl::CPtr returnType = static_cast<const StaticTypeImpl *>( functionType->getReturnType().get() );
-    metadata.valueRange = returnType->defaultRange();
-    metadata.type = std::move(returnType);
-
-    this->definition = definition;
+    return resolver.codeGen( functionGen );
 }
 
 } // namespace AST::ExpressionImpl

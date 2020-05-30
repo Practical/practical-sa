@@ -9,6 +9,7 @@
 #ifndef AST_EXPRESSION_BINARY_OP_H
 #define AST_EXPRESSION_BINARY_OP_H
 
+#include "ast/expression/overload_resolver.h"
 #include "ast/expression.h"
 #include "parser.h"
 
@@ -17,6 +18,7 @@ namespace AST::ExpressionImpl {
 class BinaryOp final : public Base {
     const NonTerminals::Expression::BinaryOperator &parserOp;
     std::optional<Expression> operands[2];
+    OverloadResolver resolver;
 
 public:
     static void init(LookupContext &builtinCtx);

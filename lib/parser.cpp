@@ -229,8 +229,8 @@ size_t Expression::parsePrefixOp(
                         "Cast operator must be followed by `!`",
                         "End of file looking for cast expression"
                 );
-                op2.operand1 = safenew< Expression >();
-                tokensConsumed += op2.operand1->basicParse( source.subslice(tokensConsumed) );
+                op2.operands[0] = safenew< Expression >();
+                tokensConsumed += op2.operands[0]->basicParse( source.subslice(tokensConsumed) );
                 expectToken(
                         Tokenizer::Tokens::BRACKET_ROUND_OPEN,
                         source,
@@ -238,8 +238,8 @@ size_t Expression::parsePrefixOp(
                         "Expected `(` after cast type",
                         "End of file looking for cast expression"
                 );
-                op2.operand2 = safenew< Expression >();
-                tokensConsumed += op2.operand2->parse( source.subslice( tokensConsumed ) );
+                op2.operands[1] = safenew< Expression >();
+                tokensConsumed += op2.operands[1]->parse( source.subslice( tokensConsumed ) );
                 expectToken(
                         Tokenizer::Tokens::BRACKET_ROUND_CLOSE,
                         source,
@@ -267,7 +267,7 @@ size_t Expression::parseInfixOp(
 
     /*
      * In regular grammer, this rule should say ExpressionN (where N is the level) -> ExpressionN OP ExpressionN-1
-     * The direct translation to code of the above is to start by calling op.operand1->actualParse( source, level )
+     * The direct translation to code of the above is to start by calling op.operands[0]->actualParse( source, level )
      * Doing this will result in an unterminated recursion (calling ourselves with the precise same arguments).
      *
      * Instead, We're parsing ExpressionN -> ExpressionN-1 OP ExpressionN-1, and if the next token after we're done is an operator
@@ -279,28 +279,28 @@ size_t Expression::parseInfixOp(
      */
 
     BinaryOperator op;
-    op.operand1 = safenew<Expression>();
-    tokensConsumed = op.operand1->actualParse( source, level-1 );
+    op.operands[0] = safenew<Expression>();
+    tokensConsumed = op.operands[0]->actualParse( source, level-1 );
 
     size_t provisionalTokensConsumed = tokensConsumed;
     op.op = nextToken( source, provisionalTokensConsumed );
     if( op.op==nullptr ) {
-        *this = std::move(* op.operand1);
+        *this = std::move(* op.operands[0]);
         RULE_LEAVE();
     }
 
     auto opInfo = operators.find(op.op->token);
     if( opInfo==operators.end() ) {
         // This is not the operator you're looking for. Just make do with what we have without it
-        *this = std::move(* op.operand1);
+        *this = std::move(* op.operands[0]);
         RULE_LEAVE();
     }
 
     ASSERT( opInfo->second==Operators::OperatorType::Regular );
     tokensConsumed = provisionalTokensConsumed;
 
-    op.operand2 = safenew< Expression >();
-    tokensConsumed += op.operand2->actualParse( source.subslice(tokensConsumed), level-1 );
+    op.operands[1] = safenew< Expression >();
+    tokensConsumed += op.operands[1]->actualParse( source.subslice(tokensConsumed), level-1 );
 
     while( true ) {
         BinaryOperator op2;
@@ -314,12 +314,12 @@ size_t Expression::parseInfixOp(
 
         // Commit to extending
         tokensConsumed = provisionalTokensConsumed;
-        op2.operand1 = safenew< Expression >();
-        op2.operand1->value = std::move( op );
+        op2.operands[0] = safenew< Expression >();
+        op2.operands[0]->value = std::move( op );
         op = std::move( op2 );
 
-        op.operand2 = safenew< Expression >();
-        tokensConsumed += op.operand2->actualParse( source.subslice( tokensConsumed ), level-1 );
+        op.operands[1] = safenew< Expression >();
+        tokensConsumed += op.operands[1]->actualParse( source.subslice( tokensConsumed ), level-1 );
     }
 
     value = std::move(op);
@@ -333,28 +333,28 @@ size_t Expression::parseInfixR2LOp(
     RULE_ENTER(source);
 
     BinaryOperator op;
-    op.operand1 = safenew< Expression >();
-    tokensConsumed += op.operand1->actualParse( source, level-1 );
+    op.operands[0] = safenew< Expression >();
+    tokensConsumed += op.operands[0]->actualParse( source, level-1 );
 
     size_t provisionalTokensConsumed = tokensConsumed;
     op.op = nextToken( source, provisionalTokensConsumed );
     if( op.op==nullptr ) {
-        *this = std::move(* op.operand1);
+        *this = std::move(* op.operands[0]);
         RULE_LEAVE();
     }
 
     auto opInfo = operators.find(op.op->token);
     if( opInfo==operators.end() ) {
         // This is not the operator you're looking for. Just make do with what we have without it
-        *this = std::move(* op.operand1);
+        *this = std::move(* op.operands[0]);
         RULE_LEAVE();
     }
     ASSERT( opInfo->second==Operators::OperatorType::Regular );
 
     tokensConsumed = provisionalTokensConsumed;
 
-    op.operand2 = safenew< Expression >();
-    tokensConsumed += op.operand2->actualParse( source.subslice(tokensConsumed), level );
+    op.operands[1] = safenew< Expression >();
+    tokensConsumed += op.operands[1]->actualParse( source.subslice(tokensConsumed), level );
 
     value = std::move( op );
 

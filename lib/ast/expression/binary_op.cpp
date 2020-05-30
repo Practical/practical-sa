@@ -13,6 +13,7 @@
 
 namespace AST::ExpressionImpl {
 
+// Non member private helpers
 static std::unordered_map< Tokenizer::Tokens, std::string > operatorNames;
 
 static void defineMatchingPairs(
@@ -31,6 +32,11 @@ static void defineMatchingPairs(
     }
 }
 
+String opToFuncName( Tokenizer::Tokens token ) {
+    return operatorNames.at(token);
+}
+
+// Static methods
 void BinaryOp::init(LookupContext &builtinCtx) {
     std::array<const StaticTypeImpl::CPtr, 4> unsignedTypes{
         builtinCtx.lookupType( "U8" ),
@@ -55,11 +61,7 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_MINUS, "__opAssignMinus" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_MODULOUS, "__opAssignMod" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_MULTIPLY, "__opAssignMultiply" );
-
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_PLUS, "__opAssignPlus" );
-    defineMatchingPairs( Operators::bPlusCodegen, inserter.first->second, unsignedTypes, builtinCtx );
-    defineMatchingPairs( Operators::bPlusCodegen, inserter.first->second, signedTypes, builtinCtx );
-
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_RIGHT_SHIFT, "__opAssignShiftRight" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASTERISK, "__opMultiply" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_AND, "__opBitAnd" );
@@ -76,7 +78,11 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MINUS, "__opMinus" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MODULOUS, "__opMod" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_NOT_EQUALS, "__opEQ" );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_PLUS, "__opPlus" );
+    defineMatchingPairs( Operators::bPlusCodegen, inserter.first->second, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bPlusCodegen, inserter.first->second, signedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_SHIFT_LEFT, "__opShiftLeft" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_SHIFT_RIGHT, "__opShiftRight" );
 }
@@ -89,11 +95,18 @@ BinaryOp::BinaryOp( const NonTerminals::Expression::BinaryOperator &parserOp ) :
 void BinaryOp::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
 {
-    ABORT()<<"TODO implement";
+    String baseName = opToFuncName( parserOp.op->token );
+    auto identifier = lookupContext.lookupIdentifier( baseName );
+    ASSERT( identifier );
+    const LookupContext::Function &function =
+            std::get<LookupContext::Function>(*identifier);
+
+    resolver.resolveOverloads( lookupContext, expectedResult, function.overloads, weight, weightLimit, metadata,
+            { parserOp.operands[0].get(), parserOp.operands[1].get() }, parserOp.op );
 }
 
 ExpressionId BinaryOp::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
-    ABORT()<<"TODO implement";
+    return resolver.codeGen( functionGen );
 }
 
 } // namespace AST::ExpressionImpl

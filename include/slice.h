@@ -11,6 +11,7 @@
 
 #include "defines.h"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <iostream>
@@ -22,11 +23,6 @@ class Slice {
     T *ptr = nullptr;
     size_t len = 0;
 
-    using vector_type = std::conditional_t<
-            std::is_const<T>::value,
-            const std::vector< std::remove_const_t<T> >,
-            std::vector<T>
-        >;
 public:
     // No ownership, default copy ctr is fine
     constexpr Slice(const Slice &rhs) = default;
@@ -49,7 +45,8 @@ public:
     {
     }
 
-    /* implicit conversion */ Slice(vector_type &vector) :
+    template<typename V, std::enable_if_t<std::is_same_v< std::remove_cv_t<T>, std::remove_cv_t<V> >, int> = 0>
+    /* implicit conversion */ Slice(std::vector<V> &vector) :
         ptr(vector.data()), len(vector.size())
     {
     }
@@ -58,8 +55,8 @@ public:
         ptr(list.begin()), len(list.size())
     {}
 
-    template<size_t Size>
-    /* implicit */ Slice( const std::array<T, Size> &array ) :
+    template<size_t Size, typename V, std::enable_if_t<std::is_same_v< std::remove_cv_t<V>, std::remove_cv_t<T>>, int> = 0>
+    /* implicit */ Slice( const std::array<V, Size> &array ) :
         ptr(&array[0]), len(array.size())
     {}
 
