@@ -18,7 +18,7 @@ ExpressionId Base::allocateId() {
 
 Base::~Base() {}
 
-PracticalSemanticAnalyzer::StaticType::CPtr Base::getType() const {
+StaticTypeImpl::CPtr Base::getType() const {
     if( castOp )
         return postCastMetadata.type;
 
@@ -45,7 +45,7 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
         postCastMetadata.type = castOp->getType();
         ASSERT( metadata.valueRange );
         postCastMetadata.valueRange = castDescriptor->calcVrp(
-                static_cast<const StaticTypeImpl *>(metadata.type.get()),
+                metadata.type.get(),
                 expectedResult.getType().get(),
                 metadata.valueRange );
 

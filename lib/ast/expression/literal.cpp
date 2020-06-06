@@ -88,7 +88,7 @@ void Literal::LiteralInt::parseInt(
 {
     ASSERT( !owner->metadata.type )<<"Cannot reuse AST nodes";
 
-    PracticalSemanticAnalyzer::StaticType::CPtr naturalType;
+    StaticTypeImpl::CPtr naturalType;
     if( result>std::numeric_limits<uint32_t>::max() ) {
         ASSERT( result<=std::numeric_limits<uint64_t>::max() );
         naturalType = AST::getBuiltinCtx().lookupType("U64");
@@ -104,7 +104,7 @@ void Literal::LiteralInt::parseInt(
     owner->metadata.valueRange = UnsignedIntValueRange::allocate( result, result );
 
     if( !expectedResult ) {
-        static const PracticalSemanticAnalyzer::StaticType::CPtr DefaultLiteralIntType =
+        static const StaticTypeImpl::CPtr DefaultLiteralIntType =
                 AST::getBuiltinCtx().lookupType("U64");
         static const unsigned DefaultLiteralIntWeight =
                 std::get< const StaticType::Scalar *>( DefaultLiteralIntType->getType() )->getLiteralWeight();

@@ -20,7 +20,7 @@ namespace AST::ExpressionImpl {
 class Base {
 public:
     struct ExpressionMetadata {
-        PracticalSemanticAnalyzer::StaticType::CPtr type;
+        StaticTypeImpl::CPtr type;
         ValueRangeBase::CPtr valueRange;
     };
 
@@ -49,7 +49,7 @@ public:
 
     virtual ~Base() = 0;
 
-    PracticalSemanticAnalyzer::StaticType::CPtr getType() const;
+    StaticTypeImpl::CPtr getType() const;
 
     ValueRangeBase::CPtr getValueRange() const {
         if( castOp )

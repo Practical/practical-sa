@@ -16,12 +16,13 @@ namespace AST {
 
 class CastOperation : private NoCopy {
     LookupContext::CodeGenCast castFunction;
-    StaticType::CPtr sourceType, destType;
+    StaticTypeImpl::CPtr sourceType, destType;
 
 public:
-    explicit CastOperation( LookupContext::CodeGenCast castFunction, StaticType::CPtr sourceType, StaticType::CPtr destType );
+    explicit CastOperation(
+            LookupContext::CodeGenCast castFunction, StaticTypeImpl::CPtr sourceType, StaticTypeImpl::CPtr destType );
 
-    StaticType::CPtr getType() const {
+    StaticTypeImpl::CPtr getType() const {
         return destType;
     }
 

@@ -11,7 +11,7 @@
 namespace AST {
 
 CastOperation::CastOperation(
-        LookupContext::CodeGenCast castFunction, StaticType::CPtr sourceType, StaticType::CPtr destType ) :
+        LookupContext::CodeGenCast castFunction, StaticTypeImpl::CPtr sourceType, StaticTypeImpl::CPtr destType ) :
     castFunction(castFunction),
     sourceType(sourceType),
     destType(destType)
