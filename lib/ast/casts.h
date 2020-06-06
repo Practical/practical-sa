@@ -31,13 +31,13 @@ ExpressionId unsignedExpansionCast(
             PracticalSemanticAnalyzer::FunctionGen *functionGen);
 
 ValueRangeBase::CPtr identityVrp(
-            StaticTypeImpl::CPtr sourceType,
-            StaticTypeImpl::CPtr destType,
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
             ValueRangeBase::CPtr inputRange );
 
 ValueRangeBase::CPtr unsignedToSignedIdentityVrp(
-            StaticTypeImpl::CPtr sourceType,
-            StaticTypeImpl::CPtr destType,
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
             ValueRangeBase::CPtr inputRange );
 
 } // namespace AST

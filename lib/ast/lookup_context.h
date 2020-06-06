@@ -64,8 +64,8 @@ public:
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             PracticalSemanticAnalyzer::FunctionGen *functionGen);
     using ValueRangeCast = ValueRangeBase::CPtr (*)(
-            StaticTypeImpl::CPtr sourceType,
-            StaticTypeImpl::CPtr destType,
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
             ValueRangeBase::CPtr inputRange
         );
 

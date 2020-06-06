@@ -26,6 +26,8 @@ public:
 
 private:
     std::unique_ptr<CastOperation> castOp;
+    ExpressionMetadata postCastMetadata;
+
 protected:
     ExpressionMetadata metadata;
 
@@ -50,6 +52,9 @@ public:
     PracticalSemanticAnalyzer::StaticType::CPtr getType() const;
 
     ValueRangeBase::CPtr getValueRange() const {
+        if( castOp )
+            return postCastMetadata.valueRange;
+
         return metadata.valueRange;
     }
 

@@ -20,7 +20,7 @@ Base::~Base() {}
 
 PracticalSemanticAnalyzer::StaticType::CPtr Base::getType() const {
     if( castOp )
-        return castOp->getType();
+        return postCastMetadata.type;
 
     return metadata.type;
 }
@@ -35,13 +35,19 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
     if( !expectedResult || *expectedResult.getType()==*metadata.type )
         return;
 
-    auto castDescptor = lookupContext.lookupCast( metadata.type, expectedResult.getType(), true );
-    if( castDescptor ) {
-        weight += castDescptor->weight;
+    auto castDescriptor = lookupContext.lookupCast( metadata.type, expectedResult.getType(), true );
+    if( castDescriptor ) {
+        weight += castDescriptor->weight;
         if( weight>weightLimit )
             throw ExpressionTooExpensive();
 
-        castOp = safenew<CastOperation>( castDescptor->codeGen, metadata.type, expectedResult.getType() );
+        castOp = safenew<CastOperation>( castDescriptor->codeGen, metadata.type, expectedResult.getType() );
+        postCastMetadata.type = castOp->getType();
+        ASSERT( metadata.valueRange );
+        postCastMetadata.valueRange = castDescriptor->calcVrp(
+                static_cast<const StaticTypeImpl *>(metadata.type.get()),
+                expectedResult.getType().get(),
+                metadata.valueRange );
 
         return;
     }
