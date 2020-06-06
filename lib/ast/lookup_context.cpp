@@ -129,10 +129,11 @@ void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::
 void LookupContext::addCast(
         PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
         PracticalSemanticAnalyzer::StaticType::CPtr destType,
-        unsigned weight, CodeGenCast codeGenCast, bool implicitAllowed )
+        unsigned weight, CodeGenCast codeGenCast, ValueRangeCast calcVrp,
+        CastDescriptor::ImplicitCastAllowed whenPossible )
 {
     ASSERT( getParent()==nullptr )<<"Non-builtin lookups not yet implemented";
-    ASSERT( implicitAllowed )<<"TODO implement non-implicit casts";
+    ASSERT( whenPossible == CastDescriptor::ImplicitCastAllowed::Always )<<"TODO implement non-implicit casts";
 
     {
         auto &sourceTypeMap = typeConversionsFrom[sourceType];
@@ -140,7 +141,7 @@ void LookupContext::addCast(
         auto insertIterator = sourceTypeMap.emplace(
                 std::piecewise_construct,
                 std::tuple(destType),
-                std::tuple(codeGenCast, weight) );
+                std::tuple(codeGenCast, calcVrp, weight, whenPossible) );
         ASSERT( insertIterator.second );
     }
 

@@ -52,6 +52,8 @@ namespace PracticalSemanticAnalyzer {
                 Void, Bool, SignedInt, UnsignedInt, Char
             };
 
+            friend std::ostream &operator<<(std::ostream &out, Type type);
+
         private:
             size_t size=0, alignment=1;
             TypeId typeId;

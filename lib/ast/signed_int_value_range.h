@@ -19,9 +19,9 @@
 namespace AST {
 
 class SignedIntValueRange final : public ValueRangeBase {
+public:
     LongEnoughIntSigned minimum, maximum;
 
-public:
     bool isLiteral() const override {
         return minimum==maximum;
     }

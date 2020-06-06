@@ -9,6 +9,9 @@
 #ifndef AST_CASTS_H
 #define AST_CASTS_H
 
+#include "ast/static_type.h"
+#include "ast/value_range_base.h"
+
 #include <practical-sa.h>
 
 namespace AST {
@@ -26,6 +29,16 @@ ExpressionId unsignedExpansionCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             PracticalSemanticAnalyzer::FunctionGen *functionGen);
+
+ValueRangeBase::CPtr identityVrp(
+            StaticTypeImpl::CPtr sourceType,
+            StaticTypeImpl::CPtr destType,
+            ValueRangeBase::CPtr inputRange );
+
+ValueRangeBase::CPtr unsignedToSignedIdentityVrp(
+            StaticTypeImpl::CPtr sourceType,
+            StaticTypeImpl::CPtr destType,
+            ValueRangeBase::CPtr inputRange );
 
 } // namespace AST
 

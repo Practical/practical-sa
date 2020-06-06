@@ -63,14 +63,29 @@ public:
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             PracticalSemanticAnalyzer::FunctionGen *functionGen);
+    using ValueRangeCast = ValueRangeBase::CPtr (*)(
+            StaticTypeImpl::CPtr sourceType,
+            StaticTypeImpl::CPtr destType,
+            ValueRangeBase::CPtr inputRange
+        );
 
     struct CastDescriptor {
-        CodeGenCast codeGen;
-        unsigned weight;
+        enum class ImplicitCastAllowed {
+            Always,
+            VrpConditional,
+            Never
+        };
 
-        CastDescriptor( CodeGenCast codeGen, unsigned weight ) :
+        CodeGenCast codeGen;
+        ValueRangeCast calcVrp = nullptr;
+        unsigned weight = std::numeric_limits<unsigned>::max();
+        ImplicitCastAllowed whenPossible = ImplicitCastAllowed::Always;
+
+        CastDescriptor( CodeGenCast codeGen, ValueRangeCast calcVrp, unsigned weight, ImplicitCastAllowed whenPossible ) :
             codeGen(codeGen),
-            weight(weight)
+            calcVrp(calcVrp),
+            weight(weight),
+            whenPossible(whenPossible)
         {}
     };
 
@@ -124,7 +139,8 @@ public:
     void addCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
-            unsigned weight, CodeGenCast codeGenCast, bool implicitAllowed );
+            unsigned weight, CodeGenCast codeGenCast, ValueRangeCast calcVrp,
+            CastDescriptor::ImplicitCastAllowed whenPossible );
 
     const CastDescriptor *lookupCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,

@@ -9,6 +9,8 @@
 #include "ast/casts.h"
 
 #include "ast/expression.h"
+#include "ast/signed_int_value_range.h"
+#include "ast/unsigned_int_value_range.h"
 
 namespace AST {
 
@@ -32,6 +34,40 @@ ExpressionId unsignedExpansionCast(
     functionGen->expandIntegerUnsigned( id, sourceExpression, sourceType, destType );
 
     return id;
+}
+
+ValueRangeBase::CPtr identityVrp(
+            StaticTypeImpl::CPtr sourceType,
+            StaticTypeImpl::CPtr destType,
+            ValueRangeBase::CPtr inputRange )
+{
+    return inputRange;
+}
+
+ValueRangeBase::CPtr unsignedToSignedIdentityVrp(
+            StaticTypeImpl::CPtr sourceType,
+            StaticTypeImpl::CPtr destType,
+            ValueRangeBase::CPtr inputRangeBase )
+{
+    ASSERT(
+            std::get<const StaticType::Scalar *>(sourceType->getType())->getType() ==
+            StaticType::Scalar::Type::UnsignedInt
+          ) <<
+            "VRP for unsigned->signed called on input of type "<<
+            std::get<const StaticType::Scalar *>(sourceType->getType())->getType();
+
+    ASSERT( typeid(inputRangeBase.get()).hash_code()==typeid(UnsignedIntValueRange).hash_code() );
+
+    auto inputRange = static_cast<const UnsignedIntValueRange *>(inputRangeBase.get());
+
+    auto maximalRange = destType->defaultRange();
+    ASSERT( typeid(maximalRange.get()).hash_code()==typeid(SignedIntValueRange).hash_code() );
+
+    ASSERT(
+            inputRange->maximum <=
+            static_cast<LongEnoughInt>( static_cast<const SignedIntValueRange *>(maximalRange.get())->maximum ) );
+
+    return SignedIntValueRange::allocate( inputRange->minimum, inputRange->maximum );
 }
 
 } // namespace AST

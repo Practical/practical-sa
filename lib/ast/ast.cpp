@@ -74,26 +74,44 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
             UnsignedIntValueRange::allocate<uint64_t>() );
 
     // Implicit conversions
-    builtinCtx.addCast( s8Type, s16Type, BuiltingBaseCastWeight+2, signedExpansionCast, true );
-    builtinCtx.addCast( s8Type, s32Type, BuiltingBaseCastWeight+4, signedExpansionCast, true );
-    builtinCtx.addCast( s8Type, s64Type, BuiltingBaseCastWeight+6, signedExpansionCast, true );
-    builtinCtx.addCast( s16Type, s32Type, BuiltingBaseCastWeight+2, signedExpansionCast, true );
-    builtinCtx.addCast( s16Type, s64Type, BuiltingBaseCastWeight+4, signedExpansionCast, true );
-    builtinCtx.addCast( s32Type, s64Type, BuiltingBaseCastWeight+2, signedExpansionCast, true );
+    builtinCtx.addCast( s8Type, s16Type, BuiltingBaseCastWeight, signedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( s8Type, s32Type, BuiltingBaseCastWeight+2, signedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( s8Type, s64Type, BuiltingBaseCastWeight+4, signedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( s16Type, s32Type, BuiltingBaseCastWeight, signedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( s16Type, s64Type, BuiltingBaseCastWeight+2, signedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( s32Type, s64Type, BuiltingBaseCastWeight, signedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
 
-    builtinCtx.addCast( u8Type, u16Type, BuiltingBaseCastWeight+2, unsignedExpansionCast, true );
-    builtinCtx.addCast( u8Type, u32Type, BuiltingBaseCastWeight+4, unsignedExpansionCast, true );
-    builtinCtx.addCast( u8Type, u64Type, BuiltingBaseCastWeight+6, unsignedExpansionCast, true );
-    builtinCtx.addCast( u16Type, u32Type, BuiltingBaseCastWeight+2, unsignedExpansionCast, true );
-    builtinCtx.addCast( u16Type, u64Type, BuiltingBaseCastWeight+4, unsignedExpansionCast, true );
-    builtinCtx.addCast( u32Type, u64Type, BuiltingBaseCastWeight+2, unsignedExpansionCast, true );
+    builtinCtx.addCast( u8Type, u16Type, BuiltingBaseCastWeight, unsignedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u8Type, u32Type, BuiltingBaseCastWeight+2, unsignedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u8Type, u64Type, BuiltingBaseCastWeight+4, unsignedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u16Type, u32Type, BuiltingBaseCastWeight, unsignedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u16Type, u64Type, BuiltingBaseCastWeight+2, unsignedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u32Type, u64Type, BuiltingBaseCastWeight, unsignedExpansionCast, identityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
 
-    builtinCtx.addCast( u8Type, s16Type, BuiltingBaseCastWeight+3, unsignedExpansionCast, true );
-    builtinCtx.addCast( u8Type, s32Type, BuiltingBaseCastWeight+5, unsignedExpansionCast, true );
-    builtinCtx.addCast( u8Type, s64Type, BuiltingBaseCastWeight+7, unsignedExpansionCast, true );
-    builtinCtx.addCast( u16Type, s32Type, BuiltingBaseCastWeight+3, unsignedExpansionCast, true );
-    builtinCtx.addCast( u16Type, s64Type, BuiltingBaseCastWeight+5, unsignedExpansionCast, true );
-    builtinCtx.addCast( u32Type, s64Type, BuiltingBaseCastWeight+7, unsignedExpansionCast, true );
+    builtinCtx.addCast( u8Type, s16Type, BuiltingBaseCastWeight+1, unsignedExpansionCast, unsignedToSignedIdentityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u8Type, s32Type, BuiltingBaseCastWeight+3, unsignedExpansionCast, unsignedToSignedIdentityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u8Type, s64Type, BuiltingBaseCastWeight+5, unsignedExpansionCast, unsignedToSignedIdentityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u16Type, s32Type, BuiltingBaseCastWeight+1, unsignedExpansionCast, unsignedToSignedIdentityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u16Type, s64Type, BuiltingBaseCastWeight+3, unsignedExpansionCast, unsignedToSignedIdentityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+    builtinCtx.addCast( u32Type, s64Type, BuiltingBaseCastWeight+5, unsignedExpansionCast, unsignedToSignedIdentityVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
 
 #if 0
     // Operators

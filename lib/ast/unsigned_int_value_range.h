@@ -19,9 +19,9 @@
 namespace AST {
 
 class UnsignedIntValueRange final : public ValueRangeBase {
+public:
     LongEnoughInt minimum, maximum;
 
-public:
     bool isLiteral() const override {
         return minimum==maximum;
     }

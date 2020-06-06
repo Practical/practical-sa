@@ -23,6 +23,20 @@ DEF_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId );
 
 namespace PracticalSemanticAnalyzer {
 
+std::ostream &operator<<(std::ostream &out, StaticType::Scalar::Type type) {
+#define CASE(c) case StaticType::Scalar::Type::c: return out<<#c
+    switch(type) {
+        CASE(Void);
+        CASE(Bool);
+        CASE(SignedInt);
+        CASE(UnsignedInt);
+        CASE(Char);
+    }
+#undef CASE
+
+    return out<<"Unkown type "<<static_cast<unsigned>(type);
+}
+
 bool StaticType::Scalar::operator==( const Scalar &rhs ) const {
     return
             size==rhs.size &&
