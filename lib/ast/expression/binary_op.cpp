@@ -11,6 +11,8 @@
 #include "ast/operators/plus.h"
 #include "tokenizer.h"
 
+#include <experimental/array>
+
 namespace AST::ExpressionImpl {
 
 // Non member private helpers
@@ -38,18 +40,18 @@ String opToFuncName( Tokenizer::Tokens token ) {
 
 // Static methods
 void BinaryOp::init(LookupContext &builtinCtx) {
-    std::array<const StaticTypeImpl::CPtr, 4> unsignedTypes{
+    auto unsignedTypes = std::experimental::make_array<const StaticTypeImpl::CPtr>(
         builtinCtx.lookupType( "U8" ),
         builtinCtx.lookupType( "U16" ),
         builtinCtx.lookupType( "U32" ),
         builtinCtx.lookupType( "U64" )
-    };
-    std::array<const StaticTypeImpl::CPtr, 4> signedTypes{
+    );
+    auto signedTypes = std::experimental::make_array<const StaticTypeImpl::CPtr>(
         builtinCtx.lookupType( "S8" ),
         builtinCtx.lookupType( "S16" ),
         builtinCtx.lookupType( "S32" ),
         builtinCtx.lookupType( "S64" )
-    };
+    );
 
     auto inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ARROW, "__opArrow" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN, "__opAssign" );

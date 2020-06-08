@@ -37,20 +37,21 @@ public:
 
     struct Function {
         struct Definition {
+            using CodeGenProto =
+                    ExpressionId(
+                            Slice<Expression>, const Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+            using VrpProto =
+                    ValueRangeBase::CPtr(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+
             const Tokenizer::Token *token;
             StaticTypeImpl::CPtr type;
             std::string mangledName;
+            CodeGenProto *codeGen = nullptr;
+            VrpProto *calcVrp = nullptr;
 
             Definition( const std::string &name ) : mangledName(name) {}
             explicit Definition( const Tokenizer::Token *token ) : token(token) {}
-
-            std::function<
-                    ExpressionId(
-                            Slice<Expression>,
-                            const Definition *definition,
-                            PracticalSemanticAnalyzer::FunctionGen *functionGen
-                        )
-                > codeGen;
         };
 
         std::unordered_map<const Tokenizer::Token *, unsigned> firstPassOverloads;

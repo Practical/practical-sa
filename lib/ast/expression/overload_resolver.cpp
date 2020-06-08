@@ -85,7 +85,16 @@ void OverloadResolver::buildActualCall(
     }
 
     StaticTypeImpl::CPtr returnType = static_cast<const StaticTypeImpl *>( functionType->getReturnType().get() );
-    metadata.valueRange = returnType->defaultRange();
+    if( definition->calcVrp ) {
+        ValueRangeBase::CPtr inputRanges[ numArguments ];
+        for( unsigned argumentNum=0; argumentNum<numArguments; ++argumentNum ) {
+            inputRanges[argumentNum] = arguments[argumentNum].getValueRange();
+        }
+
+        metadata.valueRange = definition->calcVrp( definition->type, Slice( inputRanges, numArguments ) );
+    } else {
+        metadata.valueRange = returnType->defaultRange();
+    }
     metadata.type = std::move(returnType);
 
     this->definition = definition;
