@@ -1,6 +1,6 @@
 /* This file is part of the Practical programming langauge. https://github.com/Practical/practical-sa
  *
- * To the extent header files enjoy copyright protection, this file is file is copyright (C) 2018-2019 by its authors
+ * To the extent header files enjoy copyright protection, this file is file is copyright (C) 2018-2020 by its authors
  * You can see the file's authors in the AUTHORS file in the project's home repository.
  *
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
@@ -28,8 +28,6 @@ using LongEnoughIntSigned = std::intmax_t;
 // Hopefully unique module ID for our typed ids
 static constexpr size_t PracticalSAModuleId = 0xc5489da402dc5a84;
 DECL_TYPED_NS( PracticalSemanticAnalyzer, ModuleId, unsigned long, 0, PracticalSAModuleId );
-DECL_TYPED_NS( PracticalSemanticAnalyzer, IdentifierId, unsigned long, 0, PracticalSAModuleId );
-DECL_TYPED_NS( PracticalSemanticAnalyzer, TypeId, unsigned long, 0, PracticalSAModuleId );
 DECL_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId, unsigned long, 0, PracticalSAModuleId );
 DECL_TYPED_NS( PracticalSemanticAnalyzer, JumpPointId, unsigned long, 0, PracticalSAModuleId );
 
@@ -38,42 +36,102 @@ namespace PracticalSemanticAnalyzer {
     public:
     };
 
+    // Cookie type used by the backend to identify types. Backend can choose whether to use an integer or a pointer
+    union TypeId {
+        uintptr_t n;
+        void *p;
+    };
+
     class StaticType : private NoCopy, public boost::intrusive_ref_counter<StaticType, boost::thread_unsafe_counter> {
-    private:
-        TypeId id;
-
     public:
-        using Ptr = boost::intrusive_ptr<const StaticType>;
+        using CPtr = boost::intrusive_ptr<const StaticType>;
 
-        TypeId getId() const {
-            return id;
-        }
+        class Scalar {
+        public:
+            enum class Type {
+                Void, Bool, SignedInt, UnsignedInt, Char
+            };
 
-        bool operator==( const StaticType &that ) const {
-            return this->id==that.id;
-        }
+            friend std::ostream &operator<<(std::ostream &out, Type type);
 
-        bool operator!=( const StaticType &that ) const {
-            return !operator==( that );
-        }
+        private:
+            size_t size=0, alignment=1;
+            TypeId typeId;
+            Type type;
+            unsigned literalWeight;
 
-        static Ptr allocate(TypeId id);
+        public:
+            Scalar( size_t size, size_t alignment, Type type, TypeId typeId, unsigned literalWeight ) :
+                size(size), alignment(alignment), typeId(typeId), type(type), literalWeight(literalWeight)
+            {}
 
-    private:
-        StaticType(TypeId _id) : id(_id) {
+            virtual String getName() const = 0;
+            virtual String getMangledName() const = 0;
+
+            size_t getSize() const {
+                return size;
+            }
+
+            size_t getAlignment() const {
+                return alignment;
+            }
+
+            Type getType() const {
+                return type;
+            }
+
+            TypeId getTypeId()  const {
+                return typeId;
+            }
+
+            unsigned getLiteralWeight() const {
+                return literalWeight;
+            }
+
+            bool operator==( const Scalar &rhs ) const;
+        };
+
+        class Function {
+        public:
+            virtual ~Function() {}
+
+            virtual CPtr getReturnType() const = 0;
+            virtual size_t getNumArguments() const = 0;
+            virtual CPtr getArgumentType( unsigned index ) const = 0;
+            virtual String getMangledName() const = 0;
+
+            bool operator==( const Function &rhs ) const;
+        };
+
+        using Types = std::variant<const Scalar *, const Function *>;
+
+        virtual ~StaticType() {}
+
+        virtual Types getType() const = 0;
+
+        String getMangledName() const;
+
+        bool operator==( const StaticType &rhs ) const;
+        bool operator!=( const StaticType &rhs ) const {
+            return ! (*this==rhs);
         }
     };
-    std::ostream &operator<<(std::ostream &out, StaticType::Ptr type);
-    inline bool operator==( const StaticType::Ptr &left, const StaticType::Ptr &right ) {
-        return (*left)==(*right);
-    }
+    std::ostream &operator<<(std::ostream &out, StaticType::CPtr type);
+
+    class BuiltinContextGen {
+    public:
+        virtual TypeId registerVoidType() = 0;
+        virtual TypeId registerBoolType() = 0;
+        virtual TypeId registerIntegerType( size_t bitSize, size_t alignment, bool _signed ) = 0;
+        virtual TypeId registerCharType( size_t bitSize, size_t alignment, bool _signed ) = 0;
+    };
 
     struct ArgumentDeclaration {
-        StaticType::Ptr type;
+        StaticType::CPtr type;
         String name;
         ExpressionId lvalueId;
 
-        ArgumentDeclaration(StaticType::Ptr _type, String _name, ExpressionId _lvalueId)
+        ArgumentDeclaration(StaticType::CPtr _type, String _name, ExpressionId _lvalueId)
                 : type(_type), name(_name), lvalueId(_lvalueId)
         {}
     };
@@ -83,9 +141,9 @@ namespace PracticalSemanticAnalyzer {
     public:
         // Function handling
         virtual void functionEnter(
-                IdentifierId id, String name, StaticType::Ptr returnType, Slice<const ArgumentDeclaration> arguments,
+                String name, StaticType::CPtr returnType, Slice<const ArgumentDeclaration> arguments,
                 String file, size_t line, size_t col) = 0;
-        virtual void functionLeave(IdentifierId id) = 0;
+        virtual void functionLeave() = 0;
 
         virtual void returnValue(ExpressionId id) = 0;
         virtual void returnValue() = 0; // For Void functions
@@ -97,7 +155,7 @@ namespace PracticalSemanticAnalyzer {
         // practical-sa will generate the jump points, but will not generate the jumps. It is up to the code generation
         // to use the jump points to identify the code flow.
         virtual void conditionalBranch(
-                ExpressionId id, StaticType::Ptr type, ExpressionId conditionExpression, JumpPointId elsePoint,
+                ExpressionId id, StaticType::CPtr type, ExpressionId conditionExpression, JumpPointId elsePoint,
                 JumpPointId continuationPoint
             ) = 0;
         // Called twice, once for "then" and once for "else", to signify which expression is that clause's return
@@ -106,29 +164,31 @@ namespace PracticalSemanticAnalyzer {
         virtual void jump(JumpPointId destination) = 0;
 
         // Litarals
-        virtual void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::Ptr type) = 0;
+        virtual void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::CPtr type) = 0;
         virtual void setLiteral(ExpressionId id, bool value) = 0;
 
         // The ExpressionId refers to a pointer to the resulting allocated variable
-        virtual void allocateStackVar(ExpressionId id, StaticType::Ptr type, String name) = 0;
+        virtual void allocateStackVar(ExpressionId id, StaticType::CPtr type, String name) = 0;
         virtual void assign( ExpressionId lvalue, ExpressionId rvalue ) = 0;
-        virtual void dereferencePointer( ExpressionId id, StaticType::Ptr type, ExpressionId addr ) = 0;
+        virtual void dereferencePointer( ExpressionId id, StaticType::CPtr type, ExpressionId addr ) = 0;
 
         // Casts
         virtual void truncateInteger(
-                ExpressionId id, ExpressionId source, StaticType::Ptr sourceType, StaticType::Ptr destType ) = 0;
+                ExpressionId id, ExpressionId source, StaticType::CPtr sourceType, StaticType::CPtr destType ) = 0;
         virtual void expandIntegerSigned(
-                ExpressionId id, ExpressionId source, StaticType::Ptr sourceType, StaticType::Ptr destType ) = 0;
+                ExpressionId id, ExpressionId source, StaticType::CPtr sourceType, StaticType::CPtr destType ) = 0;
         virtual void expandIntegerUnsigned(
-                ExpressionId id, ExpressionId source, StaticType::Ptr sourceType, StaticType::Ptr destType ) = 0;
+                ExpressionId id, ExpressionId source, StaticType::CPtr sourceType, StaticType::CPtr destType ) = 0;
+
+        // Function calls
         virtual void callFunctionDirect(
-                ExpressionId id, String name, Slice<const ExpressionId> arguments, StaticType::Ptr returnType ) = 0;
+                ExpressionId id, String name, Slice<const ExpressionId> arguments, StaticType::CPtr returnType ) = 0;
 
         // Binary operators
         virtual void binaryOperatorPlus(
-                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::Ptr resultType ) = 0;
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
         virtual void binaryOperatorMinus(
-                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::Ptr resultType ) = 0;
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
     };
 
     class ModuleGen {
@@ -136,30 +196,48 @@ namespace PracticalSemanticAnalyzer {
         virtual void moduleEnter(ModuleId id, String name, String file, size_t line, size_t col) = 0;
         virtual void moduleLeave(ModuleId id) = 0;
 
-        virtual std::shared_ptr<FunctionGen> handleFunction(IdentifierId id) = 0;
+        virtual std::shared_ptr<FunctionGen> handleFunction() = 0;
     };
 
     std::unique_ptr<CompilerArguments> allocateArguments();
 
+    // Must be called exactly once, before starting actual compilation
+    void prepare( BuiltinContextGen *ctxGen ); // This is the lookup context used for the builtin types
     // XXX Should path actually be a buffer?
     int compile(std::string path, const CompilerArguments *arguments, ModuleGen *codeGen);
+} // End namespace PracticalSemanticAnalyzer
 
-    class NamedType {
-    public:
-        enum class Type { Void, Type, Char, UnsignedInteger, SignedInteger, Boolean };
+namespace std {
+    template<>
+    struct hash< PracticalSemanticAnalyzer::StaticType > {
+        size_t operator()(const PracticalSemanticAnalyzer::StaticType &type) const;
+    };
 
-        virtual size_t size() const = 0;
-        virtual String name() const = 0;
-        virtual Type type() const = 0;
-        virtual TypeId id() const = 0;
-
-        bool isBuiltin() const {
-            return static_cast<int>( type() ) <= static_cast<int>( Type::Boolean );
+    template<>
+    struct hash< PracticalSemanticAnalyzer::StaticType::CPtr > {
+        size_t operator()(const PracticalSemanticAnalyzer::StaticType::CPtr &type) const {
+            hash<PracticalSemanticAnalyzer::StaticType> realHash;
+            return realHash( *type );
         }
     };
 
-    const NamedType *lookupTypeId(TypeId id);
+    template<>
+    struct equal_to< PracticalSemanticAnalyzer::StaticType::CPtr > {
+        bool operator()(
+                const PracticalSemanticAnalyzer::StaticType::CPtr &lhs,
+                const PracticalSemanticAnalyzer::StaticType::CPtr &rhs
+        ) const noexcept
+        {
+            if( !lhs && !rhs )
+                return true;
 
-} // End namespace PracticalSemanticAnalyzer
+            if( !lhs || !rhs )
+                return false;
+
+            return *lhs==*rhs;
+        }
+    };
+
+} // namespace std
 
 #endif // LIB_PRACTICAL_SA_H

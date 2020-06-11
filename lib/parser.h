@@ -97,10 +97,11 @@ namespace NonTerminals {
 
         struct BinaryOperator {
             const Tokenizer::Token *op;
-            std::unique_ptr<Expression> operand1, operand2;
+            std::array< std::unique_ptr<Expression>, 2 > operands;
         };
 
         struct FunctionCall {
+            const Tokenizer::Token *op;
             std::unique_ptr<Expression> expression;
             FunctionArguments arguments;
         };

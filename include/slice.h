@@ -11,6 +11,7 @@
 
 #include "defines.h"
 
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <iostream>
@@ -22,24 +23,42 @@ class Slice {
     T *ptr = nullptr;
     size_t len = 0;
 
-    using vector_type = std::conditional_t<
-            std::is_const<T>::value,
-            const std::vector< std::remove_const_t<T> >,
-            std::vector<T>
-        >;
 public:
     // No ownership, default copy ctr is fine
-    Slice(const Slice &rhs) = default;
-    Slice &operator=(const Slice &rhs) = default;
-    Slice() = default;
+    constexpr Slice(const Slice &rhs) = default;
+    constexpr Slice &operator=(const Slice &rhs) = default;
+    constexpr Slice() = default;
 
     constexpr Slice(T *ptr, size_t length) : ptr(ptr), len(length) {
     }
 
-    /* implicit conversion */ Slice(vector_type &vector) :
+    template<
+        typename V,
+        std::enable_if_t<
+            std::is_same_v<std::remove_const_t<T>,V> && std::is_const_v<T>,
+            int
+        > = 0
+    >
+    /* implicit conversion */ Slice(const Slice< V > &that) :
+        ptr( that.get() ),
+        len( that.size() )
+    {
+    }
+
+    template<typename V, std::enable_if_t<std::is_same_v< std::remove_cv_t<T>, std::remove_cv_t<V> >, int> = 0>
+    /* implicit conversion */ Slice(std::vector<V> &vector) :
         ptr(vector.data()), len(vector.size())
     {
     }
+
+    /* implicit */ Slice( std::initializer_list<T> list ) :
+        ptr(list.begin()), len(list.size())
+    {}
+
+    template<size_t Size, typename V, std::enable_if_t<std::is_same_v< std::remove_cv_t<V>, std::remove_cv_t<T>>, int> = 0>
+    /* implicit */ Slice( const std::array<V, Size> &array ) :
+        ptr(&array[0]), len(array.size())
+    {}
 
     // Accessors
     size_t size() const {
@@ -92,6 +111,12 @@ public:
         return Slice<const T>(ptr+start, end - start);
     }
 
+    void copy( const Slice source ) {
+        for( size_t i=0; i<size(); ++i ) {
+            (*this)[i] = source[i];
+        }
+    }
+
     // Compare the data pointed by the two slices. Allows using slice as key in hash
     bool operator==(const Slice &rhs) const {
         if( size() != rhs.size() )
@@ -119,6 +144,10 @@ public:
 
     const T* end() const {
         return get() + size();
+    }
+
+    explicit operator bool() const noexcept {
+        return size()!=0;
     }
 };
 
@@ -204,7 +233,8 @@ public:
     using Slice::Slice;
 
     /* implicit */ String( Slice<const char> slice ) : Slice(slice) {}
-    String( const char *string ) : Slice( string, strlen(string) ) {}
+    /* implicit */ String( const char *string ) : Slice( string, strlen(string) ) {}
+    /* implicit */ String( const std::string &string ) : Slice( string.c_str(), string.size() ) {}
 };
 
 static inline std::string sliceToString( const String &src ) {

@@ -113,7 +113,6 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 else CASE(OP_ASSIGN_MULTIPLY)
                 else CASE(OP_ASSIGN_PLUS)
                 else CASE(OP_ASSIGN_RIGHT_SHIFT)
-                else CASE(OP_ASSIGN_RIGHT_SHIFT_LOGICAL)
                 else CASE(OP_ASTERISK)
                 else CASE(OP_BIT_AND)
                 else CASE(OP_BIT_NOT)
@@ -140,7 +139,6 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 else CASE(OP_PLUS_PLUS)
                 else CASE(OP_SHIFT_LEFT)
                 else CASE(OP_SHIFT_RIGHT)
-                else CASE(OP_SHIFT_RIGHT_LOGICAL)
                 else CASE(OP_RUNON_ERROR)
                 // Literals
                 else CASE(LITERAL_INT_2)

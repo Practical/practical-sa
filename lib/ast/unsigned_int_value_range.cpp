@@ -6,22 +6,18 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#ifndef DEFINES_H
-#define DEFINES_H
+#include "ast/unsigned_int_value_range.h"
 
-#include <assert.h>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <memory>
-#include <utility>
+namespace AST {
 
-template<typename T, typename... Args>
-std::unique_ptr<T> safenew(Args&&... args) {
-    return std::unique_ptr<T>( new T(std::forward<Args>(args)...) );
+boost::intrusive_ptr<UnsignedIntValueRange>
+        UnsignedIntValueRange::allocate( LongEnoughInt min, LongEnoughInt max )
+{
+    boost::intrusive_ptr<UnsignedIntValueRange> ret = new UnsignedIntValueRange;
+    ret->minimum = min;
+    ret->maximum = max;
+
+    return ret;
 }
 
-// static constexpr double GoldenRatio = (1 + sqrt(5.0)) / 2;
-static constexpr double GoldenRatio = 1.618033988749895;
-
-#endif // DEFINES_H
+} // namespace AST

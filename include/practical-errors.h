@@ -19,7 +19,7 @@ namespace PracticalSemanticAnalyzer {
 
 class compile_error : public std::exception {
     size_t line, col;
-    std::unique_ptr<char> msg;
+    std::unique_ptr<char[]> msg;
 public:
     compile_error(const char *msg, size_t line, size_t col) : line(line), col(col) {
         setMsg(msg);
@@ -43,7 +43,7 @@ public:
 protected:
     void setMsg(const char *msg) {
         size_t buffsize = strlen(msg) + 100;
-        this->msg = std::unique_ptr<char>(new char[buffsize]);
+        this->msg = std::unique_ptr<char[]>(new char[buffsize]);
         snprintf(this->msg.get(), buffsize, "%s at %lu:%lu", msg, line, col);
     }
 };
@@ -72,14 +72,20 @@ public:
     }
 };
 
+class IllegalLiteral : public compile_error {
+public:
+    IllegalLiteral(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    }
+};
+
 class CastNotAllowed : public compile_error {
 public:
-    CastNotAllowed(StaticType::Ptr src, StaticType::Ptr dst, bool implicit, size_t line, size_t col);
+    CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
 };
 
 class IncompatibleTypes : public compile_error {
 public:
-    IncompatibleTypes(StaticType::Ptr left, StaticType::Ptr right, size_t line, size_t col);
+    IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, size_t line, size_t col);
 };
 
 class SymbolRedefined : public compile_error {
@@ -100,6 +106,11 @@ public:
 class TryToCallNonCallable : public compile_error {
 public:
     TryToCallNonCallable(const Tokenizer::Token *identifier);
+};
+
+class NoMatchingOverload : public compile_error {
+public:
+    NoMatchingOverload(const Tokenizer::Token *identifier);
 };
 
 } // PracticalSemanticAnalyzer

@@ -75,7 +75,6 @@ const std::vector< OperatorPriority > operators = {
         .operators = {
             { Tokens::OP_SHIFT_LEFT, OperatorType::Regular },
             { Tokens::OP_SHIFT_RIGHT, OperatorType::Regular },
-            { Tokens::OP_SHIFT_RIGHT_LOGICAL, OperatorType::Regular },
         }
     },
     {
@@ -122,7 +121,6 @@ const std::vector< OperatorPriority > operators = {
             { Tokens::OP_ASSIGN_MODULOUS, OperatorType::Regular },
             { Tokens::OP_ASSIGN_LEFT_SHIFT, OperatorType::Regular },
             { Tokens::OP_ASSIGN_RIGHT_SHIFT, OperatorType::Regular },
-            { Tokens::OP_ASSIGN_RIGHT_SHIFT_LOGICAL, OperatorType::Regular },
             { Tokens::OP_ASSIGN_BIT_AND, OperatorType::Regular },
             { Tokens::OP_ASSIGN_BIT_OR, OperatorType::Regular },
             { Tokens::OP_ASSIGN_BIT_XOR, OperatorType::Regular },

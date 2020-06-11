@@ -50,7 +50,6 @@ static const std::unordered_map<String, Tokens> operators {
     // Precedence 8
     { "<<", Tokens::OP_SHIFT_LEFT },
     { ">>", Tokens::OP_SHIFT_RIGHT },
-    { ">>>", Tokens::OP_SHIFT_RIGHT_LOGICAL },
     // Precedence 9
     { "<", Tokens::OP_LESS_THAN },
     { "<=", Tokens::OP_LESS_THAN_EQ },
@@ -72,7 +71,6 @@ static const std::unordered_map<String, Tokens> operators {
     { "%=", Tokens::OP_ASSIGN_MODULOUS },
     { "<<=", Tokens::OP_ASSIGN_LEFT_SHIFT },
     { ">>=", Tokens::OP_ASSIGN_RIGHT_SHIFT },
-    { ">>>=", Tokens::OP_ASSIGN_RIGHT_SHIFT_LOGICAL },
     { "&=", Tokens::OP_ASSIGN_BIT_AND },
     { "^=", Tokens::OP_ASSIGN_BIT_XOR },
     { "|=", Tokens::OP_ASSIGN_BIT_OR },
@@ -400,7 +398,6 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
         CASE(OP_PLUS_PLUS);
         CASE(OP_SHIFT_LEFT);
         CASE(OP_SHIFT_RIGHT);
-        CASE(OP_SHIFT_RIGHT_LOGICAL);
         CASE(OP_RUNON_ERROR);
         CASE(LITERAL_INT_2);
         CASE(LITERAL_INT_8);

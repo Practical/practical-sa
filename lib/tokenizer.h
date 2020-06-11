@@ -75,7 +75,6 @@ enum class Tokens {
     OP_PLUS_PLUS,
     OP_SHIFT_LEFT,
     OP_SHIFT_RIGHT,
-    OP_SHIFT_RIGHT_LOGICAL,
     OP_RUNON_ERROR,
     // Literals
     LITERAL_INT_2,
