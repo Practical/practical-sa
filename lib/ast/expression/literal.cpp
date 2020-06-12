@@ -9,6 +9,7 @@
 #include "literal.h"
 
 #include "ast/ast.h"
+#include "ast/bool_value_range.h"
 #include "ast/signed_int_value_range.h"
 #include "ast/unsigned_int_value_range.h"
 
@@ -37,9 +38,16 @@ void Literal::buildASTImpl(
         break;
     case Tokenizer::Tokens::LITERAL_INT_16:
     case Tokenizer::Tokens::LITERAL_INT_2:
+        ABORT()<<"TODO implement";
+        break;
     case Tokenizer::Tokens::RESERVED_TRUE:
     case Tokenizer::Tokens::RESERVED_FALSE:
-        ABORT()<<"TODO implement";
+        {
+            auto ptr = safenew< LiteralBool >();
+            LiteralBool *literalBool = ptr.get();
+            impl = std::move( ptr );
+            literalBool->parseBool( this, weight, weightLimit, expectedResult );
+        }
         break;
     default:
         ABORT()<<"Non literal parsed as literal";
@@ -156,6 +164,31 @@ void Literal::LiteralInt::parseInt(
 
         weight += std::get< const StaticType::Scalar *>( naturalType->getType() )->getLiteralWeight();
     }
+}
+
+ExpressionId Literal::LiteralBool::codeGen( Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+    ExpressionId id = allocateId();
+    functionGen->setLiteral( id, result );
+
+    return id;
+}
+
+void Literal::LiteralBool::parseBool(
+        Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult )
+{
+    switch( owner->parserLiteral.token.token ) {
+    case Tokenizer::Tokens::RESERVED_TRUE:
+        result = true;
+        break;
+    case Tokenizer::Tokens::RESERVED_FALSE:
+        result = false;
+        break;
+    default:
+        ABORT()<<"Unreachable code reached";
+    }
+
+    owner->metadata.type = AST::getBuiltinCtx().lookupType("Bool");
+    owner->metadata.valueRange = BoolValueRange::allocate( result==false, result==true );
 }
 
 } // namespace AST::ExpressionImpl
