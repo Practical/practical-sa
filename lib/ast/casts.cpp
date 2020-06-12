@@ -56,12 +56,12 @@ ValueRangeBase::CPtr unsignedToSignedIdentityVrp(
             "VRP for unsigned->signed called on input of type "<<
             std::get<const StaticType::Scalar *>(sourceType->getType())->getType();
 
-    ASSERT( typeid(inputRangeBase.get()).hash_code()==typeid(UnsignedIntValueRange).hash_code() );
+    ASSERT( dynamic_cast<const UnsignedIntValueRange *>(inputRangeBase.get())!=nullptr );
 
     auto inputRange = static_cast<const UnsignedIntValueRange *>(inputRangeBase.get());
 
     auto maximalRange = destType->defaultRange();
-    ASSERT( typeid(maximalRange.get()).hash_code()==typeid(SignedIntValueRange).hash_code() );
+    ASSERT( dynamic_cast<const SignedIntValueRange *>( maximalRange.get() )!=nullptr );
 
     ASSERT(
             inputRange->maximum <=
