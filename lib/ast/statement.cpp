@@ -25,8 +25,11 @@ void Statement::codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::Fu
             ABORT()<<"Statement is in monostate";
         }
 
-        void operator()( const NonTerminals::Expression &expression ) {
-            ABORT()<<"TODO implement";
+        void operator()( const NonTerminals::Expression &parserExpression ) {
+            Expression expression(parserExpression);
+            unsigned weight=0;
+            expression.buildAST(lookupCtx, ExpectedResult(), weight, Expression::NoWeightLimit);
+            expression.codeGen(functionGen);
         }
 
         void operator()( const NonTerminals::VariableDefinition &varDef ) {
