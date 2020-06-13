@@ -6,9 +6,10 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#include "statement.h"
+#include "ast/statement.h"
 
-#include "expression.h"
+#include "ast/compound_statement.h"
+#include "ast/expression.h"
 
 namespace AST {
 
@@ -52,8 +53,9 @@ void Statement::codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::Fu
             ABORT()<<"TODO implement";
         }
 
-        void operator()( const std::unique_ptr<NonTerminals::CompoundStatement> &compound ) {
-            ABORT()<<"TODO implement";
+        void operator()( const std::unique_ptr<NonTerminals::CompoundStatement> &parserCompound ) {
+            CompoundStatement compound(*parserCompound, lookupCtx);
+            compound.codeGen(functionGen);
         }
     };
 
