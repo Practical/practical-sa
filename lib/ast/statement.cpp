@@ -48,8 +48,9 @@ void Statement::buildAST( LookupContext &lookupCtx ) {
             varDef.buildAST(lookupCtx);
         }
 
-        void operator()( const NonTerminals::Statement::ConditionalStatement &condition ) {
-            ABORT()<<"TODO implement";
+        void operator()( const NonTerminals::Statement::ConditionalStatement &parserCondition ) {
+            auto &condition = _this.underlyingStatement.emplace<ConditionalStatement>(parserCondition);
+            condition.buildAST(lookupCtx);
         }
 
         void operator()( const std::unique_ptr<NonTerminals::CompoundStatement> &parserCompound ) {
@@ -84,6 +85,10 @@ void Statement::codeGen( const LookupContext &lookupCtx, PracticalSemanticAnalyz
 
         void operator()( const NonTerminals::Statement::ConditionalStatement &condition ) {
             ABORT()<<"TODO implement";
+        }
+
+        void operator()( const ConditionalStatement &condition ) {
+            condition.codeGen(lookupCtx, functionGen);
         }
 
         void operator()( const std::unique_ptr<CompoundStatement> &compound ) {

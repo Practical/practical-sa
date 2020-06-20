@@ -9,6 +9,7 @@
 #ifndef AST_STATEMENT_H
 #define AST_STATEMENT_H
 
+#include "ast/conditional_statement.h"
 #include "ast/expression.h"
 #include "ast/lookup_context.h"
 #include "ast/variable_definition.h"
@@ -20,7 +21,9 @@ class CompoundStatement;
 
 class Statement {
     const NonTerminals::Statement &parserStatement;
-    std::variant<std::monostate, Expression, VariableDefinition, std::unique_ptr<CompoundStatement>> underlyingStatement;
+    std::variant<
+            std::monostate, Expression, VariableDefinition, ConditionalStatement, std::unique_ptr<CompoundStatement>
+        > underlyingStatement;
 
 public:
     explicit Statement( const NonTerminals::Statement &parserStatement );

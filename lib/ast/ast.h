@@ -17,6 +17,8 @@
 
 namespace AST {
 
+extern JumpPointId::Allocator<> jumpPointAllocator;
+
 class AST {
     static LookupContext builtinCtx;
     Module::Ptr module;

@@ -16,6 +16,8 @@
 
 namespace AST {
 
+JumpPointId::Allocator<> jumpPointAllocator;
+
 LookupContext AST::builtinCtx;
 
 // Public methods
