@@ -6,24 +6,24 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#ifndef AST_EXPRESSION_BINARY_OP_H
-#define AST_EXPRESSION_BINARY_OP_H
+#ifndef AST_EXPRESSION_COMPOUND_EXPRESSION_H
+#define AST_EXPRESSION_COMPOUND_EXPRESSION_H
 
-#include "ast/expression/overload_resolver.h"
+#include "ast/expression/base.h"
 #include "ast/expression.h"
+#include "ast/statement.h"
+#include "ast/statement_list.h"
 #include "parser.h"
 
 namespace AST::ExpressionImpl {
 
-class BinaryOp final : public Base {
-    const NonTerminals::Expression::BinaryOperator &parserOp;
-    std::optional<Expression> operands[2];
-    OverloadResolver resolver;
+class CompoundExpression final : public Base {
+    LookupContext lookupContext;
+    StatementList statements;
+    Expression expression;
 
 public:
-    static void init(LookupContext &builtinCtx);
-
-    explicit BinaryOp( const NonTerminals::Expression::BinaryOperator &parserOp );
+    CompoundExpression( const NonTerminals::CompoundExpression &parserExpression, const LookupContext &parentCtx );
 
 protected:
     void buildASTImpl(
@@ -34,4 +34,4 @@ protected:
 
 } // namespace AST::ExpressionImpl
 
-#endif // AST_EXPRESSION_BINARY_OP_H
+#endif // AST_EXPRESSION_COMPOUND_EXPRESSION_H

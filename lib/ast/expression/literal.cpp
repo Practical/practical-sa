@@ -54,13 +54,15 @@ void Literal::buildASTImpl(
     }
 }
 
-ExpressionId Literal::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Literal::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     ASSERT( impl )<<"Literal::codeGen called without calling buildAST first";
     return impl->codeGen( this, functionGen );
 }
 
 // Private
-ExpressionId Literal::LiteralInt::codeGen( Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Literal::LiteralInt::codeGen(
+        const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
     ExpressionId id = allocateId();
 
     functionGen->setLiteral( id, result, owner->metadata.type );
@@ -166,7 +168,9 @@ void Literal::LiteralInt::parseInt(
     }
 }
 
-ExpressionId Literal::LiteralBool::codeGen( Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Literal::LiteralBool::codeGen(
+        const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
     ExpressionId id = allocateId();
     functionGen->setLiteral( id, result );
 

@@ -35,7 +35,7 @@ public:
     template<
         typename V,
         std::enable_if_t<
-            std::is_same_v<std::remove_const_t<T>,V> && std::is_const_v<T>,
+            std::is_same_v<std::remove_cv_t<T>,V> && std::is_const_v<T>,
             int
         > = 0
     >
@@ -47,6 +47,15 @@ public:
 
     template<typename V, std::enable_if_t<std::is_same_v< std::remove_cv_t<T>, std::remove_cv_t<V> >, int> = 0>
     /* implicit conversion */ Slice(std::vector<V> &vector) :
+        ptr(vector.data()), len(vector.size())
+    {
+    }
+
+    template<typename V,
+            std::enable_if_t<std::is_same_v< std::remove_cv_t<T>, std::remove_cv_t<V> > &&
+            std::is_const_v<T>, int> = 0
+    >
+    /* implicit conversion */ Slice(const std::vector<V> &vector) :
         ptr(vector.data()), len(vector.size())
     {
     }

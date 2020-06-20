@@ -173,7 +173,7 @@ const LookupContext::CastDescriptor *LookupContext::lookupCast(
 
 // Private methods
 ExpressionId LookupContext::globalFunctionCall(
-        Slice<Expression> arguments, const Function::Definition *definition,
+        Slice<const Expression> arguments, const Function::Definition *definition,
         PracticalSemanticAnalyzer::FunctionGen *functionGen)
 {
     ExpressionId resultId = Expression::allocateId();

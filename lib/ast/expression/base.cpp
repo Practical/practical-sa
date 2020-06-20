@@ -57,7 +57,7 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
     }
 }
 
-ExpressionId Base::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Base::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     ExpressionId ret = codeGenImpl( functionGen );
 
     if( castOp )

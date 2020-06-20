@@ -8,19 +8,25 @@
  */
 #include "statement_list.h"
 
-#include "statement.h"
-
 namespace AST {
 
-StatementList::StatementList( const NonTerminals::StatementList &statementList ) :
-    statementList( statementList )
+StatementList::StatementList( const NonTerminals::StatementList &statementList )
 {
+    statements.reserve( statementList.statements.size() );
+    for( auto &parserStatement : statementList.statements ) {
+        statements.emplace_back( parserStatement );
+    }
 }
 
-void StatementList::codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
-    for( const auto &parserStatement : statementList.statements ) {
-        Statement statement( parserStatement );
+void StatementList::buildAST( LookupContext &lookupCtx ) {
+    for( auto &statement : statements ) {
+        statement.buildAST(lookupCtx);
+    }
+}
 
+void StatementList::codeGen( const LookupContext &lookupCtx, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
+    for( const auto &statement : statements ) {
         statement.codeGen( lookupCtx, functionGen );
     }
 }

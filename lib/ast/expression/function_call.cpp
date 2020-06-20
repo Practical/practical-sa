@@ -66,7 +66,7 @@ void FunctionCall::buildASTImpl(
         );
 }
 
-ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId FunctionCall::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     return resolver.codeGen( functionGen );
 }
 

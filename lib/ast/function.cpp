@@ -102,6 +102,7 @@ void Function::codeGen(
 {
     StatementList sl( statementList );
 
+    sl.buildAST( lookupCtx );
     sl.codeGen( lookupCtx, functionGen );
 }
 

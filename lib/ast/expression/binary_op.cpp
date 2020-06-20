@@ -20,7 +20,8 @@ static std::unordered_map< Tokenizer::Tokens, std::string > operatorNames;
 
 static void defineMatchingPairs(
         ExpressionId(*codeGenerator)(
-            Slice<Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *
+            Slice<const Expression>, const LookupContext::Function::Definition *,
+            PracticalSemanticAnalyzer::FunctionGen *
         ),
         const std::string &name,
         Slice<const StaticTypeImpl::CPtr> types,
@@ -107,7 +108,7 @@ void BinaryOp::buildASTImpl(
             { parserOp.operands[0].get(), parserOp.operands[1].get() }, parserOp.op );
 }
 
-ExpressionId BinaryOp::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId BinaryOp::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     return resolver.codeGen( functionGen );
 }
 

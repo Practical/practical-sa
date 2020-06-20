@@ -56,7 +56,7 @@ void OverloadResolver::resolveOverloads(
             lookupContext, expectedResult, weight, weightLimit, preciseResultOverloads[0], metadata, parserArguments );
 }
 
-ExpressionId OverloadResolver::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId OverloadResolver::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     return definition->codeGen( arguments, definition, functionGen );
 }
 

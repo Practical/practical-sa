@@ -9,18 +9,20 @@
 #ifndef AST_COMPOUND_STATEMENT_H
 #define AST_COMPOUND_STATEMENT_H
 
+#include "ast/statement_list.h"
 #include "lookup_context.h"
 #include "parser.h"
 
 namespace AST {
 
 class CompoundStatement {
-    const NonTerminals::CompoundStatement &parserCompound;
-    LookupContext ctx;
+    LookupContext lookupCtx;
+    StatementList statementList;
 
 public:
     explicit CompoundStatement( const NonTerminals::CompoundStatement &parserCompound, const LookupContext &parentCtx );
-    void codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen );
+    void buildAST();
+    void codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 };
 
 } // namespace AST

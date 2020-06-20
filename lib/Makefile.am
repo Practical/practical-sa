@@ -9,8 +9,10 @@ libpractical_sa_la_SOURCES = practical-sa.cpp practical-errors.cpp \
 			     ast/ast.cpp ast/cast_op.cpp ast/casts.cpp ast/lookup_context.cpp ast/static_type.cpp \
 			     ast/module.cpp ast/function.cpp ast/statement_list.cpp ast/expected_result.cpp ast/statement.cpp \
 			     ast/signed_int_value_range.cpp ast/unsigned_int_value_range.cpp ast/mangle.cpp ast/compound_statement.cpp \
+			     ast/variable_definition.cpp \
 			     ast/expression.cpp ast/expression/base.cpp ast/expression/literal.cpp ast/expression/identifier.cpp \
 			     ast/expression/function_call.cpp ast/expression/binary_op.cpp ast/expression/overload_resolver.cpp \
+			     ast/expression/compound_expression.cpp \
 			     ast/operators/plus.cpp
 
 practical_sa_ut_SOURCES = ut_runner.cpp slice_ut.cpp tokenizer_ut.cpp \

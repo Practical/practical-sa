@@ -19,7 +19,8 @@ class Literal final : public Base {
     public:
         virtual ~Impl() {}
 
-        virtual ExpressionId codeGen( Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) = 0;
+        virtual ExpressionId codeGen(
+                const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const = 0;
     };
 
     // Members
@@ -33,14 +34,14 @@ protected:
     void buildASTImpl(
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
         ) override;
-    ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
+    ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 
 private:
     class LiteralInt final : public Impl {
         LongEnoughInt result = 0;
 
     public:
-        ExpressionId codeGen( Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
+        ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 
         void parseInt10( Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult );
         void parseInt( Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult );
@@ -50,7 +51,7 @@ private:
         bool result = false;
 
     public:
-        ExpressionId codeGen( Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
+        ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 
         void parseBool( Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult );
     };

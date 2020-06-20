@@ -9,18 +9,26 @@
 #ifndef AST_STATEMENT_H
 #define AST_STATEMENT_H
 
+#include "ast/expression.h"
 #include "ast/lookup_context.h"
+#include "ast/variable_definition.h"
 #include "parser.h"
 
 namespace AST {
 
+class CompoundStatement;
+
 class Statement {
     const NonTerminals::Statement &parserStatement;
+    std::variant<std::monostate, Expression, VariableDefinition, std::unique_ptr<CompoundStatement>> underlyingStatement;
 
 public:
     explicit Statement( const NonTerminals::Statement &parserStatement );
+    Statement( const Statement &rhs ); // Declared only. Should never be called
+    ~Statement();
 
-    void codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
+    void buildAST( LookupContext &lookupCtx );
+    void codeGen( const LookupContext &lookupCtx, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 };
 
 } // namespace AST

@@ -39,7 +39,7 @@ public:
         struct Definition {
             using CodeGenProto =
                     ExpressionId(
-                            Slice<Expression>, const Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+                            Slice<const Expression>, const Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
             using VrpProto =
                     ValueRangeBase::CPtr(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
@@ -128,7 +128,9 @@ public:
 
     void addBuiltinFunction(
             const std::string &name, StaticTypeImpl::CPtr returnType, Slice<const StaticTypeImpl::CPtr> argumentTypes,
-            ExpressionId(*)(Slice<Expression>, const Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *) );
+            ExpressionId(*)(
+                Slice<const Expression>, const Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *)
+        );
 
     void addFunctionPass1( const Tokenizer::Token *token );
     void addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type );
@@ -150,7 +152,7 @@ public:
 
 private:
     static ExpressionId globalFunctionCall(
-            Slice<Expression>,
+            Slice<const Expression>,
             const Function::Definition *definition,
             PracticalSemanticAnalyzer::FunctionGen *functionGen);
 };

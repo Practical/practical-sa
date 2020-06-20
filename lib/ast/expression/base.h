@@ -59,12 +59,12 @@ public:
     }
 
     void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit );
-    ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen );
+    ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 
 protected:
     virtual void buildASTImpl(
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit ) = 0;
-    virtual ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) = 0;
+    virtual ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const = 0;
 };
 
 } // namespace AST::ExpressionImpl

@@ -9,6 +9,7 @@
 #include "ast/expression.h"
 
 #include "ast/expression/binary_op.h"
+#include "ast/expression/compound_expression.h"
 #include "ast/expression/identifier.h"
 #include "ast/expression/function_call.h"
 #include "ast/expression/literal.h"
@@ -32,8 +33,11 @@ void Expression::buildASTImpl(
         unsigned &weight;
         const unsigned weightLimit;
 
-        void operator()( const std::unique_ptr<NonTerminals::CompoundExpression> &expression ) {
-            ABORT()<<"TODO implement";
+        void operator()( const std::unique_ptr<NonTerminals::CompoundExpression> &parserExpression ) {
+            auto expression = safenew<ExpressionImpl::CompoundExpression>( *parserExpression, lookupContext );
+
+            expression->buildAST( lookupContext, expectedResult, weight, weightLimit );
+            _this->actualExpression = std::move(expression);
         }
 
         void operator()( const NonTerminals::Literal &parserLiteral ) {
@@ -88,7 +92,7 @@ void Expression::buildASTImpl(
     metadata.valueRange = actualExpression->getValueRange();
 }
 
-ExpressionId Expression::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Expression::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     return actualExpression->codeGen( functionGen );
 }
 

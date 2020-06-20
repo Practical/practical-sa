@@ -50,7 +50,7 @@ void Identifier::buildASTImpl(
     std::visit( Visitor{._this=this, .expectedResult=expectedResult}, *identifier );
 }
 
-ExpressionId Identifier::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
+ExpressionId Identifier::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     struct Visitor {
         PracticalSemanticAnalyzer::FunctionGen *functionGen;
 

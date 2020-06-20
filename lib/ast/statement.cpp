@@ -17,36 +17,35 @@ Statement::Statement( const NonTerminals::Statement &parserStatement ) : parserS
 {
 }
 
-void Statement::codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
+Statement::Statement( const Statement &that ) :
+    parserStatement( *(const NonTerminals::Statement *)(1) )
+{
+    ABORT()<<"ASSERT FAILED: Statement copy constructor called";
+}
+
+Statement::~Statement() {
+    // The only use for the explicit definition of the destructor is to postpone the definition after we can #include
+    // CompoundStatement.
+}
+
+void Statement::buildAST( LookupContext &lookupCtx ) {
     struct Visitor {
+        Statement &_this;
         LookupContext &lookupCtx;
-        PracticalSemanticAnalyzer::FunctionGen *functionGen;
 
         void operator()( std::monostate mono ) {
             ABORT()<<"Statement is in monostate";
         }
 
         void operator()( const NonTerminals::Expression &parserExpression ) {
-            Expression expression(parserExpression);
+            auto &expression = _this.underlyingStatement.emplace<Expression>(parserExpression);
             unsigned weight=0;
             expression.buildAST(lookupCtx, ExpectedResult(), weight, Expression::NoWeightLimit);
-            expression.codeGen(functionGen);
         }
 
-        void operator()( const NonTerminals::VariableDefinition &varDef ) {
-            ExpressionId varExpressionId = Expression::allocateId();
-            auto varType = lookupCtx.lookupType( varDef.body.type );
-
-            Expression initValue( *varDef.initValue );
-            unsigned weight = 0;
-            initValue.buildAST(lookupCtx, varType, weight, Expression::NoWeightLimit);
-            ExpressionId initValueExpressionId = initValue.codeGen(functionGen);
-
-            lookupCtx.addLocalVar( varDef.body.name.identifier, varType, varExpressionId );
-
-            functionGen->allocateStackVar(varExpressionId, varType, varDef.body.name.identifier->text);
-
-            functionGen->assign( varExpressionId, initValueExpressionId );
+        void operator()( const NonTerminals::VariableDefinition &parserVarDef ) {
+            auto &varDef = _this.underlyingStatement.emplace<VariableDefinition>(parserVarDef);
+            varDef.buildAST(lookupCtx);
         }
 
         void operator()( const NonTerminals::Statement::ConditionalStatement &condition ) {
@@ -54,12 +53,45 @@ void Statement::codeGen( LookupContext &lookupCtx, PracticalSemanticAnalyzer::Fu
         }
 
         void operator()( const std::unique_ptr<NonTerminals::CompoundStatement> &parserCompound ) {
-            CompoundStatement compound(*parserCompound, lookupCtx);
-            compound.codeGen(functionGen);
+            auto &compound = _this.underlyingStatement.emplace<
+                    std::unique_ptr<CompoundStatement>
+                >(
+                    safenew<CompoundStatement>( *parserCompound, lookupCtx )
+                );
+            compound->buildAST();
         }
     };
 
-    std::visit( Visitor{ .lookupCtx=lookupCtx, .functionGen=functionGen}, parserStatement.content );
+    std::visit( Visitor{ ._this=*this, .lookupCtx=lookupCtx }, parserStatement.content );
+}
+
+void Statement::codeGen( const LookupContext &lookupCtx, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
+    struct Visitor {
+        const LookupContext &lookupCtx;
+        PracticalSemanticAnalyzer::FunctionGen *functionGen;
+
+        void operator()( std::monostate mono ) {
+            ABORT()<<"Statement is in monostate";
+        }
+
+        void operator()( const Expression &expression ) {
+            expression.codeGen(functionGen);
+        }
+
+        void operator()( const VariableDefinition &varDef ) {
+            varDef.codeGen( lookupCtx, functionGen );
+        }
+
+        void operator()( const NonTerminals::Statement::ConditionalStatement &condition ) {
+            ABORT()<<"TODO implement";
+        }
+
+        void operator()( const std::unique_ptr<CompoundStatement> &compound ) {
+            compound->codeGen(functionGen);
+        }
+    };
+
+    std::visit( Visitor{ .lookupCtx=lookupCtx, .functionGen=functionGen}, underlyingStatement );
 }
 
 } // namespace AST

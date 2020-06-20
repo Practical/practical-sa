@@ -31,7 +31,7 @@ protected:
     void buildASTImpl(
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
         ) override;
-    ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) override;
+    ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 };
 
 } // namespace AST::ExpressionImpl

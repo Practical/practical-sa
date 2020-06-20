@@ -13,7 +13,7 @@ namespace AST::Operators {
 using namespace PracticalSemanticAnalyzer;
 
 ExpressionId bPlusCodegen(
-        Slice<Expression> arguments,
+        Slice<const Expression> arguments,
         const LookupContext::Function::Definition *definition,
         PracticalSemanticAnalyzer::FunctionGen *functionGen)
 {

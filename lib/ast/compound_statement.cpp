@@ -14,15 +14,16 @@ namespace AST {
 
 CompoundStatement::CompoundStatement(
         const NonTerminals::CompoundStatement &parserCompound, const LookupContext &parentCtx ) :
-    parserCompound(parserCompound),
-    ctx( &parentCtx )
+    lookupCtx( &parentCtx ),
+    statementList( parserCompound.statements )
 {}
 
-void CompoundStatement::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) {
-    for( const NonTerminals::Statement &parserStatement : parserCompound.statements.statements ) {
-        Statement statement(parserStatement);
-        statement.codeGen(ctx, functionGen);
-    }
+void CompoundStatement::buildAST() {
+    statementList.buildAST( lookupCtx );
+}
+
+void CompoundStatement::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
+    statementList.codeGen( lookupCtx, functionGen );
 }
 
 } // namespace AST
