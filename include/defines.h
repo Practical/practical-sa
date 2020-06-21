@@ -21,7 +21,6 @@ std::unique_ptr<T> safenew(Args&&... args) {
     return std::unique_ptr<T>( new T(std::forward<Args>(args)...) );
 }
 
-// static constexpr double GoldenRatio = (1 + sqrt(5.0)) / 2;
-static constexpr double GoldenRatio = 1.618033988749895;
+static constexpr size_t FibonacciHashMultiplier = 0x9e3779b97f4a7c15; //static_cast<size_t>(-1) / GoldenRatio;
 
 #endif // DEFINES_H

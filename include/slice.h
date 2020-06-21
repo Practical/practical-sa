@@ -260,8 +260,6 @@ static inline String toSlice(const char *str) {
 namespace std {
     template <typename T>
     struct hash< Slice<T> > {
-        static constexpr size_t FibonacciHashMultiplier = static_cast<size_t>(-1) / GoldenRatio;
-
         constexpr size_t operator()(const Slice<T> &slice) const {
             size_t result = 0;
 

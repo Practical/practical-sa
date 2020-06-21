@@ -140,8 +140,6 @@ using namespace PracticalSemanticAnalyzer;
 
 namespace std {
 
-static constexpr size_t FibonacciHashMultiplier = static_cast<size_t>(-1) / GoldenRatio;
-
 size_t hash< StaticType >::operator()(const StaticType &type) const {
     auto typeType = type.getType();
 
