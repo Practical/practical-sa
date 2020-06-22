@@ -36,10 +36,13 @@ void ConditionalStatement::codeGen(
         const LookupContext &lookupCtx, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
 {
     ExpressionId conditionResult = condition.codeGen(functionGen);
-    JumpPointId elsePoint, contPoint{ jumpPointAllocator.allocate() };
+    JumpPointId elsePoint, contPoint;
     if( elseClause ) {
         elsePoint = jumpPointAllocator.allocate();
     }
+    // It's a silly thing to do, but make sure that the continuation jump point it higher than the else jump point
+    contPoint = jumpPointAllocator.allocate();
+
     functionGen->conditionalBranch( ExpressionId(), StaticType::CPtr(), conditionResult, elsePoint, contPoint );
 
     ifClause->codeGen( lookupCtx, functionGen );

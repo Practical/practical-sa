@@ -1,6 +1,6 @@
 /* This file is part of the Practical programming langauge. https://github.com/Practical/practical-sa
  *
- * To the extent header files enjoy copyright protection, this file is file is copyright (C) 2018-2019 by its authors
+ * To the extent header files enjoy copyright protection, this file is file is copyright (C) 2018-2020 by its authors
  * You can see the file's authors in the AUTHORS file in the project's home repository.
  *
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
@@ -10,6 +10,7 @@
 
 #include "ast/expression/binary_op.h"
 #include "ast/expression/compound_expression.h"
+#include "ast/expression/conditional_expression.h"
 #include "ast/expression/identifier.h"
 #include "ast/expression/function_call.h"
 #include "ast/expression/literal.h"
@@ -72,8 +73,11 @@ void Expression::buildASTImpl(
             _this->actualExpression = std::move(functionCall);
         }
 
-        void operator()( const std::unique_ptr<NonTerminals::ConditionalExpression> &condition ) {
-            ABORT()<<"TODO implement";
+        void operator()( const std::unique_ptr<NonTerminals::ConditionalExpression> &parserCondition ) {
+            auto condition = safenew<ExpressionImpl::ConditionalExpression>( *parserCondition );
+
+            condition->buildAST( lookupContext, expectedResult, weight, weightLimit );
+            _this->actualExpression = std::move(condition);
         }
 
         void operator()( const NonTerminals::Type &type ) {
