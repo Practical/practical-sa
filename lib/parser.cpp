@@ -220,8 +220,8 @@ size_t Expression::parsePrefixOp(
             RULE_LEAVE();
         case Operators::OperatorType::Cast:
             {
-                BinaryOperator &op2 = value.emplace< BinaryOperator >();
-                op2.op = op;
+                CastOperator &cast = value.emplace< CastOperator >();
+                cast.op = op;
                 expectToken(
                         Tokenizer::Tokens::OP_TEMPLATE_EXPAND,
                         source,
@@ -229,8 +229,7 @@ size_t Expression::parsePrefixOp(
                         "Cast operator must be followed by `!`",
                         "End of file looking for cast expression"
                 );
-                op2.operands[0] = safenew< Expression >();
-                tokensConsumed += op2.operands[0]->basicParse( source.subslice(tokensConsumed) );
+                tokensConsumed += cast.destType.parse( source.subslice(tokensConsumed) );
                 expectToken(
                         Tokenizer::Tokens::BRACKET_ROUND_OPEN,
                         source,
@@ -238,8 +237,8 @@ size_t Expression::parsePrefixOp(
                         "Expected `(` after cast type",
                         "End of file looking for cast expression"
                 );
-                op2.operands[1] = safenew< Expression >();
-                tokensConsumed += op2.operands[1]->parse( source.subslice( tokensConsumed ) );
+                cast.expression = safenew< Expression >();
+                tokensConsumed += cast.expression->parse( source.subslice( tokensConsumed ) );
                 expectToken(
                         Tokenizer::Tokens::BRACKET_ROUND_CLOSE,
                         source,

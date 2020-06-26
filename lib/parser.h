@@ -100,6 +100,12 @@ namespace NonTerminals {
             std::array< std::unique_ptr<Expression>, 2 > operands;
         };
 
+        struct CastOperator {
+            const Tokenizer::Token *op;
+            Type destType;
+            std::unique_ptr<Expression> expression;
+        };
+
         struct FunctionCall {
             const Tokenizer::Token *op;
             std::unique_ptr<Expression> expression;
@@ -112,6 +118,7 @@ namespace NonTerminals {
                 Identifier,
                 UnaryOperator,
                 BinaryOperator,
+                CastOperator,
                 FunctionCall,
                 std::unique_ptr<ConditionalExpression>,
                 Type

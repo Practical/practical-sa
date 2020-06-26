@@ -84,6 +84,14 @@ void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
             dumpParseTree( *op.operands[1], depth+1 );
         }
 
+        void operator()( const NonTerminals::Expression::CastOperator &op ) {
+            indent( out, depth )<<"Cast "<<*op.op<<"\n";
+            indent( out, depth )<<"Type:\n";
+            dumpType( op.destType, depth+1 );
+            indent( out, depth )<<"Expression:\n";
+            dumpParseTree( *op.expression, depth+1 );
+        }
+
         void operator()( const NonTerminals::Expression::FunctionCall &func ) {
             indent(out, depth) << "Function call:\n";
             dumpParseTree( *func.expression, depth+1 );

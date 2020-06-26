@@ -9,6 +9,7 @@
 #include "ast/expression.h"
 
 #include "ast/expression/binary_op.h"
+#include "ast/expression/cast_op.h"
 #include "ast/expression/compound_expression.h"
 #include "ast/expression/conditional_expression.h"
 #include "ast/expression/identifier.h"
@@ -64,6 +65,13 @@ void Expression::buildASTImpl(
 
             binaryOp->buildAST( lookupContext, expectedResult, weight, weightLimit );
             _this->actualExpression = std::move(binaryOp);
+        }
+
+        void operator()( const NonTerminals::Expression::CastOperator &cast ) {
+            auto castOp = safenew<ExpressionImpl::CastOp>(cast);
+
+            castOp->buildAST( lookupContext, expectedResult, weight, weightLimit );
+            _this->actualExpression = std::move(castOp);
         }
 
         void operator()( const NonTerminals::Expression::FunctionCall &parserFuncCall ) {
