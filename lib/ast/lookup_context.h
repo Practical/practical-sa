@@ -78,15 +78,15 @@ public:
             Never
         };
 
-        PracticalSemanticAnalyzer::StaticType::CPtr sourceType, destType;
+        StaticTypeImpl::CPtr sourceType, destType;
         CodeGenCast codeGen;
         ValueRangeCast calcVrp = nullptr;
         unsigned weight = std::numeric_limits<unsigned>::max();
         ImplicitCastAllowed whenPossible = ImplicitCastAllowed::Always;
 
         CastDescriptor(
-                PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
-                PracticalSemanticAnalyzer::StaticType::CPtr destType,
+                StaticTypeImpl::CPtr sourceType,
+                StaticTypeImpl::CPtr destType,
                 CodeGenCast codeGen, ValueRangeCast calcVrp,
                 unsigned weight, ImplicitCastAllowed whenPossible
             ) :
@@ -149,8 +149,8 @@ public:
     const Identifier *lookupIdentifier( String name ) const;
 
     void addCast(
-            PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
-            PracticalSemanticAnalyzer::StaticType::CPtr destType,
+            StaticTypeImpl::CPtr sourceType,
+            StaticTypeImpl::CPtr destType,
             unsigned weight, CodeGenCast codeGenCast, ValueRangeCast calcVrp,
             CastDescriptor::ImplicitCastAllowed whenPossible );
 

@@ -44,6 +44,11 @@ public:
     const ExpressionImpl::ExpressionMetadata getMetadata() const {
         return metadata;
     }
+
+private:
+    static std::unique_ptr<CastChain> fastPathAllocate(
+            const LookupContext::CastDescriptor *castDescriptor,
+            const ExpressionImpl::ExpressionMetadata &srcMetadata );
 };
 
 } // namespace AST

@@ -126,8 +126,8 @@ void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::
 }
 
 void LookupContext::addCast(
-        PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
-        PracticalSemanticAnalyzer::StaticType::CPtr destType,
+        StaticTypeImpl::CPtr sourceType,
+        StaticTypeImpl::CPtr destType,
         unsigned weight, CodeGenCast codeGenCast, ValueRangeCast calcVrp,
         CastDescriptor::ImplicitCastAllowed whenPossible )
 {

@@ -31,34 +31,13 @@ std::unique_ptr<CastChain> CastChain::allocate(
 
     {
         // Fastpath: direct cast from source to destination
-        auto castDesc = lookupContext.lookupCast( srcMetadata.type, destinationType );
+        auto castDescriptor = lookupContext.lookupCast( srcMetadata.type, destinationType );
 
         if(
-                castDesc!=nullptr &&
-                castDesc->whenPossible!=LookupContext::CastDescriptor::ImplicitCastAllowed::Never )
+                castDescriptor!=nullptr &&
+                castDescriptor->whenPossible!=LookupContext::CastDescriptor::ImplicitCastAllowed::Never )
         {
-            ExpressionImpl::ExpressionMetadata metadata;
-            metadata.type = destinationType;
-
-            if( castDesc->calcVrp ) {
-                metadata.valueRange = castDesc->calcVrp(
-                        srcMetadata.type.get(),
-                        destinationType.get(),
-                        srcMetadata.valueRange,
-                        true );
-            } else {
-                ASSERT(
-                        castDesc->whenPossible ==
-                        LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
-
-                metadata.valueRange = destinationType->defaultRange();
-            }
-
-            return std::unique_ptr<CastChain>( new CastChain(
-                    nullptr,
-                    *castDesc,
-                    std::move( metadata ) )
-                );
+            return fastPathAllocate( castDescriptor, srcMetadata );
         }
     }
 
@@ -85,6 +64,32 @@ ExpressionId CastChain::codeGen(
     }
 
     return cast.codeGen( sourceType, previousResult, metadata.type, functionGen );
+}
+
+std::unique_ptr<CastChain> CastChain::fastPathAllocate(
+            const LookupContext::CastDescriptor *castDescriptor,
+            const ExpressionImpl::ExpressionMetadata &srcMetadata )
+{
+    ExpressionImpl::ExpressionMetadata metadata;
+    metadata.type = castDescriptor->destType;
+
+    if( castDescriptor->calcVrp ) {
+        metadata.valueRange = castDescriptor->calcVrp(
+                srcMetadata.type.get(),
+                castDescriptor->destType.get(),
+                srcMetadata.valueRange,
+                true );
+    } else {
+        ASSERT( castDescriptor->whenPossible == LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
+
+        metadata.valueRange = castDescriptor->destType->defaultRange();
+    }
+
+    return std::unique_ptr<CastChain>( new CastChain(
+                nullptr,
+                *castDescriptor,
+                std::move( metadata ) )
+            );
 }
 
 } // namespace AST
