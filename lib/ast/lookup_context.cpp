@@ -139,7 +139,7 @@ void LookupContext::addCast(
         auto insertIterator = sourceTypeMap.emplace(
                 std::piecewise_construct,
                 std::tuple(destType),
-                std::tuple(codeGenCast, calcVrp, weight, whenPossible) );
+                std::tuple(sourceType, destType, codeGenCast, calcVrp, weight, whenPossible) );
         ASSERT( insertIterator.second );
     }
 
@@ -151,10 +151,20 @@ void LookupContext::addCast(
     }
 }
 
+void LookupContext::CastsList::sort() {
+    struct Comparer {
+        bool operator()( const CastDescriptor *lhs, const CastDescriptor *rhs ) {
+            return lhs->weight < rhs->weight;
+        }
+    };
+
+    std::sort( casts.begin(), casts.end(), Comparer() );
+}
+
 const LookupContext::CastDescriptor *LookupContext::lookupCast(
         PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
-        PracticalSemanticAnalyzer::StaticType::CPtr destType,
-        bool implicitOnly ) const
+        PracticalSemanticAnalyzer::StaticType::CPtr destType
+    ) const
 {
     auto conversionIter = typeConversionsFrom.find( sourceType );
     if( conversionIter!=typeConversionsFrom.end() ) {
@@ -167,7 +177,49 @@ const LookupContext::CastDescriptor *LookupContext::lookupCast(
     if( getParent()==nullptr )
         return nullptr;
 
-    return getParent()->lookupCast( sourceType, destType, implicitOnly );
+    return getParent()->lookupCast( sourceType, destType );
+}
+
+LookupContext::CastsList LookupContext::allCastsTo(
+        PracticalSemanticAnalyzer::StaticType::CPtr destType ) const
+{
+    CastsList ret;
+
+    for( const LookupContext *_this = this; _this!=nullptr; _this = _this->parent ) {
+        auto destTypeIter = _this->typeConversionsTo.find(destType);
+
+        if( destTypeIter != _this->typeConversionsTo.end() ) {
+            for( auto sourceType : destTypeIter->second ) {
+                ret.casts.emplace_back(
+                        & _this->typeConversionsFrom.at( sourceType ).at( destType )
+                    );
+            }
+        }
+    }
+
+    ret.sort();
+
+    return ret;
+}
+
+LookupContext::CastsList LookupContext::allCastsFrom(
+        PracticalSemanticAnalyzer::StaticType::CPtr sourceType) const
+{
+    CastsList ret;
+
+    for( const LookupContext *_this = this; _this!=nullptr; _this = _this->parent ) {
+        auto sourceTypeIter = _this->typeConversionsFrom.find(sourceType);
+
+        if( sourceTypeIter != _this->typeConversionsFrom.end() ) {
+            for( auto destTypeIter : sourceTypeIter->second ) {
+                ret.casts.emplace_back( & destTypeIter.second );
+            }
+        }
+    }
+
+    ret.sort();
+
+    return ret;
 }
 
 // Private methods

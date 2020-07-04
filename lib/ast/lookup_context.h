@@ -78,16 +78,24 @@ public:
             Never
         };
 
+        PracticalSemanticAnalyzer::StaticType::CPtr sourceType, destType;
         CodeGenCast codeGen;
         ValueRangeCast calcVrp = nullptr;
         unsigned weight = std::numeric_limits<unsigned>::max();
         ImplicitCastAllowed whenPossible = ImplicitCastAllowed::Always;
 
-        CastDescriptor( CodeGenCast codeGen, ValueRangeCast calcVrp, unsigned weight, ImplicitCastAllowed whenPossible ) :
-            codeGen(codeGen),
-            calcVrp(calcVrp),
-            weight(weight),
-            whenPossible(whenPossible)
+        CastDescriptor(
+                PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
+                PracticalSemanticAnalyzer::StaticType::CPtr destType,
+                CodeGenCast codeGen, ValueRangeCast calcVrp,
+                unsigned weight, ImplicitCastAllowed whenPossible
+            ) :
+                sourceType(sourceType),
+                destType(destType),
+                codeGen(codeGen),
+                calcVrp(calcVrp),
+                weight(weight),
+                whenPossible(whenPossible)
         {}
     };
 
@@ -146,10 +154,40 @@ public:
             unsigned weight, CodeGenCast codeGenCast, ValueRangeCast calcVrp,
             CastDescriptor::ImplicitCastAllowed whenPossible );
 
+    class CastsList : private NoCopy {
+        friend LookupContext;
+
+        std::vector<const CastDescriptor *> casts;
+        unsigned index = 0;
+
+    public:
+
+        explicit operator bool() const {
+            return index<casts.size();
+        }
+
+        void operator++() {
+            ++index;
+        }
+
+        const CastDescriptor &operator*() const {
+            return *casts.at(index);
+        }
+
+        const CastDescriptor *operator->() const {
+            return casts.at(index);
+        }
+
+    private:
+        void sort();
+    };
+
     const CastDescriptor *lookupCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
-            PracticalSemanticAnalyzer::StaticType::CPtr destType,
-            bool implicit ) const;
+            PracticalSemanticAnalyzer::StaticType::CPtr destType ) const;
+
+    CastsList allCastsTo( PracticalSemanticAnalyzer::StaticType::CPtr destType ) const;
+    CastsList allCastsFrom( PracticalSemanticAnalyzer::StaticType::CPtr sourceType ) const;
 
 private:
     static ExpressionId globalFunctionCall(

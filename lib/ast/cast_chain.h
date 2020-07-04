@@ -20,6 +20,13 @@ class CastChain {
     const LookupContext::CastDescriptor &cast;
     ExpressionImpl::ExpressionMetadata metadata;
 
+private:
+    CastChain(
+            std::unique_ptr<CastChain> &&previousCast,
+            const LookupContext::CastDescriptor &cast,
+            ExpressionImpl::ExpressionMetadata metadata
+        );
+
 public:
 
     static std::unique_ptr<CastChain> allocate(

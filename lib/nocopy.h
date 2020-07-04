@@ -12,8 +12,11 @@
 // Inheriting from this class easily disables instance copying
 class NoCopy {
 public:
-    NoCopy(const NoCopy &rhs) = delete;
-    NoCopy &operator=(const NoCopy &rhs) = delete;
+    NoCopy(const NoCopy &that) = delete;
+    NoCopy &operator=(const NoCopy &that) = delete;
+
+    NoCopy(NoCopy &&that) = default;
+    NoCopy &operator=(NoCopy &&that) = default;
 
     NoCopy() = default;
     ~NoCopy() = default;
