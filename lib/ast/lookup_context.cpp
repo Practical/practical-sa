@@ -132,7 +132,6 @@ void LookupContext::addCast(
         CastDescriptor::ImplicitCastAllowed whenPossible )
 {
     ASSERT( getParent()==nullptr )<<"Non-builtin lookups not yet implemented";
-    ASSERT( whenPossible == CastDescriptor::ImplicitCastAllowed::Always )<<"TODO implement non-implicit casts";
 
     {
         auto &sourceTypeMap = typeConversionsFrom[sourceType];
@@ -155,7 +154,7 @@ void LookupContext::addCast(
 const LookupContext::CastDescriptor *LookupContext::lookupCast(
         PracticalSemanticAnalyzer::StaticType::CPtr sourceType,
         PracticalSemanticAnalyzer::StaticType::CPtr destType,
-        bool implicit ) const
+        bool implicitOnly ) const
 {
     auto conversionIter = typeConversionsFrom.find( sourceType );
     if( conversionIter!=typeConversionsFrom.end() ) {
@@ -168,7 +167,7 @@ const LookupContext::CastDescriptor *LookupContext::lookupCast(
     if( getParent()==nullptr )
         return nullptr;
 
-    return getParent()->lookupCast( sourceType, destType, implicit );
+    return getParent()->lookupCast( sourceType, destType, implicitOnly );
 }
 
 // Private methods

@@ -39,7 +39,8 @@ ExpressionId unsignedExpansionCast(
 ValueRangeBase::CPtr identityVrp(
             const StaticTypeImpl *sourceType,
             const StaticTypeImpl *destType,
-            ValueRangeBase::CPtr inputRange )
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit )
 {
     return inputRange;
 }
@@ -47,7 +48,8 @@ ValueRangeBase::CPtr identityVrp(
 ValueRangeBase::CPtr unsignedToSignedIdentityVrp(
             const StaticTypeImpl *sourceType,
             const StaticTypeImpl *destType,
-            ValueRangeBase::CPtr inputRangeBase )
+            ValueRangeBase::CPtr inputRangeBase,
+            bool isImplicit )
 {
     ASSERT(
             std::get<const StaticType::Scalar *>(sourceType->getType())->getType() ==
@@ -68,6 +70,74 @@ ValueRangeBase::CPtr unsignedToSignedIdentityVrp(
             static_cast<LongEnoughInt>( static_cast<const SignedIntValueRange *>(maximalRange.get())->maximum ) );
 
     return SignedIntValueRange::allocate( inputRange->minimum, inputRange->maximum );
+}
+
+ExpressionId integerReductionCast(
+            PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
+            PracticalSemanticAnalyzer::StaticType::CPtr destType,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ExpressionId id = Expression::allocateId();
+    functionGen->truncateInteger( id, sourceExpression, sourceType, destType );
+
+    return id;
+}
+
+ValueRangeBase::CPtr unsignedReductionVrp(
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
+            ValueRangeBase::CPtr inputRangeBase,
+            bool isImplicit )
+{
+    ASSERT(
+            std::get<const StaticType::Scalar *>(sourceType->getType())->getType() ==
+            StaticType::Scalar::Type::UnsignedInt
+          ) <<
+            "VRP for unsigned->signed called on input of type "<<
+            std::get<const StaticType::Scalar *>(sourceType->getType())->getType();
+
+    ASSERT( dynamic_cast<const UnsignedIntValueRange *>(inputRangeBase.get())!=nullptr );
+
+    auto inputRange = static_cast<const UnsignedIntValueRange *>(inputRangeBase.get());
+
+    auto maximalRange = destType->defaultRange();
+    ASSERT( dynamic_cast<const UnsignedIntValueRange *>( maximalRange.get() )!=nullptr );
+
+    if( inputRange->maximum > static_cast<const UnsignedIntValueRange *>(maximalRange.get())->maximum ) {
+        // Values out of range
+        if( ! isImplicit )
+            return maximalRange;
+
+        return ValueRangeBase::CPtr(); // Cannot implicit cast
+    } else {
+        return UnsignedIntValueRange::allocate( inputRange->minimum, inputRange->maximum );
+    }
+}
+
+ValueRangeBase::CPtr signedReductionVrp(
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit );
+
+ValueRangeBase::CPtr signed2UnsignedVrp(
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit );
+
+ValueRangeBase::CPtr unsigned2SignedVrp(
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit );
+
+ExpressionId identityCast(
+            PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
+            PracticalSemanticAnalyzer::StaticType::CPtr destType,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return sourceExpression;
 }
 
 } // namespace AST

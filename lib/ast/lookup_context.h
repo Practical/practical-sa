@@ -67,7 +67,8 @@ public:
     using ValueRangeCast = ValueRangeBase::CPtr (*)(
             const StaticTypeImpl *sourceType,
             const StaticTypeImpl *destType,
-            ValueRangeBase::CPtr inputRange
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit
         );
 
     struct CastDescriptor {

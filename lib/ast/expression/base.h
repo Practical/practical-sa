@@ -9,24 +9,18 @@
 #ifndef AST_EXPRESSION_BASE_H
 #define AST_EXPRESSION_BASE_H
 
+#include "ast/expression/expression_metadata.h"
+#include "ast/cast_chain.h"
 #include "ast/cast_op.h"
 #include "ast/expected_result.h"
 #include "ast/lookup_context.h"
-#include "ast/value_range_base.h"
 #include <practical-sa.h>
 
 namespace AST::ExpressionImpl {
 
 class Base {
-public:
-    struct ExpressionMetadata {
-        StaticTypeImpl::CPtr type;
-        ValueRangeBase::CPtr valueRange;
-    };
-
 private:
-    std::unique_ptr<CastOperation> castOp;
-    ExpressionMetadata postCastMetadata;
+    std::unique_ptr<CastChain> castChain;
 
 protected:
     ExpressionMetadata metadata;
@@ -52,8 +46,8 @@ public:
     StaticTypeImpl::CPtr getType() const;
 
     ValueRangeBase::CPtr getValueRange() const {
-        if( castOp )
-            return postCastMetadata.valueRange;
+        if( castChain )
+            return castChain->getMetadata().valueRange;
 
         return metadata.valueRange;
     }

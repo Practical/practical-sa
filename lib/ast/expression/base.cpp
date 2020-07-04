@@ -19,8 +19,8 @@ ExpressionId Base::allocateId() {
 Base::~Base() {}
 
 StaticTypeImpl::CPtr Base::getType() const {
-    if( castOp )
-        return postCastMetadata.type;
+    if( castChain )
+        return castChain->getMetadata().type;
 
     return metadata.type;
 }
@@ -35,33 +35,15 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
     if( !expectedResult || *expectedResult.getType()==*metadata.type )
         return;
 
-    auto castDescriptor = lookupContext.lookupCast( metadata.type, expectedResult.getType(), true );
-    if( castDescriptor ) {
-        weight += castDescriptor->weight;
-        if( weight>weightLimit )
-            throw ExpressionTooExpensive();
-
-        castOp = safenew<CastOperation>( castDescriptor->codeGen, metadata.type, expectedResult.getType() );
-        postCastMetadata.type = castOp->getType();
-        ASSERT( metadata.valueRange );
-        postCastMetadata.valueRange = castDescriptor->calcVrp(
-                metadata.type.get(),
-                expectedResult.getType().get(),
-                metadata.valueRange );
-
-        return;
-    }
-
-    if( expectedResult.isMandatory() ) {
-        ABORT()<<"TODO implement multi-step casts";
-    }
+    castChain = CastChain::allocate(
+            lookupContext, expectedResult.getType(), metadata, weight, weightLimit );
 }
 
 ExpressionId Base::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     ExpressionId ret = codeGenImpl( functionGen );
 
-    if( castOp )
-        ret = castOp->codeGen( ret, functionGen );
+    if( castChain )
+        ret = castChain->codeGen( metadata.type, ret, functionGen );
 
     return ret;
 }

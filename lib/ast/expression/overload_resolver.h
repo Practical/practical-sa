@@ -26,7 +26,7 @@ public:
             const std::vector<LookupContext::Function::Definition> &overloads,
             unsigned &weight,
             unsigned weightLimit,
-            Base::ExpressionMetadata &metadata,
+            ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments,
             const Tokenizer::Token *sourceLocation
         );
@@ -37,7 +37,7 @@ private:
     void buildActualCall(
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit,
             const LookupContext::Function::Definition *definition,
-            Base::ExpressionMetadata &metadata,
+            ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments );
 };
 

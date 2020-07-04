@@ -33,12 +33,54 @@ ExpressionId unsignedExpansionCast(
 ValueRangeBase::CPtr identityVrp(
             const StaticTypeImpl *sourceType,
             const StaticTypeImpl *destType,
-            ValueRangeBase::CPtr inputRange );
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit
+        );
 
 ValueRangeBase::CPtr unsignedToSignedIdentityVrp(
             const StaticTypeImpl *sourceType,
             const StaticTypeImpl *destType,
-            ValueRangeBase::CPtr inputRange );
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit
+        );
+
+ExpressionId integerReductionCast(
+            PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
+            PracticalSemanticAnalyzer::StaticType::CPtr destType,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen);
+
+ValueRangeBase::CPtr unsignedReductionVrp(
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit
+        );
+
+ValueRangeBase::CPtr signedReductionVrp(
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit
+        );
+
+ValueRangeBase::CPtr signed2UnsignedVrp(
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit
+        );
+
+ValueRangeBase::CPtr unsigned2SignedVrp(
+            const StaticTypeImpl *sourceType,
+            const StaticTypeImpl *destType,
+            ValueRangeBase::CPtr inputRange,
+            bool isImplicit
+        );
+
+ExpressionId identityCast(
+            PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
+            PracticalSemanticAnalyzer::StaticType::CPtr destType,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen);
 
 } // namespace AST
 

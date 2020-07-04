@@ -115,6 +115,51 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
     builtinCtx.addCast( u32Type, s64Type, BuiltingBaseCastWeight+5, unsignedExpansionCast, unsignedToSignedIdentityVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
 
+    // Conditionally implicit conversions
+    builtinCtx.addCast( u16Type, u8Type, BuiltingBaseCastWeight-2, integerReductionCast, unsignedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( u32Type, u8Type, BuiltingBaseCastWeight-4, integerReductionCast, unsignedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( u64Type, u8Type, BuiltingBaseCastWeight-6, integerReductionCast, unsignedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( u32Type, u16Type, BuiltingBaseCastWeight-2, integerReductionCast, unsignedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( u64Type, u16Type, BuiltingBaseCastWeight-4, integerReductionCast, unsignedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( u64Type, u32Type, BuiltingBaseCastWeight-2, integerReductionCast, unsignedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+
+    builtinCtx.addCast( s16Type, s8Type, BuiltingBaseCastWeight-2, integerReductionCast, signedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s32Type, s8Type, BuiltingBaseCastWeight-4, integerReductionCast, signedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s64Type, s8Type, BuiltingBaseCastWeight-6, integerReductionCast, signedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s32Type, s16Type, BuiltingBaseCastWeight-2, integerReductionCast, signedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s64Type, s16Type, BuiltingBaseCastWeight-4, integerReductionCast, signedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s64Type, s32Type, BuiltingBaseCastWeight-2, integerReductionCast, signedReductionVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+
+    // Same size signed<->unsigned conversions
+    builtinCtx.addCast( u8Type, s8Type, 1, identityCast, signed2UnsignedVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( u16Type, s16Type, 1, identityCast, signed2UnsignedVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( u32Type, s32Type, 1, identityCast, signed2UnsignedVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( u64Type, s64Type, 1, identityCast, signed2UnsignedVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s8Type, u8Type, 1, identityCast, unsigned2SignedVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s16Type, u16Type, 1, identityCast, unsigned2SignedVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s32Type, u32Type, 1, identityCast, unsigned2SignedVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+    builtinCtx.addCast( s64Type, u64Type, 1, identityCast, unsigned2SignedVrp,
+            LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+
 #if 0
     // Operators
     UnaryOp::registerOpName( Tokenizer::Tokens::OP_AMPERSAND, "__opAmpersand" );

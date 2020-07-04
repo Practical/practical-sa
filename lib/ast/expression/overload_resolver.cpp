@@ -20,7 +20,7 @@ void OverloadResolver::resolveOverloads(
         const std::vector<LookupContext::Function::Definition> &overloads,
         unsigned &weight,
         unsigned weightLimit,
-        Base::ExpressionMetadata &metadata,
+        ExpressionMetadata &metadata,
         Slice<const NonTerminals::Expression *const> parserArguments,
         const Tokenizer::Token *sourceLocation
     )
@@ -64,7 +64,7 @@ ExpressionId OverloadResolver::codeGen( PracticalSemanticAnalyzer::FunctionGen *
 void OverloadResolver::buildActualCall(
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit,
             const LookupContext::Function::Definition *definition,
-            Base::ExpressionMetadata &metadata,
+            ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments )
 {
     auto functionType = std::get<const StaticType::Function *>( definition->type->getType() );
