@@ -86,4 +86,9 @@ StaticTypeImpl::StaticTypeImpl( FunctionTypeImpl &&function ) :
 {
 }
 
+std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &type )
+{
+    return out<<static_cast<PracticalSemanticAnalyzer::StaticType::CPtr>(type);
+}
+
 } // End namespace AST

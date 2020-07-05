@@ -25,6 +25,15 @@ Expression::Expression( const NonTerminals::Expression &parserExpression ) :
 {
 }
 
+size_t Expression::getLine() const {
+    return actualExpression->getLine();
+}
+
+size_t Expression::getCol() const {
+    return actualExpression->getCol();
+}
+
+// Protected memthods
 void Expression::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
 {

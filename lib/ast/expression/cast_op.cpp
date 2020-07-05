@@ -16,6 +16,14 @@ CastOp::CastOp( const NonTerminals::Expression::CastOperator &parserCast ) :
 {
 }
 
+size_t CastOp::getLine() const {
+    return parserCast.op->line;
+}
+
+size_t CastOp::getCol() const {
+    return parserCast.op->col;
+}
+
 void CastOp::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
     )

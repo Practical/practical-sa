@@ -17,6 +17,14 @@ ConditionalExpression::ConditionalExpression( const NonTerminals::ConditionalExp
     elseClause(parserCondition.elseClause)
 {}
 
+size_t ConditionalExpression::getLine() const {
+    return condition.getLine();
+}
+
+size_t ConditionalExpression::getCol() const {
+    return condition.getCol();
+}
+
 void ConditionalExpression::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
 {

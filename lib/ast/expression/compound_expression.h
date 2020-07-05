@@ -25,6 +25,9 @@ class CompoundExpression final : public Base {
 public:
     CompoundExpression( const NonTerminals::CompoundExpression &parserExpression, const LookupContext &parentCtx );
 
+    size_t getLine() const override;
+    size_t getCol() const override;
+
 protected:
     void buildASTImpl(
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit

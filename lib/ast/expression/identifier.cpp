@@ -23,6 +23,14 @@ String Identifier::getName() const {
     return parserIdentifier.identifier->text;
 }
 
+size_t Identifier::getLine() const {
+    return parserIdentifier.identifier->line;
+}
+
+size_t Identifier::getCol() const {
+    return parserIdentifier.identifier->col;
+}
+
 void Identifier::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
 {

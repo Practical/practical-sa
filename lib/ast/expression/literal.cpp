@@ -24,6 +24,14 @@ Literal::Literal( const NonTerminals::Literal &parserLiteral ) :
 {
 }
 
+size_t Literal::getLine() const {
+    return parserLiteral.token.line;
+}
+
+size_t Literal::getCol() const {
+    return parserLiteral.token.col;
+}
+
 void Literal::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
 {

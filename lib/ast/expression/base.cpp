@@ -8,6 +8,8 @@
  */
 #include "base.h"
 
+#include <practical-errors.h>
+
 namespace AST::ExpressionImpl {
 
 ExpressionId Base::allocateId() {
@@ -37,6 +39,10 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
 
     castChain = CastChain::allocate(
             lookupContext, expectedResult.getType(), metadata, weight, weightLimit );
+
+    if( !castChain && expectedResult.isMandatory() ) {
+        throw CastNotAllowed( metadata.type, expectedResult.getType(), true, getLine(), getCol() );
+    }
 }
 
 ExpressionId Base::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {

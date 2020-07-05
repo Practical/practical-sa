@@ -96,6 +96,8 @@ public:
         return valueRange;
     }
 
+    friend std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &type );
+
 private:
     explicit StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange );
     explicit StaticTypeImpl( FunctionTypeImpl &&function );

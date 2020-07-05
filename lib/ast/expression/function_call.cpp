@@ -21,6 +21,14 @@ FunctionCall::FunctionCall( const NonTerminals::Expression::FunctionCall &parser
 {
 }
 
+size_t FunctionCall::getLine() const {
+    return parserFunctionCall.op->line;
+}
+
+size_t FunctionCall::getCol() const {
+    return parserFunctionCall.op->col;
+}
+
 // protected methods
 void FunctionCall::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )

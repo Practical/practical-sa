@@ -25,6 +25,9 @@ public:
 
     explicit BinaryOp( const NonTerminals::Expression::BinaryOperator &parserOp );
 
+    size_t getLine() const override;
+    size_t getCol() const override;
+
 protected:
     void buildASTImpl(
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit

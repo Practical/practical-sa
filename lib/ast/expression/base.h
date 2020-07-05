@@ -55,6 +55,9 @@ public:
     void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit );
     ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 
+    virtual size_t getLine() const = 0;
+    virtual size_t getCol() const = 0;
+
 protected:
     virtual void buildASTImpl(
             LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit ) = 0;

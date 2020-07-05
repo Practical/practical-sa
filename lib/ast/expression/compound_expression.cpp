@@ -18,6 +18,14 @@ CompoundExpression::CompoundExpression(
 {
 }
 
+size_t CompoundExpression::getLine() const {
+    return expression.getLine();
+}
+
+size_t CompoundExpression::getCol() const {
+    return expression.getCol();
+}
+
 void CompoundExpression::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit)
 {
