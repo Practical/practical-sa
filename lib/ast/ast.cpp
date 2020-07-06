@@ -142,6 +142,7 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
     builtinCtx.addCast( s64Type, s32Type, BuiltingBaseCastWeight-2, integerReductionCast, signedReductionVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
 
+#if LATER
     // Same size signed<->unsigned conversions
     builtinCtx.addCast( u8Type, s8Type, 1, identityCast, signed2UnsignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
@@ -159,6 +160,7 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
     builtinCtx.addCast( s64Type, u64Type, 1, identityCast, unsigned2SignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
+#endif
 
 #if 0
     // Operators

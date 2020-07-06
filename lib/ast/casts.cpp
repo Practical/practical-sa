@@ -117,8 +117,38 @@ ValueRangeBase::CPtr unsignedReductionVrp(
 ValueRangeBase::CPtr signedReductionVrp(
             const StaticTypeImpl *sourceType,
             const StaticTypeImpl *destType,
-            ValueRangeBase::CPtr inputRange,
-            bool isImplicit );
+            ValueRangeBase::CPtr inputRangeBase,
+            bool isImplicit )
+{
+    ASSERT(
+            std::get<const StaticType::Scalar *>(sourceType->getType())->getType() ==
+            StaticType::Scalar::Type::SignedInt
+          ) <<
+            "VRP for signed->signed called on input of type "<<
+            std::get<const StaticType::Scalar *>(sourceType->getType())->getType();
+
+    ASSERT( dynamic_cast<const SignedIntValueRange *>(inputRangeBase.get())!=nullptr );
+
+    auto inputRange = static_cast<const SignedIntValueRange *>(inputRangeBase.get());
+
+    auto maximalRangeBase = destType->defaultRange();
+    ASSERT( dynamic_cast<const SignedIntValueRange *>( maximalRangeBase.get() )!=nullptr );
+    auto maximalRange = static_cast<const SignedIntValueRange *>(maximalRangeBase.get());
+
+    if(
+            inputRange->maximum > maximalRange->maximum ||
+            inputRange->minimum < maximalRange->minimum
+      )
+    {
+        // Values out of range
+        if( ! isImplicit )
+            return maximalRange;
+
+        return ValueRangeBase::CPtr(); // Cannot implicit cast
+    } else {
+        return SignedIntValueRange::allocate( inputRange->minimum, inputRange->maximum );
+    }
+}
 
 ValueRangeBase::CPtr signed2UnsignedVrp(
             const StaticTypeImpl *sourceType,

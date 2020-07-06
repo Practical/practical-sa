@@ -79,6 +79,10 @@ std::unique_ptr<CastChain> CastChain::fastPathAllocate(
                 castDescriptor->destType.get(),
                 srcMetadata.valueRange,
                 true );
+
+        if( !metadata.valueRange )
+            return nullptr;
+
     } else {
         ASSERT( castDescriptor->whenPossible == LookupContext::CastDescriptor::ImplicitCastAllowed::Always );
 
