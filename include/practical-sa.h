@@ -175,6 +175,8 @@ namespace PracticalSemanticAnalyzer {
         // Casts
         virtual void truncateInteger(
                 ExpressionId id, ExpressionId source, StaticType::CPtr sourceType, StaticType::CPtr destType ) = 0;
+        virtual void changeIntegerSign(
+                ExpressionId id, ExpressionId source, StaticType::CPtr sourceType, StaticType::CPtr destType ) = 0;
         virtual void expandIntegerSigned(
                 ExpressionId id, ExpressionId source, StaticType::CPtr sourceType, StaticType::CPtr destType ) = 0;
         virtual void expandIntegerUnsigned(

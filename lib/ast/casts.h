@@ -77,7 +77,7 @@ ValueRangeBase::CPtr unsigned2SignedVrp(
             bool isImplicit
         );
 
-ExpressionId identityCast(
+ExpressionId changeSignCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             PracticalSemanticAnalyzer::FunctionGen *functionGen);

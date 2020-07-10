@@ -143,21 +143,21 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
 
     // Same size signed<->unsigned conversions
-    builtinCtx.addCast( u8Type, s8Type, 1, identityCast, unsigned2SignedVrp,
+    builtinCtx.addCast( u8Type, s8Type, 1, changeSignCast, unsigned2SignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
-    builtinCtx.addCast( u16Type, s16Type, 1, identityCast, unsigned2SignedVrp,
+    builtinCtx.addCast( u16Type, s16Type, 1, changeSignCast, unsigned2SignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
-    builtinCtx.addCast( u32Type, s32Type, 1, identityCast, unsigned2SignedVrp,
+    builtinCtx.addCast( u32Type, s32Type, 1, changeSignCast, unsigned2SignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
-    builtinCtx.addCast( u64Type, s64Type, 1, identityCast, unsigned2SignedVrp,
+    builtinCtx.addCast( u64Type, s64Type, 1, changeSignCast, unsigned2SignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
-    builtinCtx.addCast( s8Type, u8Type, 1, identityCast, signed2UnsignedVrp,
+    builtinCtx.addCast( s8Type, u8Type, 1, changeSignCast, signed2UnsignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
-    builtinCtx.addCast( s16Type, u16Type, 1, identityCast, signed2UnsignedVrp,
+    builtinCtx.addCast( s16Type, u16Type, 1, changeSignCast, signed2UnsignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
-    builtinCtx.addCast( s32Type, u32Type, 1, identityCast, signed2UnsignedVrp,
+    builtinCtx.addCast( s32Type, u32Type, 1, changeSignCast, signed2UnsignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
-    builtinCtx.addCast( s64Type, u64Type, 1, identityCast, signed2UnsignedVrp,
+    builtinCtx.addCast( s64Type, u64Type, 1, changeSignCast, signed2UnsignedVrp,
             LookupContext::CastDescriptor::ImplicitCastAllowed::VrpConditional );
 
 #if 0

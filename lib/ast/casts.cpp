@@ -220,12 +220,15 @@ ValueRangeBase::CPtr unsigned2SignedVrp(
     }
 }
 
-ExpressionId identityCast(
+ExpressionId changeSignCast(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
             PracticalSemanticAnalyzer::StaticType::CPtr destType,
             PracticalSemanticAnalyzer::FunctionGen *functionGen)
 {
-    return sourceExpression;
+    ExpressionId id = Expression::allocateId();
+    functionGen->changeIntegerSign( id, sourceExpression, sourceType, destType );
+
+    return id;
 }
 
 } // namespace AST
