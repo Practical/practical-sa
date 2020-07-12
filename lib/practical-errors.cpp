@@ -14,19 +14,6 @@
 
 namespace PracticalSemanticAnalyzer {
 
-CastNotAllowed::CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
-        : compile_error(line, col)
-{
-    std::stringstream buf;
-
-    if( implicit )
-        buf<<"Cannot implicitly convert from "<<src<<" to "<<dst;
-    else
-        buf<<"Cannot cast from "<<src<<" to "<<dst;
-
-    setMsg( buf.str().c_str() );
-}
-
 IncompatibleTypes::IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, size_t line, size_t col)
         : compile_error(line, col)
 {
@@ -81,6 +68,29 @@ NoMatchingOverload::NoMatchingOverload(const Tokenizer::Token *identifier) :
     compile_error(identifier->line, identifier->col)
 {
     setMsg( "Trying to call function with no matching overload" );
+}
+
+CastError::CastError(const char *msg, StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
+        : compile_error(line, col)
+{
+    std::stringstream buf;
+
+    if( implicit )
+        buf<<"Cannot implicitly convert from "<<src<<" to "<<dst<<": "<<msg;
+    else
+        buf<<"Cannot cast from "<<src<<" to "<<dst<<": msg";
+
+    setMsg( buf.str().c_str() );
+}
+
+
+CastNotAllowed::CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
+    : CastError( "No cast chain", src, dst, implicit, line, col )
+{}
+
+AmbiguousCast::AmbiguousCast(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
+    : CastError( "Cast chain ambiguous", src, dst, implicit, line, col )
+{
 }
 
 } // namespace PracticalSemanticAnalyzer

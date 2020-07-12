@@ -178,6 +178,14 @@ public:
             return casts.at(index);
         }
 
+        const CastDescriptor *get() const {
+            return casts.at(index);
+        }
+
+        size_t size() const {
+            return casts.size();
+        }
+
     private:
         void sort();
     };

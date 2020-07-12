@@ -24,7 +24,12 @@ private:
     CastChain(
             std::unique_ptr<CastChain> &&previousCast,
             const LookupContext::CastDescriptor &cast,
-            ExpressionImpl::ExpressionMetadata metadata
+            const ExpressionImpl::ExpressionMetadata &metadata
+        );
+
+    CastChain(
+            std::unique_ptr<CastChain> &&previousCast,
+            const LookupContext::CastDescriptor &cast
         );
 
 public:
@@ -33,8 +38,8 @@ public:
             const LookupContext &lookupContext,
             StaticTypeImpl::CPtr destinationType,
             const ExpressionImpl::ExpressionMetadata &srcMetadata,
-            unsigned &weight,
-            unsigned weightLimit );
+            unsigned &weight, unsigned weightLimit,
+            bool implicit, size_t line, size_t col );
 
     ExpressionId codeGen(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,

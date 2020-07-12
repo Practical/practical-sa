@@ -78,11 +78,6 @@ public:
     }
 };
 
-class CastNotAllowed : public compile_error {
-public:
-    CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
-};
-
 class IncompatibleTypes : public compile_error {
 public:
     IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, size_t line, size_t col);
@@ -111,6 +106,21 @@ public:
 class NoMatchingOverload : public compile_error {
 public:
     NoMatchingOverload(const Tokenizer::Token *identifier);
+};
+
+class CastError : public compile_error {
+public:
+    CastError(const char *msg, StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
+};
+
+class CastNotAllowed : public CastError {
+public:
+    CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
+};
+
+class AmbiguousCast : public CastError {
+public:
+    AmbiguousCast(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
 };
 
 } // PracticalSemanticAnalyzer

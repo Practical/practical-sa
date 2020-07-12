@@ -25,6 +25,7 @@ private:
 protected:
     ExpressionMetadata metadata;
 
+public:
     class ExpressionTooExpensive : public std::exception {
     public:
         const char *what() const noexcept {
@@ -32,7 +33,6 @@ protected:
         }
     };
 
-public:
     static constexpr unsigned NoWeightLimit = std::numeric_limits<unsigned>::max();
 
     static PracticalSemanticAnalyzer::ExpressionId allocateId();

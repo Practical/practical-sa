@@ -193,9 +193,9 @@ ValueRangeBase::CPtr unsigned2SignedVrp(
 {
     ASSERT(
             std::get<const StaticType::Scalar *>(sourceType->getType())->getType() ==
-            StaticType::Scalar::Type::SignedInt
+            StaticType::Scalar::Type::UnsignedInt
           ) <<
-            "VRP for unsigned->signed called on input of type "<<
+            "VRP for unsigned->signed ("<<(*sourceType)<<" to "<<(*destType)<<") called on input of type "<<
             std::get<const StaticType::Scalar *>(sourceType->getType())->getType();
 
     ASSERT( dynamic_cast<const UnsignedIntValueRange *>(inputRangeBase.get())!=nullptr );

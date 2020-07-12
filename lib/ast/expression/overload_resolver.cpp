@@ -34,7 +34,7 @@ void OverloadResolver::resolveOverloads(
         if( overloadType->getNumArguments() == numArguments ) {
             relevantOverloads.emplace_back( &overload );
 
-            if( expectedResult && expectedResult.getType() == overloadType->getReturnType() )
+            if( expectedResult && static_cast<StaticType::CPtr>(expectedResult.getType()) == overloadType->getReturnType() )
                 preciseResultOverloads.emplace_back( &overload );
         }
     }

@@ -105,4 +105,32 @@ private:
 
 } // End namespace AST
 
+inline bool operator==( const AST::StaticTypeImpl::CPtr &lhs, const AST::StaticTypeImpl::CPtr &rhs ) {
+    if( !lhs && !rhs )
+        return true;
+
+    if( !lhs || !rhs )
+        return false;
+
+    return *lhs == *rhs;
+}
+
+inline bool operator!=( const AST::StaticTypeImpl::CPtr &lhs, const AST::StaticTypeImpl::CPtr &rhs ) {
+    return !( lhs == rhs );
+}
+
+inline std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl &type ) {
+    return out<<AST::StaticTypeImpl::CPtr(&type);
+}
+
+namespace std {
+    template<>
+    class hash< AST::StaticTypeImpl::CPtr > {
+    public:
+        size_t operator()( const AST::StaticTypeImpl::CPtr &ptr ) const {
+            return hash< PracticalSemanticAnalyzer::StaticType::CPtr >()( ptr.get() );
+        }
+    };
+}
+
 #endif // AST_STATIC_TYPE_H

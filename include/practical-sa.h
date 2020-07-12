@@ -222,24 +222,26 @@ namespace std {
             return realHash( *type );
         }
     };
-
-    template<>
-    struct equal_to< PracticalSemanticAnalyzer::StaticType::CPtr > {
-        bool operator()(
-                const PracticalSemanticAnalyzer::StaticType::CPtr &lhs,
-                const PracticalSemanticAnalyzer::StaticType::CPtr &rhs
-        ) const noexcept
-        {
-            if( !lhs && !rhs )
-                return true;
-
-            if( !lhs || !rhs )
-                return false;
-
-            return *lhs==*rhs;
-        }
-    };
-
 } // namespace std
+
+inline bool operator==(
+        const PracticalSemanticAnalyzer::StaticType::CPtr &lhs,
+        const PracticalSemanticAnalyzer::StaticType::CPtr &rhs )
+{
+    if( !lhs && !rhs )
+        return true;
+
+    if( !lhs || !rhs )
+        return false;
+
+    return *lhs==*rhs;
+}
+
+inline bool operator!=(
+        const PracticalSemanticAnalyzer::StaticType::CPtr &lhs,
+        const PracticalSemanticAnalyzer::StaticType::CPtr &rhs )
+{
+    return !( lhs == rhs );
+}
 
 #endif // LIB_PRACTICAL_SA_H

@@ -38,7 +38,7 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
         return;
 
     castChain = CastChain::allocate(
-            lookupContext, expectedResult.getType(), metadata, weight, weightLimit );
+            lookupContext, expectedResult.getType(), metadata, weight, weightLimit, true, getLine(), getCol() );
 
     if( !castChain && expectedResult.isMandatory() ) {
         throw CastNotAllowed( metadata.type, expectedResult.getType(), true, getLine(), getCol() );
