@@ -33,10 +33,10 @@ std::vector<const T *> downcastValueRanges(Slice<ValueRangeBase::CPtr> baseRange
     return ret;
 }
 
-const SignedIntValueRange *getSignedOverloadRange(
-        const StaticTypeImpl::CPtr &funcType, Slice<const SignedIntValueRange *> argumentRanges );
 const UnsignedIntValueRange *getUnsignedOverloadRange(
         const StaticTypeImpl::CPtr &funcType, Slice<const UnsignedIntValueRange *> argumentRanges );
+const SignedIntValueRange *getSignedOverloadRange(
+        const StaticTypeImpl::CPtr &funcType, Slice<const SignedIntValueRange *> argumentRanges );
 
 } // namespace AST::Operators
 

@@ -27,6 +27,10 @@ public:
     }
 
     static boost::intrusive_ptr<UnsignedIntValueRange> allocate( LongEnoughInt min, LongEnoughInt max );
+    static boost::intrusive_ptr<UnsignedIntValueRange> allocate( const UnsignedIntValueRange *that ) {
+        return allocate( that->minimum, that->maximum );
+    }
+
     template<
             typename T,
             std::enable_if_t<

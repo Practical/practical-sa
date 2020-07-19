@@ -37,7 +37,39 @@ ExpressionId bPlusCodegen(
 ValueRangeBase::CPtr bPlusUnsignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
 {
     auto inputRanges = downcastValueRanges<UnsignedIntValueRange>( inputRangesBase );
-    ABORT()<<"TODO implement";
+    ASSERT( inputRangesBase.size()==2 );
+
+    const UnsignedIntValueRange *typeRange = getUnsignedOverloadRange( funcType, inputRanges );
+    auto ret = UnsignedIntValueRange::allocate( typeRange );
+
+    bool maxOverflow = false;
+    if( inputRanges[0]->maximum>0 && (typeRange->maximum-inputRanges[0]->maximum) < inputRanges[1]->maximum ) {
+        // UB can't rule out signed overflow
+        /* There is no overflow iff: in[0]+in[1] <= range.max
+         * in[1] <= range.max-in[0]
+         * Reversal: range.max-in[0] < in[1]
+         */
+        maxOverflow = true;
+    }
+
+    bool minOverflow = false;
+    if( inputRanges[0]->minimum>0 && (typeRange->maximum-inputRanges[0]->minimum) < inputRanges[1]->minimum ) {
+        // UB can't rule out signed overflow
+        ASSERT( maxOverflow );
+        minOverflow = true;
+    }
+
+    if( minOverflow || !maxOverflow ) {
+        ret->minimum = inputRanges[0]->minimum + inputRanges[1]->minimum;
+        ret->minimum &= typeRange->maximum;
+        ret->maximum = inputRanges[0]->maximum + inputRanges[1]->maximum;
+        ret->maximum &= typeRange->maximum;
+    } else {
+        ret->minimum = typeRange->minimum;
+        ret->maximum = typeRange->maximum;
+    }
+
+    return ret;
 }
 
 ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)

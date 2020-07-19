@@ -14,6 +14,20 @@ using namespace PracticalSemanticAnalyzer;
 
 namespace AST::Operators {
 
+const UnsignedIntValueRange *getUnsignedOverloadRange(
+        const StaticTypeImpl::CPtr &funcType, Slice<const UnsignedIntValueRange *> argumentRanges )
+{
+    auto function = std::get<const StaticType::Function *>(funcType->getType());
+
+    ASSERT( argumentRanges.size()==function->getNumArguments() );
+
+    auto firstArgType = static_cast< const StaticTypeImpl * >(function->getArgumentType(0).get());
+    auto firstArgRange = firstArgType->defaultRange();
+    ASSERT( dynamic_cast< const UnsignedIntValueRange * >(firstArgRange.get()) != nullptr );
+
+    return static_cast< const UnsignedIntValueRange * >(firstArgRange.get());
+}
+
 const SignedIntValueRange *getSignedOverloadRange(
         const StaticTypeImpl::CPtr &funcType, Slice<const SignedIntValueRange *> argumentRanges )
 {
