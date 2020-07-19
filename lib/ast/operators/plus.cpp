@@ -8,6 +8,8 @@
  */
 #include "ast/operators/plus.h"
 
+#include "ast/operators/helper.h"
+
 namespace AST::Operators {
 
 using namespace PracticalSemanticAnalyzer;
@@ -30,6 +32,52 @@ ExpressionId bPlusCodegen(
             std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
 
     return resultId;
+}
+
+ValueRangeBase::CPtr bPlusUnsignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    auto inputRanges = downcastValueRanges<UnsignedIntValueRange>( inputRangesBase );
+    ABORT()<<"TODO implement";
+}
+
+ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    auto inputRanges = downcastValueRanges<SignedIntValueRange>( inputRangesBase );
+    ASSERT( inputRangesBase.size()==2 );
+
+    const SignedIntValueRange *typeRange = getSignedOverloadRange( funcType, inputRanges );
+    auto ret = SignedIntValueRange::allocate( typeRange );
+
+    if( inputRanges[0]->maximum>0 && (typeRange->maximum-inputRanges[0]->maximum) < inputRanges[1]->maximum ) {
+        // UB can't rule out signed overflow
+        /* There is no overflow iff: in[0]+in[1] <= range.max
+         * in[1] <= range.max-in[0]
+         * Reversal: range.max-in[0] < in[1]
+         */
+        ret->maximum = typeRange->maximum;
+    } else if( inputRanges[0]->maximum<0 && (typeRange->minimum-inputRanges[0]->maximum) > inputRanges[1]->maximum ) {
+        // UB can't rule out signed underflow
+        /* There is no underflow iff: in[0]+in[1] >= range.min
+         * in[1] >= range.min-in[0]
+         * Reversal of condition: range.min-in[0] > in[1]
+         */
+        ret->maximum = typeRange->minimum;
+    } else {
+        ret->maximum = inputRanges[0]->maximum + inputRanges[1]->maximum;
+    }
+
+    if( inputRanges[0]->minimum>0 && (typeRange->maximum-inputRanges[0]->minimum) < inputRanges[1]->minimum ) {
+        // UB can't rule out signed overflow
+        ret->minimum = typeRange->maximum;
+        ASSERT( ret->maximum == typeRange->maximum );
+    } else if( inputRanges[0]->minimum<0 && (typeRange->minimum-inputRanges[0]->minimum) > inputRanges[1]->minimum ) {
+        // UB can't rule out signed underflow
+        ret->minimum = typeRange->minimum;
+    } else {
+        ret->minimum = inputRanges[0]->minimum + inputRanges[1]->minimum;
+    }
+
+    return ret;
 }
 
 } // namespace AST::Operators

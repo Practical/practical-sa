@@ -48,7 +48,7 @@ StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type, V
 
 void LookupContext::addBuiltinFunction(
         const std::string &name, StaticTypeImpl::CPtr returnType, Slice<const StaticTypeImpl::CPtr> argumentTypes,
-        Function::Definition::CodeGenProto *codeGen)
+        Function::Definition::CodeGenProto *codeGen, Function::Definition::VrpProto *calcVrp)
 {
     auto iter = symbols.find( name );
 
@@ -70,6 +70,7 @@ void LookupContext::addBuiltinFunction(
                     )
                 );
     definition.codeGen = codeGen;
+    definition.calcVrp = calcVrp;
 }
 
 void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {

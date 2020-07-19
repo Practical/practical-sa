@@ -20,6 +20,9 @@ using PracticalSemanticAnalyzer::ExpressionId;
 ExpressionId bPlusCodegen(
         Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 
+ValueRangeBase::CPtr bPlusUnsignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
 } // namespace AST::Operators
 
 #endif // AST_OPERATORS_PLUS_H

@@ -137,8 +137,9 @@ public:
 
     void addBuiltinFunction(
             const std::string &name, StaticTypeImpl::CPtr returnType, Slice<const StaticTypeImpl::CPtr> argumentTypes,
-            ExpressionId(*)(
-                Slice<const Expression>, const Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *)
+            Function::Definition::CodeGenProto *codeGen,
+            Function::Definition::VrpProto *calcVrp
+
         );
 
     void addFunctionPass1( const Tokenizer::Token *token );

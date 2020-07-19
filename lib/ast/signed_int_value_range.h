@@ -27,6 +27,9 @@ public:
     }
 
     static boost::intrusive_ptr<SignedIntValueRange> allocate( LongEnoughIntSigned min, LongEnoughIntSigned max );
+    static boost::intrusive_ptr<SignedIntValueRange> allocate( const SignedIntValueRange *that ) {
+        return allocate( that->minimum, that->maximum );
+    }
 
     template<
             typename T,

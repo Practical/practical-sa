@@ -19,10 +19,8 @@ namespace AST::ExpressionImpl {
 static std::unordered_map< Tokenizer::Tokens, std::string > operatorNames;
 
 static void defineMatchingPairs(
-        ExpressionId(*codeGenerator)(
-            Slice<const Expression>, const LookupContext::Function::Definition *,
-            PracticalSemanticAnalyzer::FunctionGen *
-        ),
+        LookupContext::Function::Definition::CodeGenProto *codeGenerator,
+        LookupContext::Function::Definition::VrpProto *calcVrp,
         const std::string &name,
         Slice<const StaticTypeImpl::CPtr> types,
         LookupContext &builtinCtx)
@@ -31,7 +29,7 @@ static void defineMatchingPairs(
         builtinCtx.addBuiltinFunction(
                 name,
                 type, { type, type },
-                codeGenerator );
+                codeGenerator, calcVrp );
     }
 }
 
@@ -83,8 +81,8 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_NOT_EQUALS, "__opEQ" );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_PLUS, "__opPlus" );
-    defineMatchingPairs( Operators::bPlusCodegen, inserter.first->second, unsignedTypes, builtinCtx );
-    defineMatchingPairs( Operators::bPlusCodegen, inserter.first->second, signedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bPlusCodegen, Operators::bPlusUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bPlusCodegen, Operators::bPlusSignedVrp, inserter.first->second, signedTypes, builtinCtx );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_SHIFT_LEFT, "__opShiftLeft" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_SHIFT_RIGHT, "__opShiftRight" );
