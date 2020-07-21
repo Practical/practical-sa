@@ -152,9 +152,8 @@ void Literal::LiteralInt::parseInt(
         } else if( (*expectedScalar)->getType() == StaticType::Scalar::Type::UnsignedInt ) {
             ASSERT( (*expectedScalar)->getSize()<=64 );
 
-            weight += (*expectedScalar)->getLiteralWeight();
-
             if( (*expectedScalar)->getSize()==64 ) {
+                weight += (*expectedScalar)->getLiteralWeight();
                 owner->metadata.type = expectedResult.getType();
                 return;
             }
@@ -163,17 +162,21 @@ void Literal::LiteralInt::parseInt(
             limit <<= (*expectedScalar)->getSize();
 
             if( result < limit ) {
+                weight += (*expectedScalar)->getLiteralWeight();
                 owner->metadata.type = expectedResult.getType();
                 return;
             }
         }
-    } else {
-        // A type is expected, but it is not a scalar. Put in the default type and let the caller try a cast
-        owner->metadata.type = naturalType;
-        ASSERT( owner->metadata.type );
-
-        weight += std::get< const StaticType::Scalar *>( naturalType->getType() )->getLiteralWeight();
     }
+
+    ASSERT( ! owner->metadata.type );
+
+    // A type is expected, but it is not a scalar (or otherwise doesn't work). Put in the default type and
+    // let the caller try a cast
+    owner->metadata.type = naturalType;
+    ASSERT( owner->metadata.type );
+
+    weight += std::get< const StaticType::Scalar *>( naturalType->getType() )->getLiteralWeight();
 }
 
 ExpressionId Literal::LiteralBool::codeGen(
