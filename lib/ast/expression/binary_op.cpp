@@ -8,7 +8,7 @@
  */
 #include "ast/expression/binary_op.h"
 
-#include "ast/operators/plus.h"
+#include "ast/operators/algebraic_int.h"
 #include "tokenizer.h"
 
 #include <experimental/array>
@@ -77,6 +77,9 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_AND, "__opAnd" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_OR, "__opOr" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MINUS, "__opMinus" );
+    defineMatchingPairs( Operators::bMinusCodegen, Operators::bMinusUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bMinusCodegen, Operators::bMinusSignedVrp, inserter.first->second, signedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MODULOUS, "__opMod" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_NOT_EQUALS, "__opEQ" );
 

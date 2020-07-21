@@ -6,8 +6,8 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#ifndef AST_OPERATORS_PLUS_H
-#define AST_OPERATORS_PLUS_H
+#ifndef AST_OPERATORS_ALGEBRAIC_INT_H
+#define AST_OPERATORS_ALGEBRAIC_INT_H
 
 #include "ast/expression.h"
 
@@ -23,6 +23,13 @@ ExpressionId bPlusCodegen(
 ValueRangeBase::CPtr bPlusUnsignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
+
+ExpressionId bMinusCodegen(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+
+ValueRangeBase::CPtr bMinusUnsignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+ValueRangeBase::CPtr bMinusSignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
 } // namespace AST::Operators
 
-#endif // AST_OPERATORS_PLUS_H
+#endif // AST_OPERATORS_ALGEBRAIC_INT_H
