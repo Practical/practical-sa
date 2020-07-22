@@ -170,7 +170,75 @@ ValueRangeBase::CPtr bMinusUnsignedVrp(StaticTypeImpl::CPtr funcType, Slice<Valu
 
 ValueRangeBase::CPtr bMinusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
 {
-    ABORT()<<"TODO implement";
+    auto inputRanges = downcastValueRanges<SignedIntValueRange>( inputRangesBase );
+    ASSERT( inputRangesBase.size()==2 );
+
+    const SignedIntValueRange *typeRange = getSignedOverloadRange( funcType, inputRanges );
+    auto ret = SignedIntValueRange::allocate( typeRange );
+
+    if( inputRanges[1]->minimum>=0 || inputRanges[0]->maximum <= typeRange->maximum + inputRanges[1]->minimum )
+    {
+        /* Won't overflow iff:
+         * in[1].min>0
+         * or
+         * in[0].max - in[1].min <= range.max
+         * in[0].max <= range.max + in[1].min
+         */
+
+        // Make sure the maximal result doesn't negative overflow
+        if( inputRanges[1]->minimum<0 || inputRanges[0]->maximum >= typeRange->minimum + inputRanges[1]->minimum )
+        {
+            /* Won't overflow iff:
+             * in[1].min<0
+             * or
+             * in[0].max - in[1].min >= range.min
+             * in[0].max >= range.min + in[1].min
+             */
+            ret->maximum = inputRanges[0]->maximum - inputRanges[1]->minimum;
+        } else {
+            // The maximal result performs a negative overflow. UB is guaranteed.
+            // XXX no context for exception
+            //throw UndefinedBehavior( "Guaranteed signed integer negative overflow", 0, 0 );
+            ret->maximum = ret->minimum = typeRange->minimum;
+            return ret;
+        }
+    } else {
+        // UB can't rule out signed overflow.
+        ret->maximum = typeRange->maximum;
+    }
+
+    if( inputRanges[1]->maximum<0 || inputRanges[0]->minimum >= typeRange->minimum + inputRanges[1]->maximum )
+    {
+        /* Won't negative overflow iff:
+         * in[1].max<0
+         * or
+         * in[0].min - in[1].max >= range.min
+         * in[0].min >= range.min + in[1].max
+         */
+
+        // Make sure the minimal result doesn't positive overflow
+        if( inputRanges[1]->maximum>0 || inputRanges[0]->minimum <= typeRange->maximum - inputRanges[1]->maximum )
+        {
+            /* Won't overflow iff:
+             * in[1].max>0
+             * or
+             * in[0].min - in[1].max <= range.max
+             * in[0].min <= range.max + in[1].max
+             */
+            ret->minimum = inputRanges[0]->minimum - inputRanges[1]->maximum;
+        } else {
+            // The maximal result performs a negative overflow. UB is guaranteed.
+            // XXX no context for exception
+            //throw UndefinedBehavior( "Guaranteed signed integer positive overflow", 0, 0 );
+            ret->maximum = ret->minimum = typeRange->maximum;
+            return ret;
+        }
+    } else {
+        // UB can't rule out signed negative overflow.
+        ret->minimum = typeRange->minimum;
+    }
+
+    return ret;
 }
 
 } // namespace AST::Operators

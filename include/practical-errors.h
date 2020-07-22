@@ -78,6 +78,11 @@ public:
     }
 };
 
+class UndefinedBehavior : public compile_error {
+public:
+    UndefinedBehavior(const char *msg, size_t line, size_t col );
+};
+
 class IncompatibleTypes : public compile_error {
 public:
     IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, size_t line, size_t col);
