@@ -187,9 +187,13 @@ namespace PracticalSemanticAnalyzer {
                 ExpressionId id, String name, Slice<const ExpressionId> arguments, StaticType::CPtr returnType ) = 0;
 
         // Binary operators
-        virtual void binaryOperatorPlus(
+        virtual void binaryOperatorPlusUnsigned(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
-        virtual void binaryOperatorMinus(
+        virtual void binaryOperatorPlusSigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void binaryOperatorMinusUnsigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void binaryOperatorMinusSigned(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
     };
 

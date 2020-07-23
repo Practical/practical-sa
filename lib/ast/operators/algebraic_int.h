@@ -17,17 +17,22 @@ namespace AST::Operators {
 
 using PracticalSemanticAnalyzer::ExpressionId;
 
-ExpressionId bPlusCodegen(
+ExpressionId bPlusCodegenUnsigned(
         Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
-
 ValueRangeBase::CPtr bPlusUnsignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+ExpressionId bPlusCodegenSigned(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
 
-ExpressionId bMinusCodegen(
-        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 
+ExpressionId bMinusCodegenUnsigned(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 ValueRangeBase::CPtr bMinusUnsignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+ExpressionId bMinusCodegenSigned(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 ValueRangeBase::CPtr bMinusSignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
 } // namespace AST::Operators

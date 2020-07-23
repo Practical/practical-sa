@@ -77,15 +77,15 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_AND, "__opAnd" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_OR, "__opOr" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MINUS, "__opMinus" );
-    defineMatchingPairs( Operators::bMinusCodegen, Operators::bMinusUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
-    defineMatchingPairs( Operators::bMinusCodegen, Operators::bMinusSignedVrp, inserter.first->second, signedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bMinusCodegenUnsigned, Operators::bMinusUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bMinusCodegenSigned, Operators::bMinusSignedVrp, inserter.first->second, signedTypes, builtinCtx );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MODULOUS, "__opMod" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_NOT_EQUALS, "__opEQ" );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_PLUS, "__opPlus" );
-    defineMatchingPairs( Operators::bPlusCodegen, Operators::bPlusUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
-    defineMatchingPairs( Operators::bPlusCodegen, Operators::bPlusSignedVrp, inserter.first->second, signedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bPlusCodegenUnsigned, Operators::bPlusUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bPlusCodegenSigned, Operators::bPlusSignedVrp, inserter.first->second, signedTypes, builtinCtx );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_SHIFT_LEFT, "__opShiftLeft" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_SHIFT_RIGHT, "__opShiftRight" );

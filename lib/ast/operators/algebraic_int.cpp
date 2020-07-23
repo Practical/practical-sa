@@ -16,7 +16,7 @@ using namespace PracticalSemanticAnalyzer;
 
 // Plus
 
-ExpressionId bPlusCodegen(
+ExpressionId bPlusCodegenUnsigned(
         Slice<const Expression> arguments,
         const LookupContext::Function::Definition *definition,
         PracticalSemanticAnalyzer::FunctionGen *functionGen)
@@ -29,7 +29,7 @@ ExpressionId bPlusCodegen(
     }
 
     ExpressionId resultId = ExpressionImpl::Base::allocateId();
-    functionGen->binaryOperatorPlus(
+    functionGen->binaryOperatorPlusUnsigned(
             resultId, argumentIds[0], argumentIds[1],
             std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
 
@@ -72,6 +72,26 @@ ValueRangeBase::CPtr bPlusUnsignedVrp(StaticTypeImpl::CPtr funcType, Slice<Value
     return ret;
 }
 
+ExpressionId bPlusCodegenSigned(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ASSERT(arguments.size()==2);
+
+    std::array<ExpressionId,2> argumentIds;
+    for( unsigned i=0; i<2; ++i ) {
+        argumentIds[i] = arguments[i].codeGen(functionGen);
+    }
+
+    ExpressionId resultId = ExpressionImpl::Base::allocateId();
+    functionGen->binaryOperatorPlusSigned(
+            resultId, argumentIds[0], argumentIds[1],
+            std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
+
+    return resultId;
+}
+
 ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
 {
     auto inputRanges = downcastValueRanges<SignedIntValueRange>( inputRangesBase );
@@ -88,8 +108,8 @@ ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRa
          */
         ret->maximum = typeRange->maximum;
     } else if( inputRanges[0]->maximum<0 && (typeRange->minimum-inputRanges[0]->maximum) > inputRanges[1]->maximum ) {
-        // UB can't rule out signed underflow
-        /* There is no underflow iff: in[0]+in[1] >= range.min
+        // UB can't rule out signed negative overflow
+        /* There is no negative overflow iff: in[0]+in[1] >= range.min
          * in[1] >= range.min-in[0]
          * Reversal of condition: range.min-in[0] > in[1]
          */
@@ -103,7 +123,7 @@ ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRa
         ret->minimum = typeRange->maximum;
         ASSERT( ret->maximum == typeRange->maximum );
     } else if( inputRanges[0]->minimum<0 && (typeRange->minimum-inputRanges[0]->minimum) > inputRanges[1]->minimum ) {
-        // UB can't rule out signed underflow
+        // UB can't rule out signed negative overflow
         ret->minimum = typeRange->minimum;
     } else {
         ret->minimum = inputRanges[0]->minimum + inputRanges[1]->minimum;
@@ -115,7 +135,7 @@ ValueRangeBase::CPtr bPlusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRa
 
 // Minus
 
-ExpressionId bMinusCodegen(
+ExpressionId bMinusCodegenUnsigned(
         Slice<const Expression> arguments,
         const LookupContext::Function::Definition *definition,
         PracticalSemanticAnalyzer::FunctionGen *functionGen)
@@ -128,7 +148,7 @@ ExpressionId bMinusCodegen(
     }
 
     ExpressionId resultId = ExpressionImpl::Base::allocateId();
-    functionGen->binaryOperatorMinus(
+    functionGen->binaryOperatorMinusUnsigned(
             resultId, argumentIds[0], argumentIds[1],
             std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
 
@@ -166,6 +186,26 @@ ValueRangeBase::CPtr bMinusUnsignedVrp(StaticTypeImpl::CPtr funcType, Slice<Valu
     }
 
     return ret;
+}
+
+ExpressionId bMinusCodegenSigned(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ASSERT(arguments.size()==2);
+
+    std::array<ExpressionId,2> argumentIds;
+    for( unsigned i=0; i<2; ++i ) {
+        argumentIds[i] = arguments[i].codeGen(functionGen);
+    }
+
+    ExpressionId resultId = ExpressionImpl::Base::allocateId();
+    functionGen->binaryOperatorMinusSigned(
+            resultId, argumentIds[0], argumentIds[1],
+            std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
+
+    return resultId;
 }
 
 ValueRangeBase::CPtr bMinusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
