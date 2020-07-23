@@ -84,10 +84,15 @@ void Literal::LiteralInt::parseInt10(
     result = 0;
 
     for( char c: owner->parserLiteral.token.text ) {
+        static constexpr LongEnoughInt
+                LimitDivided = std::numeric_limits<LongEnoughInt>::max() / 10,
+                LimitTruncated = LimitDivided * 10,
+                LimitLastDigit = std::numeric_limits<LongEnoughInt>::max() % 10;
+
         if( c=='_' )
             continue;
 
-        if( result > std::numeric_limits<LongEnoughInt>::max()/10 )
+        if( result > LimitDivided )
             throw IllegalLiteral(
                     "Literal integer too big",
                     owner->parserLiteral.token.line,
@@ -95,6 +100,12 @@ void Literal::LiteralInt::parseInt10(
 
         ASSERT( c>='0' && c<='9' ) << "Decimal literal has character '"<<c<<"' out of allowed range";
         result *= 10;
+        if( result == LimitTruncated && c-'0'>LimitLastDigit )
+            throw IllegalLiteral(
+                    "Literal integer too big",
+                    owner->parserLiteral.token.line,
+                    owner->parserLiteral.token.col );
+
         result += c-'0';
     }
 
