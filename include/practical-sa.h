@@ -195,6 +195,10 @@ namespace PracticalSemanticAnalyzer {
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
         virtual void binaryOperatorMinusSigned(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void binaryOperatorMultiplyUnsigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void binaryOperatorMultiplySigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
     };
 
     class ModuleGen {

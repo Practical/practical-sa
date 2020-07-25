@@ -65,6 +65,9 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_PLUS, "__opAssignPlus" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_RIGHT_SHIFT, "__opAssignShiftRight" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASTERISK, "__opMultiply" );
+    defineMatchingPairs( Operators::bMultiplyCodegenUnsigned, Operators::bMultiplyUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::bMultiplyCodegenSigned, Operators::bMultiplySignedVrp, inserter.first->second, signedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_AND, "__opBitAnd" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_OR, "__opBitOr" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_XOR, "__opBitXor" );

@@ -281,4 +281,101 @@ ValueRangeBase::CPtr bMinusSignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueR
     return ret;
 }
 
+
+// Multiply
+
+ExpressionId bMultiplyCodegenUnsigned(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ASSERT(arguments.size()==2);
+
+    std::array<ExpressionId,2> argumentIds;
+    for( unsigned i=0; i<2; ++i ) {
+        argumentIds[i] = arguments[i].codeGen(functionGen);
+    }
+
+    ExpressionId resultId = ExpressionImpl::Base::allocateId();
+    functionGen->binaryOperatorMultiplyUnsigned(
+            resultId, argumentIds[0], argumentIds[1],
+            std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
+
+    return resultId;
+}
+
+ValueRangeBase::CPtr bMultiplyUnsignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    auto inputRanges = downcastValueRanges<UnsignedIntValueRange>( inputRangesBase );
+    ASSERT( inputRangesBase.size()==2 );
+
+    const UnsignedIntValueRange *typeRange = getUnsignedOverloadRange( funcType, inputRanges );
+    auto ret = UnsignedIntValueRange::allocate( typeRange );
+
+    LongEnoughInt tmpResult;
+    bool overflowed = __builtin_mul_overflow( inputRanges[0]->maximum, inputRanges[1]->maximum, &tmpResult );
+    ret->maximum = tmpResult & typeRange->maximum;
+    if( overflowed || ret->maximum!=tmpResult ) {
+        // We overflowed
+        return typeRange;
+    }
+
+    overflowed = __builtin_mul_overflow( inputRanges[0]->minimum, inputRanges[1]->minimum, &ret->minimum );
+    ASSERT( !overflowed && ret->minimum == (ret->minimum & typeRange->maximum) )<<
+            "Unsigned multiplication minimal value overflowed while maximal did not";
+
+    return ret;
+}
+
+ExpressionId bMultiplyCodegenSigned(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ASSERT(arguments.size()==2);
+
+    std::array<ExpressionId,2> argumentIds;
+    for( unsigned i=0; i<2; ++i ) {
+        argumentIds[i] = arguments[i].codeGen(functionGen);
+    }
+
+    ExpressionId resultId = ExpressionImpl::Base::allocateId();
+    functionGen->binaryOperatorMultiplySigned(
+            resultId, argumentIds[0], argumentIds[1],
+            std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
+
+    return resultId;
+}
+
+ValueRangeBase::CPtr bMultiplySignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    auto inputRanges = downcastValueRanges<SignedIntValueRange>( inputRangesBase );
+    ASSERT( inputRangesBase.size()==2 );
+
+    const SignedIntValueRange *typeRange = getSignedOverloadRange( funcType, inputRanges );
+
+    LongEnoughIntSigned tmp1, tmp2, tmp3, tmp4;
+
+    // XXX We depend on 2's complement representation
+#define CHECK_OVERFLOW(a) ( (a)>0 ? ( ((a)&typeRange->maximum)!=(a)) : ( ((a)&typeRange->minimum) != typeRange->minimum) )
+    bool overflowed = __builtin_mul_overflow( inputRanges[0]->maximum, inputRanges[1]->maximum, &tmp1 ) ||
+            CHECK_OVERFLOW(tmp1);
+    overflowed = overflowed || __builtin_mul_overflow( inputRanges[0]->maximum, inputRanges[1]->minimum, &tmp2 ) ||
+            CHECK_OVERFLOW(tmp2);
+    overflowed = overflowed || __builtin_mul_overflow( inputRanges[0]->minimum, inputRanges[1]->maximum, &tmp3 ) ||
+            CHECK_OVERFLOW(tmp3);
+    overflowed = overflowed || __builtin_mul_overflow( inputRanges[0]->minimum, inputRanges[1]->minimum, &tmp4 ) ||
+            CHECK_OVERFLOW(tmp4);
+#undef CHECK_OVERFLOW
+
+    if( overflowed ) {
+        return typeRange;
+    }
+
+    return SignedIntValueRange::allocate(
+            std::min( std::min(tmp1, tmp2), std::min(tmp3, tmp4) ),
+            std::max( std::max(tmp1, tmp2), std::max(tmp3, tmp4) )
+        );
+}
+
 } // namespace AST::Operators
