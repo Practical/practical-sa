@@ -9,6 +9,7 @@
 #include "ast/expression/binary_op.h"
 
 #include "ast/operators/algebraic_int.h"
+#include "ast/operators/boolean.h"
 #include "tokenizer.h"
 
 #include <experimental/array>
@@ -17,6 +18,22 @@ namespace AST::ExpressionImpl {
 
 // Non member private helpers
 static std::unordered_map< Tokenizer::Tokens, std::string > operatorNames;
+
+static void defineMatchingPairs(
+        LookupContext::Function::Definition::CodeGenProto *codeGenerator,
+        LookupContext::Function::Definition::VrpProto *calcVrp,
+        const std::string &name,
+        StaticTypeImpl::CPtr retType,
+        Slice<const StaticTypeImpl::CPtr> types,
+        LookupContext &builtinCtx)
+{
+    for( auto &type : types ) {
+        builtinCtx.addBuiltinFunction(
+                name,
+                retType, { type, type },
+                codeGenerator, calcVrp );
+    }
+}
 
 static void defineMatchingPairs(
         LookupContext::Function::Definition::CodeGenProto *codeGenerator,
@@ -51,6 +68,7 @@ void BinaryOp::init(LookupContext &builtinCtx) {
         builtinCtx.lookupType( "S32" ),
         builtinCtx.lookupType( "S64" )
     );
+    const StaticTypeImpl::CPtr boolType = builtinCtx.lookupType( "Bool" );
 
     auto inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ARROW, "__opArrow" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN, "__opAssign" );
@@ -64,6 +82,7 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_MULTIPLY, "__opAssignMultiply" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_PLUS, "__opAssignPlus" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASSIGN_RIGHT_SHIFT, "__opAssignShiftRight" );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASTERISK, "__opMultiply" );
     defineMatchingPairs( Operators::bMultiplyCodegenUnsigned, Operators::bMultiplyUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
     defineMatchingPairs( Operators::bMultiplyCodegenSigned, Operators::bMultiplySignedVrp, inserter.first->second, signedTypes, builtinCtx );
@@ -73,6 +92,8 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_XOR, "__opBitXor" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_DIVIDE, "__opDiv" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_EQUALS, "__opEquals" );
+    defineMatchingPairs( Operators::equalsCodegenUnsigned, Operators::equalsVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_GREATER_THAN, "__opGT" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_GREATER_THAN_EQ, "__opGE" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LESS_THAN, "__opLT" );
