@@ -25,35 +25,14 @@ void OverloadResolver::resolveOverloads(
         const Tokenizer::Token *sourceLocation
     )
 {
-    std::vector< const LookupContext::Function::Definition * > relevantOverloads;
-    std::vector< const LookupContext::Function::Definition * > preciseResultOverloads;
-
-    size_t numArguments = parserArguments.size();
-    for( auto &overload : overloads ) {
-        auto overloadType = std::get<const StaticType::Function *>(overload.type->getType());
-        if( overloadType->getNumArguments() == numArguments ) {
-            relevantOverloads.emplace_back( &overload );
-
-            if( expectedResult && static_cast<StaticType::CPtr>(expectedResult.getType()) == overloadType->getReturnType() )
-                preciseResultOverloads.emplace_back( &overload );
-        }
+    if( expectedResult ) {
+        resolveOverloadsByReturn(
+                lookupContext, expectedResult, overloads, weight, weightLimit, metadata, parserArguments,
+                sourceLocation );
+    } else {
+        resolveOverloadsByArguments(
+                lookupContext, overloads, weight, weightLimit, metadata, parserArguments, sourceLocation );
     }
-
-    if( relevantOverloads.size()==0 ) {
-        throw NoMatchingOverload( sourceLocation );
-    }
-
-    if( relevantOverloads.size()==1 ) {
-        // It's the only one that might match. Either it matches or compile error.
-        buildActualCall(
-                lookupContext, expectedResult, weight, weightLimit, relevantOverloads[0], metadata, parserArguments );
-        return;
-    }
-
-    ASSERT( preciseResultOverloads.size()==1 )<<"TODO actual overload _resolution_ is not yet implemented";
-
-    buildActualCall(
-            lookupContext, expectedResult, weight, weightLimit, preciseResultOverloads[0], metadata, parserArguments );
 }
 
 ExpressionId OverloadResolver::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
@@ -62,7 +41,7 @@ ExpressionId OverloadResolver::codeGen( PracticalSemanticAnalyzer::FunctionGen *
 
 // Private
 void OverloadResolver::buildActualCall(
-            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit,
+            LookupContext &lookupContext, unsigned &weight, unsigned weightLimit,
             const LookupContext::Function::Definition *definition,
             ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments )
@@ -98,6 +77,150 @@ void OverloadResolver::buildActualCall(
     metadata.type = std::move(returnType);
 
     this->definition = definition;
+}
+
+void OverloadResolver::resolveOverloadsByReturn(
+        LookupContext &lookupContext,
+        ExpectedResult expectedResult,
+        const std::vector<LookupContext::Function::Definition> &overloads,
+        unsigned &weight,
+        unsigned weightLimit,
+        ExpressionMetadata &metadata,
+        Slice<const NonTerminals::Expression *const> parserArguments,
+        const Tokenizer::Token *sourceLocation
+    )
+{
+    std::unordered_map<
+            StaticType::CPtr,
+            std::vector< const LookupContext::Function::Definition * >
+        > sortedOverloads;
+    size_t numArguments = parserArguments.size();
+
+    for( auto &overload : overloads ) {
+        auto overloadType = std::get<const StaticType::Function *>(overload.type->getType());
+        if( overloadType->getNumArguments() == numArguments ) {
+            sortedOverloads[ overloadType->getReturnType() ].emplace_back( &overload );
+        }
+    }
+
+    if( sortedOverloads.size()==0 ) {
+        throw NoMatchingOverload( sourceLocation );
+    }
+
+    if( sortedOverloads.size()==1 && sortedOverloads.begin()->second.size()==1 ) {
+        // It's the only one that might match. Either it matches or compile error.
+        buildActualCall(
+                lookupContext, weight, weightLimit, *sortedOverloads.begin()->second.begin(), metadata, parserArguments );
+        return;
+    }
+
+    auto currentReturnCandidate = sortedOverloads.find( expectedResult.getType() );
+    if( currentReturnCandidate!=sortedOverloads.end() ) {
+        try {
+            findBestOverloadByArgument(
+                    lookupContext, currentReturnCandidate->second, weight, weightLimit, metadata,
+                    parserArguments, sourceLocation );
+
+            return;
+        } catch( NoMatchingOverload &ex ) {
+        }
+    }
+
+    ABORT()<<"TODO implement";
+
+    /*
+    buildActualCall(
+            lookupContext, expectedResult, weight, weightLimit, preciseResultOverloads[0], metadata, parserArguments );
+    */
+}
+
+void OverloadResolver::resolveOverloadsByArguments(
+        LookupContext &lookupContext,
+        const std::vector<LookupContext::Function::Definition> &overloads,
+        unsigned &weight,
+        unsigned weightLimit,
+        ExpressionMetadata &metadata,
+        Slice<const NonTerminals::Expression *const> parserArguments,
+        const Tokenizer::Token *sourceLocation
+    )
+{
+    std::vector<const LookupContext::Function::Definition *> relevantOverloads;
+    size_t numArguments = parserArguments.size();
+
+    for( auto &overload : overloads ) {
+        auto overloadType = std::get<const StaticType::Function *>(overload.type->getType());
+        if( overloadType->getNumArguments() == numArguments ) {
+            relevantOverloads.emplace_back( &overload );
+        }
+    }
+
+    if( relevantOverloads.size()==0 ) {
+        throw NoMatchingOverload( sourceLocation );
+    }
+
+    if( relevantOverloads.size()==1 ) {
+        // It's the only one that might match. Either it matches or compile error.
+        buildActualCall(
+                lookupContext, weight, weightLimit, relevantOverloads[0], metadata, parserArguments );
+        return;
+    }
+
+    findBestOverloadByArgument(
+            lookupContext, relevantOverloads, weight, weightLimit, metadata, parserArguments, sourceLocation );
+}
+
+void OverloadResolver::findBestOverloadByArgument(
+        LookupContext &lookupContext,
+        Slice< const LookupContext::Function::Definition * > overloads,
+        unsigned &weight,
+        unsigned weightLimit,
+        ExpressionMetadata &metadata,
+        Slice<const NonTerminals::Expression *const> parserArguments,
+        const Tokenizer::Token *sourceLocation
+    )
+{
+    unsigned callWeightLimit = weightLimit - weight;
+    unsigned bestWeight = Base::NoWeightLimit;
+    OverloadResolver bestOverloader;
+    ExpressionMetadata bestMetadata;
+    std::vector< const LookupContext::Function::Definition * > viableOverloads;
+
+    for( auto overload : overloads ) {
+        try {
+            OverloadResolver provisoryResolver;
+            unsigned callWeight = 0;
+            ExpressionMetadata callMetadata;
+
+            provisoryResolver.buildActualCall(
+                    lookupContext, callWeight, callWeightLimit, overload, callMetadata, parserArguments );
+
+            if( callWeight<bestWeight ) {
+                bestWeight = callWeight;
+                callWeightLimit = callWeight;
+                viableOverloads.clear();
+                bestOverloader = std::move( provisoryResolver );
+                bestMetadata = std::move( callMetadata );
+            }
+
+            viableOverloads.emplace_back( overload );
+        } catch( NoMatchingOverload &ex ) {
+        } catch( AmbiguousOverloads &ex ) {
+        } catch( CastError &ex ) {
+        } catch( Base::ExpressionTooExpensive &ex ) {
+        }
+    }
+
+    if( viableOverloads.empty() )
+        throw NoMatchingOverload( sourceLocation );
+
+    if( viableOverloads.size()>1 )
+        throw AmbiguousOverloads( sourceLocation );
+
+    weight += bestWeight;
+    ASSERT( weight<=weightLimit );
+
+    (*this) = std::move( bestOverloader );
+    metadata = std::move( bestMetadata );
 }
 
 } // namespace AST::ExpressionImpl

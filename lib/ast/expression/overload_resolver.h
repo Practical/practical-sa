@@ -35,10 +35,39 @@ public:
 
 private:
     void buildActualCall(
-            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit,
+            LookupContext &lookupContext, unsigned &weight, unsigned weightLimit,
             const LookupContext::Function::Definition *definition,
             ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments );
+
+    void resolveOverloadsByReturn(
+            LookupContext &lookupContext,
+            ExpectedResult expectedResult,
+            const std::vector<LookupContext::Function::Definition> &overloads,
+            unsigned &weight,
+            unsigned weightLimit,
+            ExpressionMetadata &metadata,
+            Slice<const NonTerminals::Expression *const> parserArguments,
+            const Tokenizer::Token *sourceLocation
+        );
+    void resolveOverloadsByArguments(
+            LookupContext &lookupContext,
+            const std::vector<LookupContext::Function::Definition> &overloads,
+            unsigned &weight,
+            unsigned weightLimit,
+            ExpressionMetadata &metadata,
+            Slice<const NonTerminals::Expression *const> parserArguments,
+            const Tokenizer::Token *sourceLocation
+        );
+    void findBestOverloadByArgument(
+            LookupContext &lookupContext,
+            Slice< const LookupContext::Function::Definition * > overloads,
+            unsigned &weight,
+            unsigned weightLimit,
+            ExpressionMetadata &metadata,
+            Slice<const NonTerminals::Expression *const> parserArguments,
+            const Tokenizer::Token *sourceLocation
+        );
 };
 
 } // namespace AST::ExpressionImpl

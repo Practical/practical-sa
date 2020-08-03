@@ -70,6 +70,12 @@ NoMatchingOverload::NoMatchingOverload(const Tokenizer::Token *identifier) :
     setMsg( "Trying to call function with no matching overload" );
 }
 
+AmbiguousOverloads::AmbiguousOverloads(const Tokenizer::Token *identifier) :
+    compile_error(identifier->line, identifier->col)
+{
+    setMsg( "Trying to call function with ambiguous overload resolution" );
+}
+
 CastError::CastError(const char *msg, StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
         : compile_error(line, col)
 {

@@ -113,6 +113,11 @@ public:
     NoMatchingOverload(const Tokenizer::Token *identifier);
 };
 
+class AmbiguousOverloads : public compile_error {
+public:
+    AmbiguousOverloads(const Tokenizer::Token *identifier);
+};
+
 class CastError : public compile_error {
 public:
     CastError(const char *msg, StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
