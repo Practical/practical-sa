@@ -51,6 +51,10 @@ std::unique_ptr<CastChain> CastChain::allocate(
                 castDescriptor!=nullptr &&
                 castDescriptor->whenPossible!=LookupContext::CastDescriptor::ImplicitCastAllowed::Never )
         {
+            if( weight+castDescriptor->weight > weightLimit ) {
+                throw ExpressionImpl::Base::ExpressionTooExpensive();
+            }
+            weight += castDescriptor->weight;
             return fastPathAllocate( castDescriptor, srcMetadata );
         }
     }
