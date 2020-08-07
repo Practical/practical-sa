@@ -106,7 +106,9 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     defineMatchingPairs( Operators::bMinusCodegenSigned, Operators::bMinusSignedVrp, inserter.first->second, signedTypes, builtinCtx );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MODULOUS, "__opMod" );
-    inserter = operatorNames.emplace( Tokenizer::Tokens::OP_NOT_EQUALS, "__opEQ" );
+    inserter = operatorNames.emplace( Tokenizer::Tokens::OP_NOT_EQUALS, "__opNE" );
+    defineMatchingPairs( Operators::notEqualsCodegenInt, Operators::notEqualsVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::notEqualsCodegenInt, Operators::notEqualsVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_PLUS, "__opPlus" );
     defineMatchingPairs( Operators::bPlusCodegenUnsigned, Operators::bPlusUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );

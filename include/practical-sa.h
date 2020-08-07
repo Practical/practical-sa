@@ -204,6 +204,8 @@ namespace PracticalSemanticAnalyzer {
         // Comparison operators
         virtual void operatorEquals(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void operatorNotEquals(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
     };
 
     class ModuleGen {
