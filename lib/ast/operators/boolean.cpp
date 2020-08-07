@@ -14,7 +14,7 @@
 
 namespace AST::Operators {
 
-ExpressionId equalsCodegenUnsigned(
+ExpressionId equalsCodegenInt(
         Slice<const Expression> arguments,
         const LookupContext::Function::Definition *definition,
         PracticalSemanticAnalyzer::FunctionGen *functionGen)
@@ -34,9 +34,10 @@ ExpressionId equalsCodegenUnsigned(
     return resultId;
 }
 
-ValueRangeBase::CPtr equalsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+template<typename VR>
+static ValueRangeBase::CPtr equalsVrpImpl(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase)
 {
-    auto inputRanges = downcastValueRanges<UnsignedIntValueRange>( inputRangesBase );
+    auto inputRanges = downcastValueRanges<VR>( inputRangesBase );
     ASSERT( inputRangesBase.size()==2 );
 
     // True is not an option iff there is no intersection between the ranges
@@ -51,6 +52,14 @@ ValueRangeBase::CPtr equalsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<Val
         return BoolValueRange::allocate( true, false );
 
     return BoolValueRange::allocate( true, true );
+}
+
+ValueRangeBase::CPtr equalsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase) {
+    return equalsVrpImpl<UnsignedIntValueRange>( std::move(functType), inputRangesBase );
+}
+
+ValueRangeBase::CPtr equalsVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase) {
+    return equalsVrpImpl<SignedIntValueRange>( std::move(functType), inputRangesBase );
 }
 
 } // namespace AST::Operators

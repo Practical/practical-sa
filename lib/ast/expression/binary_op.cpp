@@ -92,7 +92,8 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_XOR, "__opBitXor" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_DIVIDE, "__opDiv" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_EQUALS, "__opEquals" );
-    defineMatchingPairs( Operators::equalsCodegenUnsigned, Operators::equalsVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::equalsCodegenInt, Operators::equalsVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::equalsCodegenInt, Operators::equalsVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_GREATER_THAN, "__opGT" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_GREATER_THAN_EQ, "__opGE" );

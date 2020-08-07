@@ -15,9 +15,10 @@
 
 namespace AST::Operators {
 
-ExpressionId equalsCodegenUnsigned(
+ExpressionId equalsCodegenInt(
         Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 ValueRangeBase::CPtr equalsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+ValueRangeBase::CPtr equalsVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
 } // namespace AST::Operators
 
