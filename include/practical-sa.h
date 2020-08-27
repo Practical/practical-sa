@@ -200,6 +200,8 @@ namespace PracticalSemanticAnalyzer {
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
         virtual void binaryOperatorMultiplySigned(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void binaryOperatorDivideUnsigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
 
         // Comparison operators
         virtual void operatorEquals(

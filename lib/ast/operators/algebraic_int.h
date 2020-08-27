@@ -45,6 +45,12 @@ ExpressionId bMultiplyCodegenSigned(
         Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 ValueRangeBase::CPtr bMultiplySignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
+
+
+ExpressionId bDivideCodegenUnsigned(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr bDivideUnsignedVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
 } // namespace AST::Operators
 
 #endif // AST_OPERATORS_ALGEBRAIC_INT_H

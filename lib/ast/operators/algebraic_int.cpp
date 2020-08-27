@@ -378,4 +378,40 @@ ValueRangeBase::CPtr bMultiplySignedVrp(StaticTypeImpl::CPtr funcType, Slice<Val
         );
 }
 
+// Divide
+ExpressionId bDivideCodegenUnsigned(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ASSERT(arguments.size()==2);
+
+    std::array<ExpressionId,2> argumentIds;
+    for( unsigned i=0; i<2; ++i ) {
+        argumentIds[i] = arguments[i].codeGen(functionGen);
+    }
+
+    ExpressionId resultId = ExpressionImpl::Base::allocateId();
+    functionGen->binaryOperatorDivideUnsigned(
+            resultId, argumentIds[0], argumentIds[1],
+            std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
+
+    return resultId;
+}
+
+ValueRangeBase::CPtr bDivideUnsignedVrp(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    auto inputRanges = downcastValueRanges<UnsignedIntValueRange>( inputRangesBase );
+    ASSERT( inputRangesBase.size()==2 );
+
+    const UnsignedIntValueRange *typeRange = getUnsignedOverloadRange( funcType, inputRanges );
+    auto ret = UnsignedIntValueRange::allocate( typeRange );
+
+    ret->maximum = inputRanges[0]->maximum / inputRanges[1]->minimum;
+    ret->minimum = inputRanges[0]->minimum / inputRanges[1]->maximum;
+
+    return ret;
+}
+
+
 } // namespace AST::Operators

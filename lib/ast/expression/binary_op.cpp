@@ -91,6 +91,8 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_OR, "__opBitOr" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_XOR, "__opBitXor" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_DIVIDE, "__opDiv" );
+    defineMatchingPairs( Operators::bDivideCodegenUnsigned, Operators::bDivideUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_EQUALS, "__opEquals" );
     defineMatchingPairs( Operators::equalsCodegenInt, Operators::equalsVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
     defineMatchingPairs( Operators::equalsCodegenInt, Operators::equalsVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
@@ -136,7 +138,7 @@ void BinaryOp::buildASTImpl(
 {
     String baseName = opToFuncName( parserOp.op->token );
     auto identifier = lookupContext.lookupIdentifier( baseName );
-    ASSERT( identifier );
+    ASSERT( identifier )<<"Operator "<<parserOp.op->token<<" is not yet implemented by the compiler";
     const LookupContext::Function &function =
             std::get<LookupContext::Function>(*identifier);
 
