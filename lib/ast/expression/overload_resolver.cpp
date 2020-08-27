@@ -116,6 +116,15 @@ void OverloadResolver::resolveOverloadsByReturn(
 
     auto currentReturnCandidate = sortedOverloads.find( expectedResult.getType() );
     if( currentReturnCandidate!=sortedOverloads.end() ) {
+        ASSERT( ! currentReturnCandidate->second.empty() );
+
+        if( currentReturnCandidate->second.size()==1 ) {
+            // Only one overload matches the return type exactly
+            buildActualCall(
+                    lookupContext, weight, weightLimit, currentReturnCandidate->second[0], metadata, parserArguments );
+            return;
+        }
+
         try {
             findBestOverloadByArgument(
                     lookupContext, currentReturnCandidate->second, weight, weightLimit, metadata,
