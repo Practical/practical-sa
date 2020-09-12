@@ -14,10 +14,16 @@
 
 namespace AST::Operators {
 
-ExpressionId equalsCodegenInt(
+using namespace PracticalSemanticAnalyzer;
+
+template<
+    void (FunctionGen::*generator)(
+                ExpressionId, ExpressionId, ExpressionId, StaticType::CPtr )
+        >
+static ExpressionId genericCodeGen(
         Slice<const Expression> arguments,
         const LookupContext::Function::Definition *definition,
-        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+        FunctionGen *functionGen)
 {
     ASSERT(arguments.size()==2);
 
@@ -27,11 +33,19 @@ ExpressionId equalsCodegenInt(
     }
 
     ExpressionId resultId = ExpressionImpl::Base::allocateId();
-    functionGen->operatorEquals(
+    (functionGen->*generator)(
             resultId, argumentIds[0], argumentIds[1],
             std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
 
     return resultId;
+}
+
+ExpressionId equalsCodegenInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorEquals >(arguments, definition, functionGen);
 }
 
 template<typename VR, bool negate>
@@ -42,7 +56,7 @@ static ValueRangeBase::CPtr equalsVrpImpl(StaticTypeImpl::CPtr functType, Slice<
 
     // True is not an option iff there is no intersection between the ranges
     if( inputRanges[0]->maximum<inputRanges[1]->minimum || inputRanges[0]->minimum > inputRanges[1]->maximum ) {
-        if( !negate )
+        if constexpr( !negate )
             return BoolValueRange::allocate( false, true );
         else
             return BoolValueRange::allocate( true, false );
@@ -53,7 +67,7 @@ static ValueRangeBase::CPtr equalsVrpImpl(StaticTypeImpl::CPtr functType, Slice<
             inputRanges[0]->isLiteral() && inputRanges[1]->isLiteral() &&
             inputRanges[0]->minimum==inputRanges[1]->minimum
       ) {
-        if( !negate )
+        if constexpr( !negate )
             return BoolValueRange::allocate( true, false );
         else
             return BoolValueRange::allocate( false, true );
@@ -75,19 +89,7 @@ ExpressionId notEqualsCodegenInt(
         const LookupContext::Function::Definition *definition,
         PracticalSemanticAnalyzer::FunctionGen *functionGen)
 {
-    ASSERT(arguments.size()==2);
-
-    std::array<ExpressionId,2> argumentIds;
-    for( unsigned i=0; i<2; ++i ) {
-        argumentIds[i] = arguments[i].codeGen(functionGen);
-    }
-
-    ExpressionId resultId = ExpressionImpl::Base::allocateId();
-    functionGen->operatorNotEquals(
-            resultId, argumentIds[0], argumentIds[1],
-            std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
-
-    return resultId;
+    return genericCodeGen< &FunctionGen::operatorNotEquals >(arguments, definition, functionGen);
 }
 
 ValueRangeBase::CPtr notEqualsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase) {
@@ -96,6 +98,69 @@ ValueRangeBase::CPtr notEqualsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<
 
 ValueRangeBase::CPtr notEqualsVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase) {
     return equalsVrpImpl<SignedIntValueRange, true>( std::move(functType), inputRangesBase );
+}
+
+
+template<typename VR, bool Equals, bool Negate>
+static ValueRangeBase::CPtr lessThanVrpImpl(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    auto inputRanges = downcastValueRanges<VR>( inputRangesBase );
+    ASSERT( inputRangesBase.size()==2 );
+
+    // Cannot be True iff left is entirely above right
+    if(
+            inputRanges[0]->minimum >= inputRanges[1]->maximum && (
+                !Equals ||
+                inputRanges[0]->minimum != inputRanges[1]->maximum
+            )
+      )
+    {
+        if constexpr( !Negate )
+            return BoolValueRange::allocate( true, false );
+        else
+            return BoolValueRange::allocate( false, true );
+    }
+
+    // Cannot be False iff left is entirely below right
+    if(
+            inputRanges[0]->maximum <= inputRanges[1]->minimum && (
+                Equals ||
+                inputRanges[0]->maximum != inputRanges[1]->minimum )
+      )
+    {
+        if constexpr( !Negate )
+            return BoolValueRange::allocate( false, true );
+        else
+            return BoolValueRange::allocate( true, false );
+    }
+
+    return BoolValueRange::allocate( true, true );
+}
+
+ExpressionId lessThanCodegenUInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorLessThanUnsigned >(arguments, definition, functionGen);
+}
+
+ValueRangeBase::CPtr lessThanVrpUnsigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
+{
+    return lessThanVrpImpl< UnsignedIntValueRange, false, false >( std::move(funcType), inputRanges );
+}
+
+ExpressionId lessThanCodegenSInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorLessThanSigned >(arguments, definition, functionGen);
+}
+
+ValueRangeBase::CPtr lessThanVrpSigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
+{
+    return lessThanVrpImpl< SignedIntValueRange, false, false >( std::move(funcType), inputRanges );
 }
 
 } // namespace AST::Operators

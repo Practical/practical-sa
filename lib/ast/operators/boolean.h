@@ -25,6 +25,14 @@ ExpressionId notEqualsCodegenInt(
 ValueRangeBase::CPtr notEqualsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 ValueRangeBase::CPtr notEqualsVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
+
+ExpressionId lessThanCodegenUInt(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr lessThanVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+ExpressionId lessThanCodegenSInt(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr lessThanVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
 } // namespace AST::Operators
 
 #endif // AST_OPERATORS_BOOLEAN_H

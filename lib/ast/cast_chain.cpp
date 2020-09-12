@@ -185,11 +185,11 @@ std::unique_ptr<CastChain> CastChain::allocate(
     std::unique_ptr<CastChain> ret( new CastChain( nullptr, *currentCast ) );
 
     const ExpressionImpl::ExpressionMetadata *lastMetadata = &srcMetadata;
-    goto midenter;
+    goto skipSettingRet;
     do {
         ret = std::unique_ptr<CastChain>( new CastChain( std::move(ret), *currentCast ) );
 
-midenter:
+skipSettingRet:
         ASSERT( currentCast->calcVrp != nullptr );
         ret->metadata.valueRange = currentCast->calcVrp(
                 currentCast->sourceType.get(), currentCast->destType.get(),

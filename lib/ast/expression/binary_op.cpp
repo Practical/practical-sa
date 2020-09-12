@@ -100,6 +100,9 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_GREATER_THAN, "__opGT" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_GREATER_THAN_EQ, "__opGE" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LESS_THAN, "__opLT" );
+    defineMatchingPairs( Operators::lessThanCodegenUInt, Operators::lessThanVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::lessThanCodegenSInt, Operators::lessThanVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LESS_THAN_EQ, "__opLE" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_AND, "__opAnd" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_OR, "__opOr" );
