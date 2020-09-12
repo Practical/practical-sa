@@ -29,9 +29,38 @@ ValueRangeBase::CPtr notEqualsVrpSigned(StaticTypeImpl::CPtr functType, Slice<Va
 ExpressionId lessThanCodegenUInt(
         Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 ValueRangeBase::CPtr lessThanVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
 ExpressionId lessThanCodegenSInt(
         Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 ValueRangeBase::CPtr lessThanVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+
+ExpressionId lessThanOrEqualsCodegenUInt(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr lessThanOrEqualsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+ExpressionId lessThanOrEqualsCodegenSInt(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr lessThanOrEqualsVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+
+ExpressionId greaterThenCodegenUInt(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr greaterThenVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+ExpressionId greaterThenCodegenSInt(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr greaterThenVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+
+ExpressionId greaterThenOrEqualsCodegenUInt(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr greaterThenOrEqualsVrpUnsigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
+ExpressionId greaterThenOrEqualsCodegenSInt(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr greaterThenOrEqualsVrpSigned(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
 
 } // namespace AST::Operators
 

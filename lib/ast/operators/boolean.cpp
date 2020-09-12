@@ -163,4 +163,85 @@ ValueRangeBase::CPtr lessThanVrpSigned(StaticTypeImpl::CPtr funcType, Slice<Valu
     return lessThanVrpImpl< SignedIntValueRange, false, false >( std::move(funcType), inputRanges );
 }
 
+
+ExpressionId lessThanOrEqualsCodegenUInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorLessThanOrEqualsUnsigned >(arguments, definition, functionGen);
+}
+
+ValueRangeBase::CPtr lessThanOrEqualsVrpUnsigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
+{
+    return lessThanVrpImpl< UnsignedIntValueRange, true, false >( std::move(funcType), inputRanges );
+}
+
+ExpressionId lessThanOrEqualsCodegenSInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorLessThanOrEqualsSigned >(arguments, definition, functionGen);
+}
+
+ValueRangeBase::CPtr lessThanOrEqualsVrpSigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
+{
+    return lessThanVrpImpl< SignedIntValueRange, true, false >( std::move(funcType), inputRanges );
+}
+
+
+ExpressionId greaterThenCodegenUInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorGreaterThanUnsigned >(arguments, definition, functionGen);
+}
+
+ValueRangeBase::CPtr greaterThenVrpUnsigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
+{
+    return lessThanVrpImpl< UnsignedIntValueRange, true, true >( std::move(funcType), inputRanges );
+}
+
+ExpressionId greaterThenCodegenSInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorGreaterThanSigned >(arguments, definition, functionGen);
+}
+
+ValueRangeBase::CPtr greaterThenVrpSigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
+{
+    return lessThanVrpImpl< SignedIntValueRange, true, true >( std::move(funcType), inputRanges );
+}
+
+
+ExpressionId greaterThenOrEqualsCodegenUInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorGreaterThanOrEqualsUnsigned >(arguments, definition, functionGen);
+}
+
+ValueRangeBase::CPtr greaterThenOrEqualsVrpUnsigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
+{
+    return lessThanVrpImpl< UnsignedIntValueRange, false, true >( std::move(funcType), inputRanges );
+}
+
+ExpressionId greaterThenOrEqualsCodegenSInt(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    return genericCodeGen< &FunctionGen::operatorGreaterThanOrEqualsSigned >(arguments, definition, functionGen);
+}
+
+ValueRangeBase::CPtr greaterThenOrEqualsVrpSigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
+{
+    return lessThanVrpImpl< SignedIntValueRange, false, true >( std::move(funcType), inputRanges );
+}
+
 } // namespace AST::Operators

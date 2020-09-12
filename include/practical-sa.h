@@ -212,6 +212,18 @@ namespace PracticalSemanticAnalyzer {
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
         virtual void operatorLessThanSigned(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void operatorLessThanOrEqualsUnsigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void operatorLessThanOrEqualsSigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void operatorGreaterThanUnsigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void operatorGreaterThanSigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void operatorGreaterThanOrEqualsUnsigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+        virtual void operatorGreaterThanOrEqualsSigned(
+                ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
     };
 
     class ModuleGen {

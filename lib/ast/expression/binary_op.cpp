@@ -98,12 +98,21 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     defineMatchingPairs( Operators::equalsCodegenInt, Operators::equalsVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_GREATER_THAN, "__opGT" );
+    defineMatchingPairs( Operators::greaterThenCodegenUInt, Operators::greaterThenVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::greaterThenCodegenSInt, Operators::greaterThenVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_GREATER_THAN_EQ, "__opGE" );
+    defineMatchingPairs( Operators::greaterThenOrEqualsCodegenUInt, Operators::greaterThenOrEqualsVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::greaterThenOrEqualsCodegenSInt, Operators::greaterThenOrEqualsVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LESS_THAN, "__opLT" );
     defineMatchingPairs( Operators::lessThanCodegenUInt, Operators::lessThanVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
     defineMatchingPairs( Operators::lessThanCodegenSInt, Operators::lessThanVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
 
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LESS_THAN_EQ, "__opLE" );
+    defineMatchingPairs( Operators::lessThanOrEqualsCodegenUInt, Operators::lessThanOrEqualsVrpUnsigned, inserter.first->second, boolType, unsignedTypes, builtinCtx );
+    defineMatchingPairs( Operators::lessThanOrEqualsCodegenSInt, Operators::lessThanOrEqualsVrpSigned, inserter.first->second, boolType, signedTypes, builtinCtx );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_AND, "__opAnd" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_OR, "__opOr" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MINUS, "__opMinus" );
