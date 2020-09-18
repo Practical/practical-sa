@@ -117,6 +117,9 @@ void BinaryOp::init(LookupContext &builtinCtx) {
     builtinCtx.addBuiltinFunction(
             inserter.first->second, boolType, { boolType, boolType }, Operators::logicalAnd, Operators::logicalAndVrp );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_LOGIC_OR, "__opOr" );
+    builtinCtx.addBuiltinFunction(
+            inserter.first->second, boolType, { boolType, boolType }, Operators::logicalOr, Operators::logicalOrVrp );
+
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MINUS, "__opMinus" );
     defineMatchingPairs( Operators::bMinusCodegenUnsigned, Operators::bMinusUnsignedVrp, inserter.first->second, unsignedTypes, builtinCtx );
     defineMatchingPairs( Operators::bMinusCodegenSigned, Operators::bMinusSignedVrp, inserter.first->second, signedTypes, builtinCtx );

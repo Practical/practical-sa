@@ -297,4 +297,57 @@ ValueRangeBase::CPtr logicalAndVrp(
             inputRanges[0]->trueAllowed && inputRanges[1]->trueAllowed );
 }
 
+
+ExpressionId logicalOr(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ASSERT(arguments.size()==2);
+
+    /* We are effectively codegening the following code:
+     * if( left ) {
+     *   true
+     * } else {
+     *   right
+     * }
+     */
+
+    ExpressionId leftArgumentId = arguments[0].codeGen(functionGen);
+    ExpressionId resultId = ExpressionImpl::Base::allocateId();
+
+    JumpPointId elsePoint = jumpPointAllocator.allocate(),
+                contPoint = jumpPointAllocator.allocate();
+
+    functionGen->conditionalBranch( resultId, definition->returnType(), leftArgumentId, elsePoint, contPoint );
+
+    // Then clause - left side was true
+    ExpressionId literalTrue = ExpressionImpl::Base::allocateId();
+    functionGen->setLiteral( literalTrue, true );
+    // This is the expression's result
+    functionGen->setConditionClauseResult( literalTrue );
+
+
+    functionGen->setJumpPoint( elsePoint );
+    // Else clause - left side was false
+    ExpressionId rightArgumentId = arguments[1].codeGen(functionGen);
+
+    functionGen->setConditionClauseResult( rightArgumentId );
+
+    // Continuation
+    functionGen->setJumpPoint( contPoint );
+
+    return resultId;
+}
+
+ValueRangeBase::CPtr logicalOrVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    ASSERT( inputRangesBase.size()==2 );
+    auto inputRanges = downcastValueRanges<BoolValueRange>( inputRangesBase );
+
+    return new BoolValueRange(
+            inputRanges[0]->falseAllowed && inputRanges[1]->falseAllowed,
+            inputRanges[0]->trueAllowed || inputRanges[1]->trueAllowed );
+}
+
 } // namespace AST::Operators
