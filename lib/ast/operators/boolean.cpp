@@ -9,6 +9,7 @@
 #include "ast/operators/boolean.h"
 
 #include "ast/operators/helper.h"
+#include "ast/ast.h"
 #include "ast/bool_value_range.h"
 #include "ast/unsigned_int_value_range.h"
 
@@ -51,8 +52,8 @@ ExpressionId equalsCodegenInt(
 template<typename VR, bool negate>
 static ValueRangeBase::CPtr equalsVrpImpl(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase)
 {
-    auto inputRanges = downcastValueRanges<VR>( inputRangesBase );
     ASSERT( inputRangesBase.size()==2 );
+    auto inputRanges = downcastValueRanges<VR>( inputRangesBase );
 
     // True is not an option iff there is no intersection between the ranges
     if( inputRanges[0]->maximum<inputRanges[1]->minimum || inputRanges[0]->minimum > inputRanges[1]->maximum ) {
@@ -242,6 +243,58 @@ ExpressionId greaterThenOrEqualsCodegenSInt(
 ValueRangeBase::CPtr greaterThenOrEqualsVrpSigned(StaticTypeImpl::CPtr funcType, Slice<ValueRangeBase::CPtr> inputRanges)
 {
     return lessThanVrpImpl< SignedIntValueRange, false, true >( std::move(funcType), inputRanges );
+}
+
+
+ExpressionId logicalAnd(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ASSERT(arguments.size()==2);
+
+    /* We are effectively codegening the following code:
+     * if( left ) {
+     *   right
+     * } else {
+     *   false
+     * }
+     */
+
+    ExpressionId leftArgumentId = arguments[0].codeGen(functionGen);
+    ExpressionId resultId = ExpressionImpl::Base::allocateId();
+
+    JumpPointId elsePoint = jumpPointAllocator.allocate(),
+                contPoint = jumpPointAllocator.allocate();
+
+    functionGen->conditionalBranch( resultId, definition->returnType(), leftArgumentId, elsePoint, contPoint );
+
+    // Then clause - left side was true
+    ExpressionId rightArgumentId = arguments[1].codeGen(functionGen);
+    // This is the expression's result
+    functionGen->setConditionClauseResult( rightArgumentId );
+
+    functionGen->setJumpPoint( elsePoint );
+    // Else clause - left side was false
+    ExpressionId literalFalse = ExpressionImpl::Base::allocateId();
+    functionGen->setLiteral( literalFalse, false );
+    functionGen->setConditionClauseResult( literalFalse );
+
+    // Continuation
+    functionGen->setJumpPoint( contPoint );
+
+    return resultId;
+}
+
+ValueRangeBase::CPtr logicalAndVrp(
+        StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    ASSERT( inputRangesBase.size()==2 );
+    auto inputRanges = downcastValueRanges<BoolValueRange>( inputRangesBase );
+
+    return new BoolValueRange(
+            inputRanges[0]->falseAllowed || inputRanges[1]->falseAllowed,
+            inputRanges[0]->trueAllowed && inputRanges[1]->trueAllowed );
 }
 
 } // namespace AST::Operators

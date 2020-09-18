@@ -19,6 +19,11 @@ using namespace PracticalSemanticAnalyzer;
 
 namespace AST {
 
+StaticType::CPtr LookupContext::Function::Definition::returnType() const {
+    auto functionType = std::get<const StaticType::Function *>( type->getType() );
+    return functionType->getReturnType();
+}
+
 StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
     auto iter = types.find( sliceToString(name) );
 

@@ -52,6 +52,8 @@ public:
 
             Definition( const std::string &name ) : mangledName(name) {}
             explicit Definition( const Tokenizer::Token *token ) : token(token) {}
+
+            StaticType::CPtr returnType() const;
         };
 
         std::unordered_map<const Tokenizer::Token *, unsigned> firstPassOverloads;

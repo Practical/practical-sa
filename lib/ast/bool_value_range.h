@@ -17,15 +17,14 @@
 namespace AST {
 
 class BoolValueRange final : public ValueRangeBase {
+public:
     bool falseAllowed = true;
     bool trueAllowed = true;
 
-private:
     BoolValueRange( bool falseAllowed, bool trueAllowed ) :
         falseAllowed(falseAllowed), trueAllowed(trueAllowed)
     {}
 
-public:
     bool isLiteral() const override {
         return (trueAllowed && !falseAllowed) || (!trueAllowed && falseAllowed);
     }
