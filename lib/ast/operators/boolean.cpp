@@ -342,12 +342,39 @@ ExpressionId logicalOr(
 
 ValueRangeBase::CPtr logicalOrVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase)
 {
-    ASSERT( inputRangesBase.size()==2 );
+    ASSERT( inputRangesBase.size()==2 )<<"Expected value ranges for two arguments, got "<<inputRangesBase.size();
     auto inputRanges = downcastValueRanges<BoolValueRange>( inputRangesBase );
 
     return new BoolValueRange(
             inputRanges[0]->falseAllowed && inputRanges[1]->falseAllowed,
             inputRanges[0]->trueAllowed || inputRanges[1]->trueAllowed );
+}
+
+
+ExpressionId logicalNot(
+        Slice<const Expression> arguments,
+        const LookupContext::Function::Definition *definition,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen)
+{
+    ASSERT(arguments.size()==1);
+
+    ExpressionId argumentId = arguments[0].codeGen(functionGen);
+    ExpressionId resultId = ExpressionImpl::Base::allocateId();
+
+    functionGen->operatorLogicalNot( resultId, argumentId );
+
+    return resultId;
+}
+
+ValueRangeBase::CPtr logicalNotVrp(
+        StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRangesBase)
+{
+    ASSERT( inputRangesBase.size()==1 )
+            <<"Expected value ranges for one argument, got "<<inputRangesBase.size();
+    auto inputRanges = downcastValueRanges<BoolValueRange>( inputRangesBase );
+
+    return new BoolValueRange(
+            inputRanges[0]->trueAllowed, inputRanges[0]->falseAllowed );
 }
 
 } // namespace AST::Operators

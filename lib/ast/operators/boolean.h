@@ -73,6 +73,12 @@ ExpressionId logicalOr(
         Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
 ValueRangeBase::CPtr logicalOrVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
+
+// !
+ExpressionId logicalNot(
+        Slice<const Expression>, const LookupContext::Function::Definition *, PracticalSemanticAnalyzer::FunctionGen *);
+ValueRangeBase::CPtr logicalNotVrp(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
+
 } // namespace AST::Operators
 
 #endif // AST_OPERATORS_BOOLEAN_H

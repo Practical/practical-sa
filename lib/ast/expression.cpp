@@ -12,9 +12,10 @@
 #include "ast/expression/cast_op.h"
 #include "ast/expression/compound_expression.h"
 #include "ast/expression/conditional_expression.h"
-#include "ast/expression/identifier.h"
 #include "ast/expression/function_call.h"
+#include "ast/expression/identifier.h"
 #include "ast/expression/literal.h"
+#include "ast/expression/unary_op.h"
 
 using namespace PracticalSemanticAnalyzer;
 
@@ -66,7 +67,10 @@ void Expression::buildASTImpl(
         }
 
         void operator()( const NonTerminals::Expression::UnaryOperator &op ) {
-            ABORT()<<"TODO implement";
+            auto unaryOp = safenew<ExpressionImpl::UnaryOp>(op);
+
+            unaryOp->buildAST( lookupContext, expectedResult, weight, weightLimit );
+            _this->actualExpression = std::move(unaryOp);
         }
 
         void operator()( const NonTerminals::Expression::BinaryOperator &op ) {

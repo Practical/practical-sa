@@ -224,6 +224,10 @@ namespace PracticalSemanticAnalyzer {
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
         virtual void operatorGreaterThanOrEqualsSigned(
                 ExpressionId id, ExpressionId left, ExpressionId right, StaticType::CPtr resultType ) = 0;
+
+
+        // Unary operators
+        virtual void operatorLogicalNot( ExpressionId id, ExpressionId argument ) = 0;
     };
 
     class ModuleGen {

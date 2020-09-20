@@ -50,7 +50,7 @@ static void defineMatchingPairs(
     }
 }
 
-String opToFuncName( Tokenizer::Tokens token ) {
+static String opToFuncName( Tokenizer::Tokens token ) {
     return operatorNames.at(token);
 }
 
@@ -155,7 +155,7 @@ void BinaryOp::buildASTImpl(
 {
     String baseName = opToFuncName( parserOp.op->token );
     auto identifier = lookupContext.lookupIdentifier( baseName );
-    ASSERT( identifier )<<"Operator "<<parserOp.op->token<<" is not yet implemented by the compiler";
+    ASSERT( identifier )<<"Binary operator "<<parserOp.op->token<<" is not yet implemented by the compiler";
     const LookupContext::Function &function =
             std::get<LookupContext::Function>(*identifier);
 
