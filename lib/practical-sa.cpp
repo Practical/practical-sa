@@ -48,14 +48,22 @@ bool StaticType::Function::operator==( const Function &rhs ) const {
     ABORT()<<"TODO implement";
 }
 
+bool StaticType::Pointer::operator==( const Pointer &rhs ) const {
+    return getPointedType() == rhs.getPointedType();
+}
+
 String StaticType::getMangledName() const {
     struct Visitor {
+        String operator()( const Scalar *scalar ) {
+            return scalar->getMangledName();
+        }
+
         String operator()( const Function *function ) {
             return function->getMangledName();
         }
 
-        String operator()( const Scalar *scalar ) {
-            return scalar->getMangledName();
+        String operator()( const Pointer *pointer ) {
+            return pointer->getMangledName();
         }
     };
 
@@ -79,6 +87,10 @@ bool StaticType::operator==( const StaticType &rhs ) const {
         bool operator()( const StaticType::Function *function ) {
             return (*function)==*( std::get<const Function *>( rightTypes ) );
         }
+
+        bool operator()( const StaticType::Pointer *pointer ) {
+            return (*pointer)==*( std::get<const Pointer *>( rightTypes ) );
+        }
     };
 
     return std::visit( Visitor{ .rightTypes = rhs.getType() }, getType() );
@@ -100,6 +112,10 @@ std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
                 out<<function->getArgumentType(argNum);
             }
             out<<")->"<<function->getReturnType();
+        }
+
+        void operator()( const StaticType::Pointer *pointer ) {
+            out << pointer->getPointedType() << "*";
         }
     };
 
@@ -141,6 +157,8 @@ using namespace PracticalSemanticAnalyzer;
 namespace std {
 
 size_t hash< StaticType >::operator()(const StaticType &type) const {
+    static constexpr size_t PointerModifier = 20;
+
     auto typeType = type.getType();
 
     struct Visitor {
@@ -160,6 +178,10 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
             result += hash{}( *function->getReturnType() );
 
             return result;
+        }
+
+        size_t operator()( const StaticType::Pointer *pointer ) {
+            return hash{}( *pointer->getPointedType() ) * (FibonacciHashMultiplier - PointerModifier);
         }
     };
 

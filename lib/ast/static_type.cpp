@@ -41,6 +41,19 @@ StaticType::CPtr FunctionTypeImpl::getArgumentType( unsigned index ) const {
     return argumentTypes[index];
 }
 
+String PointerTypeImpl::getMangledName() const {
+    if( mangledName.empty() ) {
+        mangledName = "p";
+        mangledName += sliceToString( pointed->getMangledName() );
+    }
+
+    return mangledName;
+}
+
+PracticalSemanticAnalyzer::StaticType::CPtr PointerTypeImpl::getPointedType() const {
+    return pointed;
+}
+
 StaticType::Types StaticTypeImpl::getType() const {
     struct Visitor {
         const StaticType *_this;
@@ -51,6 +64,10 @@ StaticType::Types StaticTypeImpl::getType() const {
 
         Types operator()( const std::unique_ptr<FunctionTypeImpl> &function ) {
             return function.get();
+        }
+
+        Types operator()( const PointerTypeImpl &ptr ) {
+            return &ptr;
         }
     };
 
@@ -85,6 +102,10 @@ StaticTypeImpl::StaticTypeImpl( FunctionTypeImpl &&function ) :
     content( safenew<FunctionTypeImpl>( std::move(function) ) )
 {
 }
+
+StaticTypeImpl::StaticTypeImpl( PointerTypeImpl &&ptr ) :
+    content( std::move(ptr) )
+{}
 
 std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &type )
 {

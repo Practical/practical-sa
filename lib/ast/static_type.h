@@ -74,11 +74,23 @@ public:
     String getMangledName() const override;
 };
 
+class PointerTypeImpl : public PracticalSemanticAnalyzer::StaticType::Pointer, private NoCopy {
+    boost::intrusive_ptr<const StaticTypeImpl> pointed;
+    mutable std::string mangledName;
+
+public:
+    explicit PointerTypeImpl( boost::intrusive_ptr<const StaticTypeImpl> pointed ) : pointed(pointed) {}
+
+    virtual String getMangledName() const override;
+    virtual PracticalSemanticAnalyzer::StaticType::CPtr getPointedType() const override;
+};
+
 class StaticTypeImpl final : public PracticalSemanticAnalyzer::StaticType {
 private:
     std::variant<
             std::unique_ptr<ScalarTypeImpl>,
-            std::unique_ptr<FunctionTypeImpl>
+            std::unique_ptr<FunctionTypeImpl>,
+            PointerTypeImpl
     > content;
     ValueRangeBase::CPtr valueRange;
 
@@ -101,6 +113,7 @@ public:
 private:
     explicit StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange );
     explicit StaticTypeImpl( FunctionTypeImpl &&function );
+    explicit StaticTypeImpl( PointerTypeImpl &&function );
 };
 
 } // End namespace AST

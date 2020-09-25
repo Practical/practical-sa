@@ -38,7 +38,30 @@ StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
 }
 
 StaticTypeImpl::CPtr LookupContext::lookupType( const NonTerminals::Type &type ) const {
-    return lookupType( type.type.identifier->text );
+    struct Visitor {
+        const LookupContext *_this;
+
+        StaticTypeImpl::CPtr operator()( std::monostate ) {
+            ABORT()<<"Unreachable state";
+        }
+
+
+        StaticTypeImpl::CPtr operator()( const NonTerminals::Identifier &id ) {
+            return _this->lookupType( id.identifier->text );
+        }
+
+        StaticTypeImpl::CPtr operator()( const NonTerminals::Type::Pointer &ptr )
+        {
+            auto ret = _this->lookupType( *ptr.pointed );
+
+            if( !ret )
+                return StaticTypeImpl::CPtr();
+
+            return StaticTypeImpl::allocate( PointerTypeImpl( std::move(ret) ) );
+        }
+    };
+
+    return std::visit( Visitor( { ._this = this } ), type.type );
 }
 
 StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type, ValueRangeBase::CPtr defaultValueRange ) {

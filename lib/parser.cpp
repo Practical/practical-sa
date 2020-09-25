@@ -27,8 +27,74 @@ size_t Identifier::parse(Slice<const Tokenizer::Token> source) {
 
 size_t Type::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
-    tokensConsumed = type.parse(source);
+
+    Identifier &id = type.emplace<Identifier>();
+
+    tokensConsumed = id.parse( source );
+
+    bool done=false;
+
+    do {
+        size_t provisionalyConsumed = 0;
+        const Tokenizer::Token *token = nextToken( source.subslice(tokensConsumed), provisionalyConsumed, nullptr );
+        if( !token )
+            break;
+
+        switch( token->token ) {
+        case Tokenizer::Tokens::OP_ASTERISK:
+            {
+                auto pointedType = std::make_unique<Type>();
+                pointedType->type = std::move(type);
+
+                type.emplace< Pointer >( std::move(pointedType), token );
+            }
+            break;
+        default:
+            done=true;
+            break;
+        }
+
+        if( !done )
+            tokensConsumed += provisionalyConsumed;
+    } while(!done);
+
     RULE_LEAVE();
+}
+
+size_t Type::getLine() const {
+    struct Visitor {
+        size_t operator()( std::monostate ) {
+            ABORT()<<"Unreachable state";
+        }
+
+        size_t operator()( const Identifier &id ) {
+            return id.getLine();
+        }
+
+        size_t operator()( const Pointer &ptr ) {
+            return ptr.token->line;
+        }
+    };
+
+    return std::visit( Visitor{}, type );
+}
+
+size_t Type::getCol() const {
+    struct Visitor {
+        size_t operator()( std::monostate ) {
+            ABORT()<<"Unreachable state";
+        }
+
+        size_t operator()( const Identifier &id ) {
+            return id.getCol();
+        }
+
+        size_t operator()( const Pointer &ptr ) {
+            return ptr.token->col;
+        }
+    };
+
+    return std::visit( Visitor{}, type );
 }
 
 size_t Literal::parse(Slice<const Tokenizer::Token> source) {
@@ -580,7 +646,7 @@ size_t FuncDeclArgsNonEmpty::parse(Slice<const Tokenizer::Token> source) {
     do {
         FuncDeclArg arg;
         tokensConsumed += arg.parse(source.subslice(tokensConsumed));
-        arguments.emplace_back(arg);
+        arguments.emplace_back( std::move(arg) );
 
         more = wishForToken( Tokenizer::Tokens::COMMA, source, tokensConsumed, true );
     } while( more );

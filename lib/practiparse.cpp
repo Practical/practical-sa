@@ -30,7 +30,24 @@ void dumpIdentifier( const NonTerminals::Identifier &id, size_t depth ) {
 }
 
 void dumpType( const NonTerminals::Type &type, size_t depth ) {
-    dumpIdentifier(type.type, depth);
+    struct Visitor {
+        size_t depth;
+
+        void operator()( std::monostate ) {
+            ABORT()<<"Invalid state";
+        }
+
+        void operator()( const NonTerminals::Identifier &id ) {
+            dumpIdentifier( id, depth );
+        }
+
+        void operator()( const NonTerminals::Type::Pointer &ptr ) {
+            indent( std::cout, depth ) << "Pointer\n";
+            dumpType( *ptr.pointed, depth+1 );
+        }
+    };
+
+    std::visit( Visitor{.depth = depth}, type.type );
 }
 
 void dumpParseTree( const NonTerminals::Expression &node, size_t depth=0 );

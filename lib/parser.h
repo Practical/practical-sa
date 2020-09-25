@@ -62,15 +62,19 @@ namespace NonTerminals {
     };
 
     struct Type : public NonTerminal {
-        Identifier type;
+        struct Pointer {
+            std::unique_ptr< const Type > pointed;
+            const Tokenizer::Token *token = nullptr;
+
+            Pointer( std::unique_ptr< const Type > pointed, const Tokenizer::Token *token ) :
+                pointed(std::move(pointed)), token(token)
+            {}
+        };
+        std::variant<std::monostate, Identifier, Pointer> type;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
-        size_t getLine() const {
-            return type.getLine();
-        }
-        size_t getCol() const {
-            return type.getCol();
-        }
+        size_t getLine() const;
+        size_t getCol() const;
     };
 
     struct Literal : public NonTerminal {

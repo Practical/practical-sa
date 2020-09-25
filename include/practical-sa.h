@@ -103,7 +103,17 @@ namespace PracticalSemanticAnalyzer {
             bool operator==( const Function &rhs ) const;
         };
 
-        using Types = std::variant<const Scalar *, const Function *>;
+        class Pointer {
+        public:
+            virtual ~Pointer() {}
+
+            virtual String getMangledName() const = 0;
+            virtual CPtr getPointedType() const = 0;
+
+            bool operator==( const Pointer &rhs ) const;
+        };
+
+        using Types = std::variant<const Scalar *, const Function *, const Pointer *>;
 
         virtual ~StaticType() {}
 
