@@ -21,7 +21,7 @@ using PracticalSemanticAnalyzer::tokenizer_error;
 namespace Tokenizer {
 
 static const std::unordered_set<char> operatorChars = {
-    '~', '!', '#', '/', '$', '%', '^', '&', '*', '-', '=', '+', '<', '>', '.', '|', ':' };
+    '~', '!', '#', '/', '$', '%', '^', '&', '*', '-', '=', '+', '<', '>', '.', '|', ':', '@' };
 static const std::unordered_map<String, Tokens> operators {
     // Precedence 1
     { "::", Tokens::OP_DOUBLE_COLON },
@@ -34,12 +34,13 @@ static const std::unordered_map<String, Tokens> operators {
     { "]", Tokens::BRACKET_SQUARE_CLOSE },
     { ".", Tokens::OP_DOT },
     { "->", Tokens::OP_ARROW },
+    { "@", Tokens::OP_PTR },
     // Precedence 3
     { "+", Tokens::OP_PLUS },
     { "-", Tokens::OP_MINUS },
     { "~", Tokens::OP_BIT_NOT },
     { "!", Tokens::OP_LOGIC_NOT },
-    { "*", Tokens::OP_ASTERISK },
+    { "*", Tokens::OP_MULTIPLY },
     { "&", Tokens::OP_AMPERSAND },
     // Precedence 5
     { "/", Tokens::OP_DIVIDE },
@@ -373,11 +374,12 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
         CASE(OP_ASSIGN_PLUS);
         CASE(OP_ASSIGN_RIGHT_SHIFT);
         CASE(OP_ASSIGN_RIGHT_SHIFT_LOGICAL);
-        CASE(OP_ASTERISK);
+        CASE(OP_MULTIPLY);
         CASE(OP_BIT_AND);
         CASE(OP_BIT_NOT);
         CASE(OP_BIT_OR);
         CASE(OP_BIT_XOR);
+        CASE(OP_PTR);
         CASE(OP_COLON);
         CASE(OP_DIVIDE);
         CASE(OP_DOT);

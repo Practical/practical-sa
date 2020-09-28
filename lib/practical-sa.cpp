@@ -115,7 +115,7 @@ std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
         }
 
         void operator()( const StaticType::Pointer *pointer ) {
-            out << pointer->getPointedType() << "*";
+            out << pointer->getPointedType() << "@";
         }
     };
 

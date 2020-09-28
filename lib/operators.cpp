@@ -32,6 +32,7 @@ const std::vector< OperatorPriority > operators = {
             { Tokens::BRACKET_SQUARE_OPEN, OperatorType::SliceSubscript },
             { Tokens::OP_DOT, OperatorType::Regular },
             { Tokens::OP_ARROW, OperatorType::Regular },
+            { Tokens::OP_PTR, OperatorType::Regular },    // Pointer dereference
         }
     },
     {
@@ -44,7 +45,6 @@ const std::vector< OperatorPriority > operators = {
             { Tokens::OP_MINUS, OperatorType::Regular },       // Unary minus
             { Tokens::OP_BIT_NOT, OperatorType::Regular },
             { Tokens::OP_LOGIC_NOT, OperatorType::Regular },
-            { Tokens::OP_ASTERISK, OperatorType::Regular },    // Pointer dereference
             { Tokens::OP_AMPERSAND, OperatorType::Regular },   // Address of
             { Tokens::RESERVED_EXPECT, OperatorType::Cast },
         }
@@ -53,7 +53,7 @@ const std::vector< OperatorPriority > operators = {
         // 5
         .kind = OperatorPriority::OpKind::Infix,
         .operators = {
-            { Tokens::OP_ASTERISK, OperatorType::Regular },    // Multiplication
+            { Tokens::OP_MULTIPLY, OperatorType::Regular },
             { Tokens::OP_DIVIDE, OperatorType::Regular },
             { Tokens::OP_MODULOUS, OperatorType::Regular },
             { Tokens::OP_AMPERSAND, OperatorType::Regular },   // Bitwise AND

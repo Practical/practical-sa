@@ -41,7 +41,7 @@ size_t Type::parse(Slice<const Tokenizer::Token> source) {
             break;
 
         switch( token->token ) {
-        case Tokenizer::Tokens::OP_ASTERISK:
+        case Tokenizer::Tokens::OP_PTR:
             {
                 auto pointedType = std::make_unique<Type>();
                 pointedType->type = std::move(type);

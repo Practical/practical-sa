@@ -113,7 +113,7 @@ public:
 private:
     explicit StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange );
     explicit StaticTypeImpl( FunctionTypeImpl &&function );
-    explicit StaticTypeImpl( PointerTypeImpl &&function );
+    explicit StaticTypeImpl( PointerTypeImpl &&ptr );
 };
 
 } // End namespace AST

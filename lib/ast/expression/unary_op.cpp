@@ -39,7 +39,7 @@ void UnaryOp::init(LookupContext &builtinCtx) {
 
     auto inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ARROW, "__opArrow" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_AMPERSAND, "__opAmpersand" );
-    inserter = operatorNames.emplace( Tokenizer::Tokens::OP_ASTERISK, "__opDereference" );
+    inserter = operatorNames.emplace( Tokenizer::Tokens::OP_PTR, "__opDereference" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_BIT_NOT, "__opOneComplement" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MINUS, "__opMinus" );
     inserter = operatorNames.emplace( Tokenizer::Tokens::OP_MINUS_MINUS, "__opMinusMinus" );
