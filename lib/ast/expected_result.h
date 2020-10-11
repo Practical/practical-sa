@@ -31,7 +31,7 @@ public:
     }
 
     explicit operator bool() const {
-        return type != nullptr;
+        return !!type;
     }
 
     // Prevent accidental casts to int via the bool cast

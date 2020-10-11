@@ -41,6 +41,10 @@ StaticType::CPtr FunctionTypeImpl::getArgumentType( unsigned index ) const {
     return argumentTypes[index];
 }
 
+PointerTypeImpl::PointerTypeImpl( boost::intrusive_ptr<const StaticTypeImpl> pointed ) :
+    pointed( downCast( pointed->removeFlags(StaticType::Flags::Reference) ) )
+{}
+
 String PointerTypeImpl::getMangledName() const {
     if( mangledName.empty() ) {
         mangledName = "p";
@@ -92,6 +96,29 @@ String FunctionTypeImpl::getMangledName() const {
     return mangledNameCache.c_str();
 }
 
+StaticTypeImpl::StaticTypeImpl( const StaticTypeImpl &that ) :
+    valueRange( that.valueRange ),
+    flags( that.flags )
+{
+    struct Visitor {
+        StaticTypeImpl *_this;
+
+        void operator()( const std::unique_ptr<ScalarTypeImpl> &scalar ) {
+            _this->content = std::make_unique<ScalarTypeImpl>( *scalar );
+        }
+
+        void operator()( const std::unique_ptr<FunctionTypeImpl> &function ) {
+            _this->content = std::make_unique<FunctionTypeImpl>( *function );
+        }
+
+        void operator()( const PointerTypeImpl &pointer ) {
+            _this->content = pointer;
+        }
+    };
+
+    std::visit( Visitor{ ._this=this }, that.content );
+}
+
 StaticTypeImpl::StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange ) :
     content( std::unique_ptr<ScalarTypeImpl>( new ScalarTypeImpl( std::move(scalar) ) ) ),
     valueRange(valueRange)
@@ -110,6 +137,13 @@ StaticTypeImpl::StaticTypeImpl( PointerTypeImpl &&ptr ) :
 std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &type )
 {
     return out<<static_cast<PracticalSemanticAnalyzer::StaticType::CPtr>(type);
+}
+
+StaticTypeImpl::CPtr downCast( StaticType::CPtr ptr ) {
+    auto downCasted = dynamic_cast<const StaticTypeImpl *>( ptr.get() );
+    ASSERT( downCasted || !ptr );
+
+    return downCasted;
 }
 
 } // End namespace AST

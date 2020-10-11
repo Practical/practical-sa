@@ -19,7 +19,7 @@ ExpectedResult::ExpectedResult( StaticTypeImpl::CPtr type, bool mandatory ) :
 }
 
 ExpectedResult::ExpectedResult( StaticType::CPtr type, bool mandatory ) :
-    type( dynamic_cast<const StaticTypeImpl *>( type.get() ) ),
+    type( downCast( std::move(type) ) ),
     mandatory(mandatory)
 {
 }

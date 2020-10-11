@@ -20,7 +20,7 @@ namespace AST {
 
 class StaticTypeImpl;
 
-class ScalarTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Scalar, private NoCopy {
+class ScalarTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Scalar {
     std::string name;
     std::string mangledName;
 
@@ -38,6 +38,7 @@ public:
         name( std::move(that.name) ),
         mangledName( std::move(that.mangledName) )
     {}
+    ScalarTypeImpl( const ScalarTypeImpl &that ) = default;
 
     virtual String getName() const override {
         return name.c_str();
@@ -48,7 +49,7 @@ public:
     }
 };
 
-class FunctionTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Function, private NoCopy {
+class FunctionTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Function {
     boost::intrusive_ptr<const StaticTypeImpl> returnType;
     std::vector< boost::intrusive_ptr<const StaticTypeImpl> > argumentTypes;
     mutable std::string mangledNameCache;
@@ -62,6 +63,7 @@ public:
         returnType( std::move(that.returnType) ),
         argumentTypes( std::move(that.argumentTypes) )
     {}
+    FunctionTypeImpl( const FunctionTypeImpl &that ) = default;
 
     PracticalSemanticAnalyzer::StaticType::CPtr getReturnType() const override;
 
@@ -74,12 +76,12 @@ public:
     String getMangledName() const override;
 };
 
-class PointerTypeImpl : public PracticalSemanticAnalyzer::StaticType::Pointer, private NoCopy {
+class PointerTypeImpl : public PracticalSemanticAnalyzer::StaticType::Pointer {
     boost::intrusive_ptr<const StaticTypeImpl> pointed;
     mutable std::string mangledName;
 
 public:
-    explicit PointerTypeImpl( boost::intrusive_ptr<const StaticTypeImpl> pointed ) : pointed(pointed) {}
+    explicit PointerTypeImpl( boost::intrusive_ptr<const StaticTypeImpl> pointed );
 
     virtual String getMangledName() const override;
     virtual PracticalSemanticAnalyzer::StaticType::CPtr getPointedType() const override;
@@ -93,6 +95,7 @@ private:
             PointerTypeImpl
     > content;
     ValueRangeBase::CPtr valueRange;
+    Flags::Type flags = 0;
 
 public:
     using CPtr = boost::intrusive_ptr<const StaticTypeImpl>;
@@ -108,13 +111,32 @@ public:
         return valueRange;
     }
 
+    virtual Flags::Type getFlags() const override {
+        return flags;
+    }
+
+    virtual StaticType::CPtr setFlags( Flags::Type newFlags ) const override {
+        if( flags==newFlags )
+            return this;
+
+        Ptr ret = allocate( *this );
+        ret->flags = newFlags;
+
+        return ret;
+    }
+
     friend std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &type );
 
 private:
+    // Copy
+    explicit StaticTypeImpl( const StaticTypeImpl &that );
+
     explicit StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange );
     explicit StaticTypeImpl( FunctionTypeImpl &&function );
     explicit StaticTypeImpl( PointerTypeImpl &&ptr );
 };
+
+StaticTypeImpl::CPtr downCast( PracticalSemanticAnalyzer::StaticType::CPtr ptr );
 
 } // End namespace AST
 

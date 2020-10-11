@@ -133,6 +133,11 @@ public:
     AmbiguousCast(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
 };
 
+class LValueRequired : public compile_error {
+public:
+    LValueRequired(StaticType::CPtr wrongType, size_t line, size_t col);
+};
+
 } // PracticalSemanticAnalyzer
 
 #endif // PRACTICAL_ERRORS_H

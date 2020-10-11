@@ -17,7 +17,6 @@ namespace AST::ExpressionImpl {
 
 class BinaryOp final : public Base {
     const NonTerminals::Expression::BinaryOperator &parserOp;
-    std::optional<Expression> operands[2];
     OverloadResolver resolver;
 
 public:

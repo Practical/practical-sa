@@ -65,6 +65,28 @@ size_t UnaryOp::getCol() const {
 void UnaryOp::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
 {
+    bool defaultHandling = true;
+
+    // The special cases
+    switch( parserOp.op->token ) {
+    case Tokenizer::Tokens::OP_AMPERSAND:
+        defaultHandling = false;
+        body.emplace<AddressOf>( *parserOp.operand ).
+                buildASTImpl(lookupContext, expectedResult, metadata, weight, weightLimit);
+        break;
+    default:
+        break;
+    }
+
+    if( defaultHandling ) {
+        buildASTFromTemplate(body.emplace<OverloadResolver>(), lookupContext, expectedResult, weight, weightLimit);
+    }
+}
+
+void UnaryOp::buildASTFromTemplate(
+        OverloadResolver &resolver, LookupContext &lookupContext, ExpectedResult expectedResult,
+        unsigned &weight, unsigned weightLimit )
+{
     String baseName = opToFuncName( parserOp.op->token );
     auto identifier = lookupContext.lookupIdentifier( baseName );
     ASSERT( identifier )<<"Unary operator "<<parserOp.op->token<<" is not yet implemented by the compiler";
@@ -76,7 +98,23 @@ void UnaryOp::buildASTImpl(
 }
 
 ExpressionId UnaryOp::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
-    return resolver.codeGen( functionGen );
+    struct Visitor {
+        PracticalSemanticAnalyzer::FunctionGen *functionGen;
+
+        ExpressionId operator()( std::monostate ) {
+            ABORT()<<"Trying to codegen over uninitialized unary operator";
+        }
+
+        ExpressionId operator()( const OverloadResolver &resolver ) {
+            return resolver.codeGen( functionGen );
+        }
+
+        ExpressionId operator()( const AddressOf &addressOf ) {
+            return addressOf.codeGen( functionGen );
+        }
+    };
+
+    return std::visit( Visitor{ .functionGen = functionGen }, body );
 }
 
 } // namespace AST::ExpressionImpl

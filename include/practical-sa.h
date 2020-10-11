@@ -46,6 +46,13 @@ namespace PracticalSemanticAnalyzer {
     public:
         using CPtr = boost::intrusive_ptr<const StaticType>;
 
+        struct Flags {
+            using Type = uint8_t;
+            static constexpr Type
+                    Reference = 1<<0,
+                    Mutable = 1<<1;
+        };
+
         class Scalar {
         public:
             enum class Type {
@@ -124,6 +131,16 @@ namespace PracticalSemanticAnalyzer {
         bool operator==( const StaticType &rhs ) const;
         bool operator!=( const StaticType &rhs ) const {
             return ! (*this==rhs);
+        }
+
+        virtual Flags::Type getFlags() const = 0;
+        virtual CPtr setFlags( Flags::Type flags ) const = 0;
+
+        CPtr addFlags( Flags::Type moreFlags ) const {
+            return setFlags( getFlags() | moreFlags );
+        }
+        CPtr removeFlags( Flags::Type lessFlags ) const {
+            return setFlags( getFlags() & ~lessFlags );
         }
     };
     std::ostream &operator<<(std::ostream &out, StaticType::CPtr type);
