@@ -106,6 +106,16 @@ std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
 
     std::visit( Visitor{ .out = out }, type->getType() );
 
+    StaticType::Flags::Type flags = type->getFlags();
+    if( flags & StaticType::Flags::Mutable ) {
+        out << " mut";
+        flags &= ~StaticType::Flags::Mutable;
+    }
+    if( flags & StaticType::Flags::Reference ) {
+        out << " ref";
+        flags &= ~StaticType::Flags::Reference;
+    }
+
     return out;
 }
 
