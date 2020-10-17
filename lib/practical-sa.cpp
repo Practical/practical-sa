@@ -52,27 +52,12 @@ bool StaticType::Pointer::operator==( const Pointer &rhs ) const {
     return getPointedType() == rhs.getPointedType();
 }
 
-String StaticType::getMangledName() const {
-    struct Visitor {
-        String operator()( const Scalar *scalar ) {
-            return scalar->getMangledName();
-        }
-
-        String operator()( const Function *function ) {
-            return function->getMangledName();
-        }
-
-        String operator()( const Pointer *pointer ) {
-            return pointer->getMangledName();
-        }
-    };
-
-    return std::visit( Visitor{}, getType() );
-}
-
 bool StaticType::operator==( const StaticType &rhs ) const {
     auto leftType = getType();
     auto rightType = rhs.getType();
+
+    if( getFlags()!=rhs.getFlags() )
+        return false;
 
     if( leftType.index() != rightType.index() )
         return false;
@@ -157,7 +142,9 @@ using namespace PracticalSemanticAnalyzer;
 namespace std {
 
 size_t hash< StaticType >::operator()(const StaticType &type) const {
-    static constexpr size_t PointerModifier = 20;
+    static constexpr size_t PointerModifier = 4;
+    static constexpr size_t ReferenceModifier = 6;
+    static constexpr size_t MutableModifier = 10;
 
     auto typeType = type.getType();
 
@@ -185,7 +172,20 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
         }
     };
 
-    return typeType.index() * FibonacciHashMultiplier + std::visit( Visitor{}, typeType );
+    size_t retVal = typeType.index() * FibonacciHashMultiplier + std::visit( Visitor{}, typeType );
+
+    size_t asserter = 0;
+    if( (type.getFlags() & StaticType::Flags::Reference) != 0 ) {
+        retVal *= FibonacciHashMultiplier-ReferenceModifier;
+        asserter |= StaticType::Flags::Reference;
+    }
+    if( (type.getFlags() & StaticType::Flags::Mutable) != 0 ) {
+        retVal *= FibonacciHashMultiplier-MutableModifier;
+        asserter |= StaticType::Flags::Mutable;
+    }
+    ASSERT( type.getFlags() == asserter )<<"Unhandled type flag. Flags "<<type.getFlags()<<", handled "<<asserter;
+
+    return retVal;
 }
 
 } // namespace std

@@ -45,13 +45,9 @@ PointerTypeImpl::PointerTypeImpl( boost::intrusive_ptr<const StaticTypeImpl> poi
     pointed( downCast( pointed->removeFlags(StaticType::Flags::Reference) ) )
 {}
 
-String PointerTypeImpl::getMangledName() const {
-    if( mangledName.empty() ) {
-        mangledName = "p";
-        mangledName += sliceToString( pointed->getMangledName() );
-    }
-
-    return mangledName;
+void PointerTypeImpl::getMangledName( std::ostringstream &formatter ) const {
+    formatter<<"p";
+    pointed->getMangledName( formatter );
 }
 
 PracticalSemanticAnalyzer::StaticType::CPtr PointerTypeImpl::getPointedType() const {
@@ -78,22 +74,57 @@ StaticType::Types StaticTypeImpl::getType() const {
     return std::visit( Visitor{ ._this=this }, content );
 }
 
-String FunctionTypeImpl::getMangledName() const {
-    if( mangledNameCache.empty() ) {
+String StaticTypeImpl::getMangledName() const {
+    if( mangledName.empty() ) {
         std::ostringstream formatter;
-        // Return value
-        formatter<<"R"<<getReturnType()->getMangledName()<<"E";
-        // Parameters
-        formatter<<"P";
-        for( unsigned i=0; i<getNumArguments(); ++i ) {
-            formatter<<getArgumentType(i)->getMangledName();
-        }
-        formatter<<"E";
+        getMangledName(formatter);
 
-        mangledNameCache = std::move(formatter).str();
+        mangledName = std::move(formatter).str();
     }
 
-    return mangledNameCache.c_str();
+    return mangledName;
+}
+
+void StaticTypeImpl::getMangledName( std::ostringstream &formatter ) const {
+    Flags::Type flags = getFlags();
+    if( (flags & Flags::Reference) != 0 ) {
+        formatter<<'r';
+        flags &= ~Flags::Reference;
+    }
+    if( (flags & Flags::Mutable) != 0 ) {
+        formatter<<'m';
+        flags &= ~Flags::Mutable;
+    }
+    ASSERT( flags==0 )<<"Unhandled type flags "<<flags;
+
+    struct Visitor {
+        std::ostringstream &formatter;
+
+        void operator()( const Scalar *scalar ) {
+            static_cast<const ScalarTypeImpl *>(scalar)->getMangledName(formatter);
+        }
+
+        void operator()( const Function *function ) {
+            static_cast<const FunctionTypeImpl *>(function)->getMangledName(formatter);
+        }
+
+        void operator()( const Pointer *pointer ) {
+            static_cast<const PointerTypeImpl *>(pointer)->getMangledName(formatter);
+        }
+    };
+
+    std::visit( Visitor{ .formatter=formatter }, getType() );
+}
+
+void FunctionTypeImpl::getMangledName(std::ostringstream &formatter) const {
+    // Return value
+    formatter<<"R"<<getReturnType()->getMangledName()<<"E";
+    // Parameters
+    formatter<<"P";
+    for( unsigned i=0; i<getNumArguments(); ++i ) {
+        formatter<<getArgumentType(i)->getMangledName();
+    }
+    formatter<<"E";
 }
 
 StaticTypeImpl::StaticTypeImpl( const StaticTypeImpl &that ) :

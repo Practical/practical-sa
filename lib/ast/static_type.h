@@ -15,6 +15,7 @@
 #include <practical-sa.h>
 
 #include <memory>
+#include <sstream>
 
 namespace AST {
 
@@ -44,15 +45,14 @@ public:
         return name.c_str();
     }
 
-    virtual String getMangledName() const override {
-        return mangledName.c_str();
+    virtual void getMangledName(std::ostringstream &formatter) const {
+        formatter<<mangledName;
     }
 };
 
 class FunctionTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Function {
     boost::intrusive_ptr<const StaticTypeImpl> returnType;
     std::vector< boost::intrusive_ptr<const StaticTypeImpl> > argumentTypes;
-    mutable std::string mangledNameCache;
 
 public:
     explicit FunctionTypeImpl(
@@ -73,17 +73,16 @@ public:
 
     PracticalSemanticAnalyzer::StaticType::CPtr getArgumentType( unsigned index ) const override;
 
-    String getMangledName() const override;
+    void getMangledName(std::ostringstream &formatter) const;
 };
 
-class PointerTypeImpl : public PracticalSemanticAnalyzer::StaticType::Pointer {
+class PointerTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Pointer {
     boost::intrusive_ptr<const StaticTypeImpl> pointed;
-    mutable std::string mangledName;
 
 public:
     explicit PointerTypeImpl( boost::intrusive_ptr<const StaticTypeImpl> pointed );
 
-    virtual String getMangledName() const override;
+    void getMangledName(std::ostringstream &formatter) const;
     virtual PracticalSemanticAnalyzer::StaticType::CPtr getPointedType() const override;
 };
 
@@ -95,6 +94,7 @@ private:
             PointerTypeImpl
     > content;
     ValueRangeBase::CPtr valueRange;
+    mutable std::string mangledName;
     Flags::Type flags = 0;
 
 public:
@@ -107,6 +107,10 @@ public:
     }
 
     virtual Types getType() const override final;
+
+    virtual String getMangledName() const override;
+    void getMangledName( std::ostringstream &formatter ) const;
+
     ValueRangeBase::CPtr defaultRange() const {
         return valueRange;
     }
