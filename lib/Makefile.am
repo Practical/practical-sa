@@ -6,9 +6,10 @@ libpractical_sa_la_LDFLAGS = -version-info 0:0:0
 libpractical_sa_la_SOURCES = practical-sa.cpp practical-errors.cpp scope_tracing.cpp \
 			     tokenizer.cpp parser.cpp parser_internal.cpp operators.cpp \
 			     ast/ast.cpp ast/cast_op.cpp ast/casts.cpp ast/lookup_context.cpp ast/static_type.cpp \
-			     ast/module.cpp ast/function.cpp ast/statement_list.cpp ast/expected_result.cpp ast/statement.cpp \
-			     ast/signed_int_value_range.cpp ast/unsigned_int_value_range.cpp ast/mangle.cpp ast/compound_statement.cpp \
-			     ast/variable_definition.cpp ast/conditional_statement.cpp ast/cast_chain.cpp \
+			     ast/module.cpp ast/function.cpp ast/statement_list.cpp ast/expected_result.cpp \
+			     ast/statement.cpp ast/signed_int_value_range.cpp ast/unsigned_int_value_range.cpp \
+			     ast/mangle.cpp ast/compound_statement.cpp ast/variable_definition.cpp \
+			     ast/conditional_statement.cpp ast/cast_chain.cpp ast/decay.cpp \
 			     ast/expression.cpp ast/expression/base.cpp ast/expression/literal.cpp ast/expression/identifier.cpp \
 			     ast/expression/function_call.cpp ast/expression/binary_op.cpp ast/expression/overload_resolver.cpp \
 			     ast/expression/compound_expression.cpp ast/expression/conditional_expression.cpp ast/expression/cast_op.cpp \

@@ -12,6 +12,7 @@
 #include "ast/expression/unary_op.h"
 #include "ast/bool_value_range.h"
 #include "ast/casts.h"
+#include "ast/decay.h"
 #include "ast/signed_int_value_range.h"
 #include "ast/unsigned_int_value_range.h"
 
@@ -150,6 +151,7 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
 
     ExpressionImpl::UnaryOp::init(builtinCtx);
     ExpressionImpl::BinaryOp::init(builtinCtx);
+    decayInit();
 }
 
 } // End namespace AST

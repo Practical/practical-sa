@@ -50,10 +50,17 @@ public:
         return metadata;
     }
 
+    struct Junction {
+        const LookupContext::CastDescriptor *descriptor = nullptr;
+        unsigned pathWeight = 0;
+        unsigned length = 0;
+    };
+
 private:
     static std::unique_ptr<CastChain> fastPathAllocate(
             const LookupContext::CastDescriptor *castDescriptor,
             const ExpressionImpl::ExpressionMetadata &srcMetadata );
+
 };
 
 } // namespace AST

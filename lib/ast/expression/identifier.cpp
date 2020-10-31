@@ -46,7 +46,7 @@ void Identifier::buildASTImpl(
         ExpectedResult &expectedResult;
 
         void operator()( const LookupContext::Variable &var ) {
-            _this->metadata.type = var.type;
+            _this->metadata.type = downCast( var.type->addFlags( StaticType::Flags::Reference ) );
             _this->metadata.valueRange = var.type->defaultRange();
         }
 
@@ -64,11 +64,7 @@ ExpressionId Identifier::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *fu
 
         ExpressionId operator()( const LookupContext::Variable &var ) {
             if( var.lvalueId!=ExpressionId() ) {
-                ExpressionId resultId = allocateId();
-
-                functionGen->dereferencePointer( resultId, var.type, var.lvalueId );
-
-                return resultId;
+                return var.lvalueId;
             }
 
             ABORT()<<"TODO implement by name identifier lookup";

@@ -9,6 +9,7 @@
 #include "ast/cast_chain.h"
 
 #include "ast/expression/base.h"
+#include "ast/decay.h"
 
 #include <practical-errors.h>
 
@@ -41,7 +42,8 @@ std::unique_ptr<CastChain> CastChain::allocate(
         bool implicit, size_t line, size_t col )
 {
     ASSERT( implicit )<<"TODO explicit cast is untested";
-    ASSERT( destinationType != srcMetadata.type );
+    ASSERT( destinationType != srcMetadata.type )<<
+            "No point in seeking path from "<<srcMetadata.type<<" to "<<destinationType;
 
     {
         // Fastpath: direct cast from source to destination
@@ -59,12 +61,31 @@ std::unique_ptr<CastChain> CastChain::allocate(
         }
     }
 
-    LookupContext::CastsList upperHook = lookupContext.allCastsTo( destinationType );
-    if( !upperHook )
-        return nullptr;
+    std::unordered_map< StaticTypeImpl::CPtr, Junction > paths;
 
-    LookupContext::CastsList lowerHook = lookupContext.allCastsFrom( srcMetadata.type );
-    if( !upperHook )
+    std::vector< StaticTypeImpl::CPtr > pendingCandidates, candidates;
+
+    // Check decay options
+    pendingCandidates = decay( paths, srcMetadata.type, 0, 0 );
+    for( auto &pathNode : paths ) {
+        if( pathNode.first != destinationType )
+            continue;
+
+        // Our type directly decays into the destination type
+        weight += pathNode.second.pathWeight;
+        if( weight>weightLimit )
+            throw ExpressionImpl::Base::ExpressionTooExpensive();
+
+        ExpressionImpl::ExpressionMetadata metadata;
+        metadata.type = destinationType;
+        metadata.valueRange = pathNode.second.descriptor->calcVrp(
+                srcMetadata.type.get(), destinationType.get(), srcMetadata.valueRange, true );
+
+        return std::unique_ptr<CastChain>( new CastChain( nullptr, *pathNode.second.descriptor, metadata ) );
+    }
+
+    LookupContext::CastsList upperHook = lookupContext.allCastsTo( destinationType );
+    if( !upperHook && pendingCandidates.empty() )
         return nullptr;
 
     /* We are looking for the shortest (least number of casts) path between sourceType and destinationType,
@@ -82,16 +103,6 @@ std::unique_ptr<CastChain> CastChain::allocate(
      * and so on until we run out of new types to reach or we find a path.
      */
 
-    struct Junction {
-        const LookupContext::CastDescriptor *path = nullptr;
-        unsigned pathWeight = 0;
-        unsigned length = 0;
-    };
-
-    std::unordered_map< StaticTypeImpl::CPtr, Junction > paths;
-
-    std::vector< StaticTypeImpl::CPtr > pendingCandidates, candidates;
-
     paths.emplace( destinationType, Junction{ .pathWeight=weight, .length=0 } );
 
     unsigned effectiveLimit = ExpressionImpl::Base::NoWeightLimit;
@@ -104,7 +115,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
 
         unsigned interimWeight = upperHook->weight;
         if( interimWeight<=weightLimit ) {
-            paths.emplace( upperHook->sourceType, Junction{ .path=upperHook.get(), .pathWeight=interimWeight, .length=1 } );
+            paths.emplace( upperHook->sourceType, Junction{ .descriptor=upperHook.get(), .pathWeight=interimWeight, .length=1 } );
             pendingCandidates.emplace_back( upperHook->sourceType );
         } else {
             // Since the list is sorted, there will be no valid candidates past this one
@@ -145,7 +156,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
 
                     effectiveLimit = interimWeight;
                     validPaths.emplace_back(
-                            Junction{ .path = upperHook.get(), .pathWeight = interimWeight, .length = chainLength } );
+                            Junction{ .descriptor = upperHook.get(), .pathWeight = interimWeight, .length = chainLength } );
 
                     break;
                 }
@@ -155,7 +166,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
                     // We've already reached this type. See if this time it's a better path
                     if( sourceIter->second.length==chainLength && sourceIter->second.pathWeight>interimWeight ) {
                         sourceIter->second.pathWeight = interimWeight;
-                        sourceIter->second.path = upperHook.get();
+                        sourceIter->second.descriptor = upperHook.get();
                     }
 
                     continue;
@@ -163,7 +174,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
 
                 paths.emplace(
                         upperHook->sourceType,
-                        Junction{ .path = upperHook.get(), .pathWeight=interimWeight, .length=chainLength } );
+                        Junction{ .descriptor = upperHook.get(), .pathWeight=interimWeight, .length=chainLength } );
                 pendingCandidates.emplace_back( upperHook->sourceType );
             }
         }
@@ -179,7 +190,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
     if( weight>weightLimit )
         throw ExpressionImpl::Base::ExpressionTooExpensive();
 
-    const LookupContext::CastDescriptor *currentCast = validPaths[0].path;
+    const LookupContext::CastDescriptor *currentCast = validPaths[0].descriptor;
     ASSERT( currentCast!=nullptr );
     ASSERT( currentCast->sourceType == srcMetadata.type );
     std::unique_ptr<CastChain> ret( new CastChain( nullptr, *currentCast ) );
@@ -198,7 +209,7 @@ skipSettingRet:
             return nullptr;
 
         lastMetadata = &ret->metadata;
-        currentCast = paths.at( currentCast->destType ).path;
+        currentCast = paths.at( currentCast->destType ).descriptor;
     } while( currentCast!=nullptr );
 
     return ret;
