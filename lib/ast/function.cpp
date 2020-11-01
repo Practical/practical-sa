@@ -79,7 +79,7 @@ void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {
 
             Expression expression( parserExpression.expression );
 
-            unsigned weight = 0;
+            Weight weight;
             expression.buildAST( _this->lookupCtx, _this->getReturnType(), weight, Expression::NoWeightLimit );
 
             functionGen->returnValue( expression.codeGen( functionGen ) );

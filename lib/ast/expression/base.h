@@ -14,6 +14,7 @@
 #include "ast/cast_op.h"
 #include "ast/expected_result.h"
 #include "ast/lookup_context.h"
+#include "ast/weight.h"
 #include <practical-sa.h>
 
 namespace AST::ExpressionImpl {
@@ -33,7 +34,7 @@ public:
         }
     };
 
-    static constexpr unsigned NoWeightLimit = std::numeric_limits<unsigned>::max();
+    static constexpr Weight NoWeightLimit = Weight::max();
 
     static PracticalSemanticAnalyzer::ExpressionId allocateId();
 
@@ -52,7 +53,7 @@ public:
         return metadata.valueRange;
     }
 
-    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit );
+    void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit );
     ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 
     virtual size_t getLine() const = 0;
@@ -60,7 +61,7 @@ public:
 
 protected:
     virtual void buildASTImpl(
-            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit ) = 0;
+            LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit ) = 0;
     virtual ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const = 0;
 };
 

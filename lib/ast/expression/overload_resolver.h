@@ -24,8 +24,8 @@ public:
             LookupContext &lookupContext,
             ExpectedResult expectedResult,
             const std::vector<LookupContext::Function::Definition> &overloads,
-            unsigned &weight,
-            unsigned weightLimit,
+            Weight &weight,
+            Weight weightLimit,
             ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments,
             const Tokenizer::Token *sourceLocation
@@ -35,7 +35,7 @@ public:
 
 private:
     void buildActualCall(
-            LookupContext &lookupContext, unsigned &weight, unsigned weightLimit,
+            LookupContext &lookupContext, Weight &weight, Weight weightLimit,
             const LookupContext::Function::Definition *definition,
             ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments );
@@ -44,8 +44,8 @@ private:
             LookupContext &lookupContext,
             ExpectedResult expectedResult,
             const std::vector<LookupContext::Function::Definition> &overloads,
-            unsigned &weight,
-            unsigned weightLimit,
+            Weight &weight,
+            Weight weightLimit,
             ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments,
             const Tokenizer::Token *sourceLocation
@@ -53,8 +53,8 @@ private:
     void resolveOverloadsByArguments(
             LookupContext &lookupContext,
             const std::vector<LookupContext::Function::Definition> &overloads,
-            unsigned &weight,
-            unsigned weightLimit,
+            Weight &weight,
+            Weight weightLimit,
             ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments,
             const Tokenizer::Token *sourceLocation
@@ -62,8 +62,8 @@ private:
     void findBestOverloadByArgument(
             LookupContext &lookupContext,
             Slice< const LookupContext::Function::Definition * > overloads,
-            unsigned &weight,
-            unsigned weightLimit,
+            Weight &weight,
+            Weight weightLimit,
             ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments,
             const Tokenizer::Token *sourceLocation

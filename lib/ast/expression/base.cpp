@@ -27,7 +27,7 @@ StaticTypeImpl::CPtr Base::getType() const {
     return metadata.type;
 }
 
-void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
     buildASTImpl( lookupContext, expectedResult, weight, weightLimit );
 

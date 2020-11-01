@@ -55,7 +55,7 @@ void decayInit() {
 
 std::vector< StaticTypeImpl::CPtr > decay(
             std::unordered_map< StaticTypeImpl::CPtr, CastChain::Junction > &paths,
-            StaticTypeImpl::CPtr type, unsigned length, unsigned weight )
+            StaticTypeImpl::CPtr type, Weight weight )
 {
     using RetType = std::vector< StaticTypeImpl::CPtr >;
     if( (type->getFlags() & StaticTypeImpl::Flags::Reference) != 0 ) {
@@ -64,7 +64,7 @@ std::vector< StaticTypeImpl::CPtr > decay(
                 decayedType,
                 CastChain::Junction{
                     .descriptor = &decayCasts.at(DecayCasts::ReferenceToBuiltinValue),
-                    .pathWeight=weight+1, .length=length }
+                    .pathWeight=weight+Weight(1, 0) }
             );
         return RetType{ decayedType };
     }

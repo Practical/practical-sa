@@ -30,14 +30,14 @@ public:
 
 protected:
     void buildASTImpl(
-            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
+            LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit
         ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 
 private:
     void buildASTFromTemplate(
             OverloadResolver &resolver, LookupContext &lookupContext, ExpectedResult expectedResult,
-            unsigned &weight, unsigned weightLimit
+            Weight &weight, Weight weightLimit
         );
 };
 

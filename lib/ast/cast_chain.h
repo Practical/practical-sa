@@ -12,6 +12,7 @@
 #include "ast/expression/expression_metadata.h"
 #include "ast/lookup_context.h"
 #include "ast/static_type.h"
+#include "ast/weight.h"
 
 namespace AST {
 
@@ -38,7 +39,7 @@ public:
             const LookupContext &lookupContext,
             StaticTypeImpl::CPtr destinationType,
             const ExpressionImpl::ExpressionMetadata &srcMetadata,
-            unsigned &weight, unsigned weightLimit,
+            Weight &weight, Weight weightLimit,
             bool implicit, size_t line, size_t col );
 
     ExpressionId codeGen(
@@ -52,8 +53,7 @@ public:
 
     struct Junction {
         const LookupContext::CastDescriptor *descriptor = nullptr;
-        unsigned pathWeight = 0;
-        unsigned length = 0;
+        Weight pathWeight;
     };
 
 private:

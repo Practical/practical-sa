@@ -38,7 +38,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
         const LookupContext &lookupContext,
         StaticTypeImpl::CPtr destinationType,
         const ExpressionImpl::ExpressionMetadata &srcMetadata,
-        unsigned &weight, unsigned weightLimit,
+        Weight &weight, Weight weightLimit,
         bool implicit, size_t line, size_t col )
 {
     ASSERT( implicit )<<"TODO explicit cast is untested";
@@ -53,10 +53,10 @@ std::unique_ptr<CastChain> CastChain::allocate(
                 castDescriptor!=nullptr &&
                 castDescriptor->whenPossible!=LookupContext::CastDescriptor::ImplicitCastAllowed::Never )
         {
-            if( weight+castDescriptor->weight > weightLimit ) {
+            if( weight+Weight(castDescriptor->weight) > weightLimit ) {
                 throw ExpressionImpl::Base::ExpressionTooExpensive();
             }
-            weight += castDescriptor->weight;
+            weight += Weight(castDescriptor->weight);
             return fastPathAllocate( castDescriptor, srcMetadata );
         }
     }
@@ -66,7 +66,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
     std::vector< StaticTypeImpl::CPtr > pendingCandidates, candidates;
 
     // Check decay options
-    pendingCandidates = decay( paths, srcMetadata.type, 0, 0 );
+    pendingCandidates = decay( paths, srcMetadata.type, Weight() );
     for( auto &pathNode : paths ) {
         if( pathNode.first != destinationType )
             continue;
@@ -103,9 +103,9 @@ std::unique_ptr<CastChain> CastChain::allocate(
      * and so on until we run out of new types to reach or we find a path.
      */
 
-    paths.emplace( destinationType, Junction{ .pathWeight=weight, .length=0 } );
+    paths.emplace( destinationType, Junction{ .pathWeight=weight } );
 
-    unsigned effectiveLimit = ExpressionImpl::Base::NoWeightLimit;
+    Weight effectiveLimit = ExpressionImpl::Base::NoWeightLimit;
     for( ; upperHook ; ++upperHook ) {
         ASSERT( upperHook->sourceType != srcMetadata.type )<<
                 "Single step cast should have been handled by fastpath "<<srcMetadata.type<<" to "<<destinationType;
@@ -113,9 +113,9 @@ std::unique_ptr<CastChain> CastChain::allocate(
         if( implicit && upperHook->whenPossible==LookupContext::CastDescriptor::ImplicitCastAllowed::Never )
             continue;
 
-        unsigned interimWeight = upperHook->weight;
+        Weight interimWeight( upperHook->weight );
         if( interimWeight<=weightLimit ) {
-            paths.emplace( upperHook->sourceType, Junction{ .descriptor=upperHook.get(), .pathWeight=interimWeight, .length=1 } );
+            paths.emplace( upperHook->sourceType, Junction{ .descriptor=upperHook.get(), .pathWeight=interimWeight } );
             pendingCandidates.emplace_back( upperHook->sourceType );
         } else {
             // Since the list is sorted, there will be no valid candidates past this one
@@ -141,7 +141,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
                     continue;
                 }
 
-                unsigned interimWeight = upperHook->weight + paths.at( upperHook->destType ).pathWeight;
+                Weight interimWeight = Weight(upperHook->weight) + paths.at( upperHook->destType ).pathWeight;
 
                 if( interimWeight>effectiveLimit ) {
                     // Since the list is sorted, there will be no valid candidates past this one
@@ -156,7 +156,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
 
                     effectiveLimit = interimWeight;
                     validPaths.emplace_back(
-                            Junction{ .descriptor = upperHook.get(), .pathWeight = interimWeight, .length = chainLength } );
+                            Junction{ .descriptor = upperHook.get(), .pathWeight = interimWeight } );
 
                     break;
                 }
@@ -164,7 +164,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
                 auto sourceIter = paths.find( upperHook->sourceType );
                 if( sourceIter!=paths.end() ) {
                     // We've already reached this type. See if this time it's a better path
-                    if( sourceIter->second.length==chainLength && sourceIter->second.pathWeight>interimWeight ) {
+                    if( sourceIter->second.pathWeight>interimWeight ) {
                         sourceIter->second.pathWeight = interimWeight;
                         sourceIter->second.descriptor = upperHook.get();
                     }
@@ -174,7 +174,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
 
                 paths.emplace(
                         upperHook->sourceType,
-                        Junction{ .descriptor = upperHook.get(), .pathWeight=interimWeight, .length=chainLength } );
+                        Junction{ .descriptor = upperHook.get(), .pathWeight=interimWeight } );
                 pendingCandidates.emplace_back( upperHook->sourceType );
             }
         }

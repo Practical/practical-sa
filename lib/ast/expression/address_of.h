@@ -21,7 +21,7 @@ public:
 
     void buildASTImpl(
             LookupContext &lookupContext, ExpectedResult expectedResult, ExpressionMetadata &metadata,
-            unsigned &weight, unsigned weightLimit
+            Weight &weight, Weight weightLimit
         );
     ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 };

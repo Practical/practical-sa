@@ -33,7 +33,7 @@ size_t Literal::getCol() const {
 }
 
 void Literal::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
     switch( parserLiteral.token.token ) {
     case Tokenizer::Tokens::LITERAL_INT_10:
@@ -79,7 +79,7 @@ ExpressionId Literal::LiteralInt::codeGen(
 }
 
 void Literal::LiteralInt::parseInt10(
-        Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult )
+        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
 {
     result = 0;
 
@@ -113,7 +113,7 @@ void Literal::LiteralInt::parseInt10(
 }
 
 void Literal::LiteralInt::parseInt(
-        Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult )
+        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
 {
     ASSERT( !owner->metadata.type )<<"Cannot reuse AST nodes";
 
@@ -135,8 +135,8 @@ void Literal::LiteralInt::parseInt(
     if( !expectedResult ) {
         static const StaticTypeImpl::CPtr DefaultLiteralIntType =
                 AST::getBuiltinCtx().lookupType("U64");
-        static const unsigned DefaultLiteralIntWeight =
-                std::get< const StaticType::Scalar *>( DefaultLiteralIntType->getType() )->getLiteralWeight();
+        static const Weight DefaultLiteralIntWeight =
+                Weight( std::get< const StaticType::Scalar *>( DefaultLiteralIntType->getType() )->getLiteralWeight(), 0 );
 
         // If nothing is expected, return the maximal unsigned type
         owner->metadata.type =  DefaultLiteralIntType;
@@ -156,7 +156,7 @@ void Literal::LiteralInt::parseInt(
                 owner->metadata.type = expectedResult.getType();
                 owner->metadata.valueRange = SignedIntValueRange::allocate( result, result );
 
-                weight += (*expectedScalar)->getLiteralWeight();
+                weight += Weight( (*expectedScalar)->getLiteralWeight(), 0 );
 
                 return;
             }
@@ -164,7 +164,7 @@ void Literal::LiteralInt::parseInt(
             ASSERT( (*expectedScalar)->getSize()<=64 );
 
             if( (*expectedScalar)->getSize()==64 ) {
-                weight += (*expectedScalar)->getLiteralWeight();
+                weight += Weight( (*expectedScalar)->getLiteralWeight(), 0 );
                 owner->metadata.type = expectedResult.getType();
                 return;
             }
@@ -173,7 +173,7 @@ void Literal::LiteralInt::parseInt(
             limit <<= (*expectedScalar)->getSize();
 
             if( result < limit ) {
-                weight += (*expectedScalar)->getLiteralWeight();
+                weight += Weight( (*expectedScalar)->getLiteralWeight(), 0 );
                 owner->metadata.type = expectedResult.getType();
                 return;
             }
@@ -187,7 +187,7 @@ void Literal::LiteralInt::parseInt(
     owner->metadata.type = naturalType;
     ASSERT( owner->metadata.type );
 
-    weight += std::get< const StaticType::Scalar *>( naturalType->getType() )->getLiteralWeight();
+    weight += Weight( std::get< const StaticType::Scalar *>( naturalType->getType() )->getLiteralWeight() );
 }
 
 ExpressionId Literal::LiteralBool::codeGen(
@@ -200,7 +200,7 @@ ExpressionId Literal::LiteralBool::codeGen(
 }
 
 void Literal::LiteralBool::parseBool(
-        Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult )
+        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
 {
     switch( owner->parserLiteral.token.token ) {
     case Tokenizer::Tokens::RESERVED_TRUE:

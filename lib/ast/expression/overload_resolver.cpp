@@ -18,8 +18,8 @@ void OverloadResolver::resolveOverloads(
         LookupContext &lookupContext,
         ExpectedResult expectedResult,
         const std::vector<LookupContext::Function::Definition> &overloads,
-        unsigned &weight,
-        unsigned weightLimit,
+        Weight &weight,
+        Weight weightLimit,
         ExpressionMetadata &metadata,
         Slice<const NonTerminals::Expression *const> parserArguments,
         const Tokenizer::Token *sourceLocation
@@ -41,7 +41,7 @@ ExpressionId OverloadResolver::codeGen( PracticalSemanticAnalyzer::FunctionGen *
 
 // Private
 void OverloadResolver::buildActualCall(
-            LookupContext &lookupContext, unsigned &weight, unsigned weightLimit,
+            LookupContext &lookupContext, Weight &weight, Weight weightLimit,
             const LookupContext::Function::Definition *definition,
             ExpressionMetadata &metadata,
             Slice<const NonTerminals::Expression *const> parserArguments )
@@ -54,7 +54,7 @@ void OverloadResolver::buildActualCall(
 
     for( unsigned argumentNum=0; argumentNum<numArguments; ++argumentNum ) {
         Expression &argument = arguments.emplace_back( *parserArguments[argumentNum] );
-        unsigned additionalWeight = 0;
+        Weight additionalWeight;
         argument.buildAST(
                 lookupContext, ExpectedResult( functionType->getArgumentType(argumentNum) ),
                 additionalWeight, weightLimit );
@@ -83,8 +83,8 @@ void OverloadResolver::resolveOverloadsByReturn(
         LookupContext &lookupContext,
         ExpectedResult expectedResult,
         const std::vector<LookupContext::Function::Definition> &overloads,
-        unsigned &weight,
-        unsigned weightLimit,
+        Weight &weight,
+        Weight weightLimit,
         ExpressionMetadata &metadata,
         Slice<const NonTerminals::Expression *const> parserArguments,
         const Tokenizer::Token *sourceLocation
@@ -146,8 +146,8 @@ void OverloadResolver::resolveOverloadsByReturn(
 void OverloadResolver::resolveOverloadsByArguments(
         LookupContext &lookupContext,
         const std::vector<LookupContext::Function::Definition> &overloads,
-        unsigned &weight,
-        unsigned weightLimit,
+        Weight &weight,
+        Weight weightLimit,
         ExpressionMetadata &metadata,
         Slice<const NonTerminals::Expression *const> parserArguments,
         const Tokenizer::Token *sourceLocation
@@ -181,15 +181,15 @@ void OverloadResolver::resolveOverloadsByArguments(
 void OverloadResolver::findBestOverloadByArgument(
         LookupContext &lookupContext,
         Slice< const LookupContext::Function::Definition * > overloads,
-        unsigned &weight,
-        unsigned weightLimit,
+        Weight &weight,
+        Weight weightLimit,
         ExpressionMetadata &metadata,
         Slice<const NonTerminals::Expression *const> parserArguments,
         const Tokenizer::Token *sourceLocation
     )
 {
-    unsigned callWeightLimit = weightLimit - weight;
-    unsigned bestWeight = Base::NoWeightLimit;
+    Weight callWeightLimit = weightLimit - weight;
+    Weight bestWeight = Base::NoWeightLimit;
     OverloadResolver bestOverloader;
     ExpressionMetadata bestMetadata;
     std::vector< const LookupContext::Function::Definition * > viableOverloads;
@@ -197,7 +197,7 @@ void OverloadResolver::findBestOverloadByArgument(
     for( auto overload : overloads ) {
         try {
             OverloadResolver provisoryResolver;
-            unsigned callWeight = 0;
+            Weight callWeight;
             ExpressionMetadata callMetadata;
 
             provisoryResolver.buildActualCall(

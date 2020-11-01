@@ -63,7 +63,7 @@ size_t UnaryOp::getCol() const {
 
 // Protected methods
 void UnaryOp::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
     bool defaultHandling = true;
 
@@ -85,7 +85,7 @@ void UnaryOp::buildASTImpl(
 
 void UnaryOp::buildASTFromTemplate(
         OverloadResolver &resolver, LookupContext &lookupContext, ExpectedResult expectedResult,
-        unsigned &weight, unsigned weightLimit )
+        Weight &weight, Weight weightLimit )
 {
     String baseName = opToFuncName( parserOp.op->token );
     auto identifier = lookupContext.lookupIdentifier( baseName );

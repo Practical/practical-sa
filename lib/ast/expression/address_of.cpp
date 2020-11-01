@@ -20,7 +20,7 @@ AddressOf::AddressOf( const NonTerminals::Expression &parserOperand ) :
 
 void AddressOf::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, ExpressionMetadata &metadata,
-        unsigned &weight, unsigned weightLimit
+        Weight &weight, Weight weightLimit
     )
 {
     StaticType::Types expectedType = expectedResult.getType()->getType();

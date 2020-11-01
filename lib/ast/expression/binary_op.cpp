@@ -151,7 +151,7 @@ size_t BinaryOp::getCol() const {
 
 // Protected methods
 void BinaryOp::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
     String baseName = opToFuncName( parserOp.op->token );
     auto identifier = lookupContext.lookupIdentifier( baseName );

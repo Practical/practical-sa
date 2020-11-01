@@ -32,7 +32,7 @@ size_t Identifier::getCol() const {
 }
 
 void Identifier::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
     identifier = lookupContext.lookupIdentifier( parserIdentifier.identifier->text );
 
