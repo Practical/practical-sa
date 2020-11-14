@@ -53,7 +53,9 @@ public:
 
     struct Junction {
         const LookupContext::CastDescriptor *descriptor = nullptr;
+        StaticTypeImpl::CPtr predecessor;
         Weight pathWeight;
+        bool multiplePaths = false;
     };
 
 private:
@@ -61,6 +63,8 @@ private:
             const LookupContext::CastDescriptor *castDescriptor,
             const ExpressionImpl::ExpressionMetadata &srcMetadata );
 
+    void calcVrp(
+            const ExpressionImpl::ExpressionMetadata &srcMetadata, bool isImplicit, size_t line, size_t col );
 };
 
 } // namespace AST

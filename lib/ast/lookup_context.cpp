@@ -240,7 +240,7 @@ LookupContext::CastsList LookupContext::allCastsFrom(
         auto sourceTypeIter = _this->typeConversionsFrom.find(sourceType);
 
         if( sourceTypeIter != _this->typeConversionsFrom.end() ) {
-            for( auto destTypeIter : sourceTypeIter->second ) {
+            for( auto &destTypeIter : sourceTypeIter->second ) {
                 ret.casts.emplace_back( & destTypeIter.second );
             }
         }

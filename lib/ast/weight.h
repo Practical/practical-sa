@@ -9,6 +9,8 @@
 #ifndef AST_WEIGHT_H
 #define AST_WEIGHT_H
 
+#include <iostream>
+
 namespace AST {
 
 struct Weight {
@@ -80,5 +82,7 @@ struct Weight {
 };
 
 } // namespace AST
+
+std::ostream &operator<<( std::ostream &out, const AST::Weight &weight );
 
 #endif // AST_WEIGHT_H

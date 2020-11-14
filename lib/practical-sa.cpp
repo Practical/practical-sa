@@ -82,6 +82,10 @@ bool StaticType::operator==( const StaticType &rhs ) const {
 }
 
 std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
+    if( !type ) {
+        return out<<"Type(nullptr)";
+    }
+
     struct Visitor {
         std::ostream &out;
 

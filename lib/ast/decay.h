@@ -17,8 +17,8 @@ void decayInit();
 
 std::vector< StaticTypeImpl::CPtr > decay(
         std::unordered_map< StaticTypeImpl::CPtr, CastChain::Junction > &paths,
-        StaticTypeImpl::CPtr type, Weight weight );
+        StaticTypeImpl::CPtr type );
 
-}
+} // namespace AST
 
 #endif // AST_DECAY_H
