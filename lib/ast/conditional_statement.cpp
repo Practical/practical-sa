@@ -24,7 +24,7 @@ ConditionalStatement::ConditionalStatement( const NonTerminals::Statement::Condi
 }
 
 void ConditionalStatement::buildAST( LookupContext &lookupCtx ) {
-    unsigned weight=0;
+    Weight weight;
     auto boolType = AST::getBuiltinCtx().lookupType("Bool");
     condition.buildAST(lookupCtx, boolType, weight, Expression::NoWeightLimit);
     ifClause->buildAST(lookupCtx);

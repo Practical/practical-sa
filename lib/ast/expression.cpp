@@ -36,14 +36,14 @@ size_t Expression::getCol() const {
 
 // Protected memthods
 void Expression::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
     struct Visitor {
         Expression *_this;
         LookupContext &lookupContext;
         ExpectedResult expectedResult;
-        unsigned &weight;
-        const unsigned weightLimit;
+        Weight &weight;
+        const Weight weightLimit;
 
         void operator()( const std::unique_ptr<NonTerminals::CompoundExpression> &parserExpression ) {
             auto expression = safenew<ExpressionImpl::CompoundExpression>( *parserExpression, lookupContext );

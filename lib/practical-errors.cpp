@@ -99,4 +99,8 @@ AmbiguousCast::AmbiguousCast(StaticType::CPtr src, StaticType::CPtr dst, bool im
 {
 }
 
+LValueRequired::LValueRequired(StaticType::CPtr wrongType, size_t line, size_t col) :
+    compile_error( "LValue required", line, col )
+{}
+
 } // namespace PracticalSemanticAnalyzer

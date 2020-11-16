@@ -33,6 +33,7 @@ const std::vector< OperatorPriority > operators = {
             { Tokens::OP_DOT, OperatorType::Regular },
             { Tokens::OP_ARROW, OperatorType::Regular },
             { Tokens::OP_PTR, OperatorType::Regular },    // Pointer dereference
+            { Tokens::OP_AMPERSAND, OperatorType::Regular },   // Address of
         }
     },
     {
@@ -45,7 +46,6 @@ const std::vector< OperatorPriority > operators = {
             { Tokens::OP_MINUS, OperatorType::Regular },       // Unary minus
             { Tokens::OP_BIT_NOT, OperatorType::Regular },
             { Tokens::OP_LOGIC_NOT, OperatorType::Regular },
-            { Tokens::OP_AMPERSAND, OperatorType::Regular },   // Address of
             { Tokens::RESERVED_EXPECT, OperatorType::Cast },
         }
     },

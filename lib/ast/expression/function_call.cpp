@@ -31,7 +31,7 @@ size_t FunctionCall::getCol() const {
 
 // protected methods
 void FunctionCall::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
     functionId.emplace( *parserFunctionCall.expression );
     functionId->buildAST( lookupContext, ExpectedResult(), weight, weightLimit );
@@ -43,8 +43,8 @@ void FunctionCall::buildASTImpl(
         FunctionCall *_this;
         LookupContext &lookupContext;
         ExpectedResult &expectedResult;
-        unsigned &weight;
-        const unsigned weightLimit;
+        Weight &weight;
+        const Weight weightLimit;
 
         void operator()( const LookupContext::Variable &var ) {
             ABORT()<<"TODO calling function through a variable not yet implemented";

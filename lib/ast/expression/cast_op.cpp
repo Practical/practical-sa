@@ -25,7 +25,7 @@ size_t CastOp::getCol() const {
 }
 
 void CastOp::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit
     )
 {
     metadata.type = lookupContext.lookupType( parserCast.destType );

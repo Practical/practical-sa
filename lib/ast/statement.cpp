@@ -39,7 +39,7 @@ void Statement::buildAST( LookupContext &lookupCtx ) {
 
         void operator()( const NonTerminals::Expression &parserExpression ) {
             auto &expression = _this.underlyingStatement.emplace<Expression>(parserExpression);
-            unsigned weight=0;
+            Weight weight;
             expression.buildAST(lookupCtx, ExpectedResult(), weight, Expression::NoWeightLimit);
         }
 

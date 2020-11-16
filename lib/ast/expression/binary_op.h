@@ -17,7 +17,6 @@ namespace AST::ExpressionImpl {
 
 class BinaryOp final : public Base {
     const NonTerminals::Expression::BinaryOperator &parserOp;
-    std::optional<Expression> operands[2];
     OverloadResolver resolver;
 
 public:
@@ -30,7 +29,7 @@ public:
 
 protected:
     void buildASTImpl(
-            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
+            LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit
         ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 };

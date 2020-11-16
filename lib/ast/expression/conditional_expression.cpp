@@ -26,9 +26,9 @@ size_t ConditionalExpression::getCol() const {
 }
 
 void ConditionalExpression::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit )
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
-    unsigned conditionWeight = 0;
+    Weight conditionWeight;
     auto boolType = AST::getBuiltinCtx().lookupType("Bool");
     condition.buildAST(lookupContext, boolType, conditionWeight, Expression::NoWeightLimit);
 

@@ -35,7 +35,7 @@ public:
 
 protected:
     void buildASTImpl(
-            LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit
+            LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit
         ) override;
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 
@@ -46,8 +46,8 @@ private:
     public:
         ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 
-        void parseInt10( Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult );
-        void parseInt( Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult );
+        void parseInt10( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
+        void parseInt( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
     };
 
     class LiteralBool final : public Impl {
@@ -56,7 +56,7 @@ private:
     public:
         ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 
-        void parseBool( Literal *owner, unsigned &weight, unsigned weightLimit, ExpectedResult expectedResult );
+        void parseBool( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
     };
 };
 

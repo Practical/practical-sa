@@ -46,6 +46,13 @@ namespace PracticalSemanticAnalyzer {
     public:
         using CPtr = boost::intrusive_ptr<const StaticType>;
 
+        struct Flags {
+            using Type = uint8_t;
+            static constexpr Type
+                    Reference = 1<<0,
+                    Mutable = 1<<1;
+        };
+
         class Scalar {
         public:
             enum class Type {
@@ -66,7 +73,6 @@ namespace PracticalSemanticAnalyzer {
             {}
 
             virtual String getName() const = 0;
-            virtual String getMangledName() const = 0;
 
             size_t getSize() const {
                 return size;
@@ -98,7 +104,6 @@ namespace PracticalSemanticAnalyzer {
             virtual CPtr getReturnType() const = 0;
             virtual size_t getNumArguments() const = 0;
             virtual CPtr getArgumentType( unsigned index ) const = 0;
-            virtual String getMangledName() const = 0;
 
             bool operator==( const Function &rhs ) const;
         };
@@ -107,7 +112,6 @@ namespace PracticalSemanticAnalyzer {
         public:
             virtual ~Pointer() {}
 
-            virtual String getMangledName() const = 0;
             virtual CPtr getPointedType() const = 0;
 
             bool operator==( const Pointer &rhs ) const;
@@ -119,11 +123,21 @@ namespace PracticalSemanticAnalyzer {
 
         virtual Types getType() const = 0;
 
-        String getMangledName() const;
+        virtual String getMangledName() const = 0;
 
         bool operator==( const StaticType &rhs ) const;
         bool operator!=( const StaticType &rhs ) const {
             return ! (*this==rhs);
+        }
+
+        virtual Flags::Type getFlags() const = 0;
+        virtual CPtr setFlags( Flags::Type flags ) const = 0;
+
+        CPtr addFlags( Flags::Type moreFlags ) const {
+            return setFlags( getFlags() | moreFlags );
+        }
+        CPtr removeFlags( Flags::Type lessFlags ) const {
+            return setFlags( getFlags() & ~lessFlags );
         }
     };
     std::ostream &operator<<(std::ostream &out, StaticType::CPtr type);

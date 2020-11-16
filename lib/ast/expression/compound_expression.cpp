@@ -27,7 +27,7 @@ size_t CompoundExpression::getCol() const {
 }
 
 void CompoundExpression::buildASTImpl(
-        LookupContext &lookupContext, ExpectedResult expectedResult, unsigned &weight, unsigned weightLimit)
+        LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit)
 {
     ASSERT( &lookupContext == this->lookupContext.getParent() );
 

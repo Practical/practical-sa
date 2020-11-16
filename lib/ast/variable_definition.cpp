@@ -21,7 +21,7 @@ VariableDefinition::VariableDefinition(const NonTerminals::VariableDefinition &p
 void VariableDefinition::buildAST( LookupContext &lookupCtx ) {
     auto varType = lookupCtx.lookupType( parserVarDef.body.type );
 
-    unsigned weight = 0;
+    Weight weight;
     initValue.buildAST(lookupCtx, varType, weight, Expression::NoWeightLimit);
 
     lookupCtx.addLocalVar( parserVarDef.body.name.identifier, varType, Expression::allocateId() );
