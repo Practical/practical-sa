@@ -8,7 +8,12 @@
  */
 #include "ast/expression/address_of.h"
 
+#include "ast/pointers.h"
+
 #include <practical-errors.h>
+#include <practical-sa.h>
+
+using namespace PracticalSemanticAnalyzer;
 
 namespace AST::ExpressionImpl {
 
@@ -41,10 +46,16 @@ void AddressOf::buildASTImpl(
 
     if( (operand.getType()->getFlags() & StaticType::Flags::Reference)==0 )
         throw LValueRequired( operand.getType(), operand.getLine(), operand.getCol() );
+
+    metadata.type = StaticTypeImpl::allocate( PointerTypeImpl( operand.getType() ) );
+    metadata.valueRange = new PointerValueRange( operand.getValueRange() );
 }
 
 ExpressionId AddressOf::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
-    ABORT()<<"TODO implement";
+    ASSERT( (operand.getType()->getFlags() & StaticType::Flags::Reference) != 0 )<<
+            "Address of operand type "<<operand.getType()<<" is not an lvalue";
+
+    return operand.codeGen(functionGen);
 }
 
 } // AST::ExpressionImpl
