@@ -96,6 +96,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
                 }
 
                 validPaths.emplace_back( &path );
+                continue;
             }
 
             auto temporaryCandidates = decay( paths, candidate );
@@ -213,6 +214,8 @@ static std::vector< StaticTypeImpl::CPtr > castCandidates(
             }
 
             paths.erase( previousIter );
+        } else {
+            ret.push_back( candidates->destType );
         }
 
         paths.emplace( candidates->destType, CastChain::Junction{
@@ -220,8 +223,6 @@ static std::vector< StaticTypeImpl::CPtr > castCandidates(
                 .predecessor = candidates->sourceType,
                 .pathWeight = pathWeight,
             } );
-
-        ret.push_back( candidates->destType );
     }
 
     return ret;
