@@ -6,8 +6,8 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#ifndef TYPED_H
-#define TYPED_H
+#ifndef PRACTICAL_TYPED_H
+#define PRACTICAL_TYPED_H
 
 #include <cstddef>
 #include <functional>
@@ -105,4 +105,4 @@ std::ostream &operator<<(std::ostream &out, Typed<int8_t, init, mod, id> t) {
     return out << Typed<int8_t, init, mod, id>::getName() << "(" << (int)t.get() << ")";
 }
 
-#endif // TYPED_H
+#endif // PRACTICAL_TYPED_H

@@ -6,8 +6,8 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#ifndef SLICE_H
-#define SLICE_H
+#ifndef PRACTICAL_SLICE_H
+#define PRACTICAL_SLICE_H
 
 #include "defines.h"
 
@@ -283,4 +283,4 @@ namespace std {
     };
 }
 
-#endif // SLICE_H
+#endif // PRACTICAL_SLICE_H

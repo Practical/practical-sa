@@ -10,8 +10,8 @@
 
 #include "ast/pointers.h"
 
-#include <practical-errors.h>
-#include <practical-sa.h>
+#include <practical/errors.h>
+#include <practical/practical.h>
 
 using namespace PracticalSemanticAnalyzer;
 

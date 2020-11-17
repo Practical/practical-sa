@@ -11,7 +11,8 @@
 
 #include "fd.h"
 #include "nocopy.h"
-#include "slice.h"
+
+#include <practical/slice.h>
 
 #include <sys/mman.h>
 

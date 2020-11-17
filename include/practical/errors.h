@@ -9,7 +9,7 @@
 #ifndef PRACTICAL_ERRORS_H
 #define PRACTICAL_ERRORS_H
 
-#include <practical-sa.h>
+#include <practical/practical.h>
 
 namespace Tokenizer {
     struct Token;

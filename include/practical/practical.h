@@ -6,8 +6,8 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#ifndef LIB_PRACTICAL_SA_H
-#define LIB_PRACTICAL_SA_H
+#ifndef PRACTICAL_PRACTICAL_H
+#define PRACTICAL_PRACTICAL_H
 
 #include "nocopy.h"
 #include "typed.h"
@@ -305,4 +305,4 @@ inline bool operator!=(
     return !( lhs == rhs );
 }
 
-#endif // LIB_PRACTICAL_SA_H
+#endif // PRACTICAL_PRACTICAL_H

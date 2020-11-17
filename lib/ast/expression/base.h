@@ -15,7 +15,8 @@
 #include "ast/expected_result.h"
 #include "ast/lookup_context.h"
 #include "ast/weight.h"
-#include <practical-sa.h>
+
+#include <practical/practical.h>
 
 namespace AST::ExpressionImpl {
 

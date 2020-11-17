@@ -15,7 +15,7 @@
 
 #include "ast/lookup_context.h"
 
-#include <practical-sa.h>
+#include <practical/practical.h>
 
 namespace AST {
 

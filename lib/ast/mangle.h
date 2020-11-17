@@ -9,7 +9,7 @@
 #ifndef AST_MANGLE_H
 #define AST_MANGLE_H
 
-#include <practical-sa.h>
+#include <practical/practical.h>
 
 #include <string>
 

@@ -6,9 +6,9 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#include "practical-errors.h"
-
 #include "tokenizer.h"
+
+#include <practical/errors.h>
 
 #include <sstream>
 

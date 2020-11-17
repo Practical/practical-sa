@@ -9,7 +9,8 @@
 #include <tokenizer.h>
 
 #include "asserts.h"
-#include "practical-errors.h"
+
+#include <practical/errors.h>
 
 #include <regex>
 #include <string>

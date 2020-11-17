@@ -10,7 +10,7 @@
 
 #include "ast/expression.h"
 
-#include <practical-errors.h>
+#include <practical/errors.h>
 
 namespace AST::ExpressionImpl {
 

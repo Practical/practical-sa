@@ -13,7 +13,7 @@
 #include "ast/signed_int_value_range.h"
 #include "ast/unsigned_int_value_range.h"
 
-#include <practical-errors.h>
+#include <practical/errors.h>
 
 using namespace PracticalSemanticAnalyzer;
 

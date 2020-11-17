@@ -13,7 +13,7 @@
 #include "ast/lookup_context.h"
 #include "parser.h"
 
-#include <practical-sa.h>
+#include <practical/practical.h>
 
 namespace AST {
 

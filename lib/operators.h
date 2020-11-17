@@ -9,11 +9,12 @@
 #ifndef OPERATORS_H
 #define OPERATORS_H
 
+#include "tokenizer.h"
+
+#include <practical/slice.h>
+
 #include <unordered_map>
 #include <vector>
-
-#include "slice.h"
-#include "tokenizer.h"
 
 namespace Operators {
 

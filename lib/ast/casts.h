@@ -12,7 +12,7 @@
 #include "ast/static_type.h"
 #include "ast/value_range_base.h"
 
-#include <practical-sa.h>
+#include <practical/practical.h>
 
 namespace AST {
 

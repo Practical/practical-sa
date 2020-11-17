@@ -12,7 +12,7 @@
 #include "ast/value_range_base.h"
 #include "asserts.h"
 
-#include <practical-sa.h>
+#include <practical/practical.h>
 
 #include <memory>
 #include <sstream>

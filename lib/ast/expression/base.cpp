@@ -8,7 +8,7 @@
  */
 #include "base.h"
 
-#include <practical-errors.h>
+#include <practical/errors.h>
 
 namespace AST::ExpressionImpl {
 

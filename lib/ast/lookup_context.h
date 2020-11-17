@@ -11,8 +11,9 @@
 
 #include "ast/static_type.h"
 #include "parser.h"
-#include "slice.h"
 #include "tokenizer.h"
+
+#include <practical/slice.h>
 
 #include <string>
 #include <unordered_map>

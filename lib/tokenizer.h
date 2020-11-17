@@ -9,12 +9,12 @@
 #ifndef TOKENIZER_H
 #define TOKENIZER_H
 
+#include <practical/defines.h>
+#include <practical/slice.h>
+
 #include <cstring>
 #include <iostream>
 #include <memory>
-
-#include "defines.h"
-#include "slice.h"
 
 namespace Tokenizer {
 

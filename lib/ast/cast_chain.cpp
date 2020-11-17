@@ -11,7 +11,7 @@
 #include "ast/expression/base.h"
 #include "ast/decay.h"
 
-#include <practical-errors.h>
+#include <practical/errors.h>
 
 using namespace PracticalSemanticAnalyzer;
 

@@ -10,11 +10,12 @@
 #define PARSER_H
 
 #include "asserts.h"
-#include "defines.h"
 #include "operators.h"
-#include "practical-sa.h"
-#include "slice.h"
 #include "tokenizer.h"
+
+#include <practical/defines.h>
+#include <practical/practical.h>
+#include <practical/slice.h>
 
 #include <memory>
 #include <variant>

@@ -9,7 +9,7 @@
 #ifndef AST_AST_H
 #define AST_AST_H
 
-#include <practical-sa.h>
+#include <practical/practical.h>
 
 #include "parser.h"
 #include "ast/lookup_context.h"

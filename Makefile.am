@@ -1,6 +1,8 @@
 SUBDIRS=lib
 
-include_HEADERS = include/practical-sa.h include/practical-errors.h include/typed.h include/slice.h
+include_practicaldir = $(includedir)/practical
+
+include_practical_HEADERS = include/practical/practical.h include/practical/errors.h include/practical/typed.h include/practical/slice.h
 
 ut:
 	$(MAKE) -C lib ut

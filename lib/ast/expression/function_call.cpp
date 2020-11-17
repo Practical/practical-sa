@@ -10,7 +10,7 @@
 
 #include "ast/expression/identifier.h"
 
-#include <practical-errors.h>
+#include <practical/errors.h>
 
 using namespace PracticalSemanticAnalyzer;
 

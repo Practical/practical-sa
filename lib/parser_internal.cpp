@@ -1,6 +1,6 @@
 #include "parser_internal.h"
 
-#include "practical-errors.h"
+#include <practical/errors.h>
 
 #if VERBOSE_PARSING
 size_t PARSER_RECURSION_DEPTH;

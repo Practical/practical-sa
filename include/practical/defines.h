@@ -6,8 +6,8 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#ifndef DEFINES_H
-#define DEFINES_H
+#ifndef PRACTICAL_DEFINES_H
+#define PRACTICAL_DEFINES_H
 
 #include <assert.h>
 #include <cstdio>
@@ -23,4 +23,4 @@ std::unique_ptr<T> safenew(Args&&... args) {
 
 static constexpr size_t FibonacciHashMultiplier = 0x9e3779b97f4a7c15; //static_cast<size_t>(-1) / GoldenRatio;
 
-#endif // DEFINES_H
+#endif // PRACTICAL_DEFINES_H

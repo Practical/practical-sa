@@ -6,7 +6,7 @@
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
  * home directory.
  */
-#include "slice.h"
+#include <practical/slice.h>
 
 #include <cppunit/extensions/HelperMacros.h>
 

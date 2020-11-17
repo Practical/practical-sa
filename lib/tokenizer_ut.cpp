@@ -9,8 +9,9 @@
 #include "tokenizer.h"
 
 #include "mmap.h"
-#include "practical-errors.h"
 #include "ut/dirscan.h"
+
+#include <practical/errors.h>
 
 #include <cppunit/extensions/HelperMacros.h>
 

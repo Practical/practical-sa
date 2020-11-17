@@ -8,7 +8,7 @@
  */
 #include "ast/operators/helper.h"
 
-#include <practical-sa.h>
+#include <practical/practical.h>
 
 using namespace PracticalSemanticAnalyzer;
 

@@ -9,8 +9,9 @@
 #include "parser.h"
 
 #include "parser_internal.h"
-#include "practical-errors.h"
 #include "scope_tracing.h"
+
+#include <practical/errors.h>
 
 using namespace InternalNonTerminals;
 

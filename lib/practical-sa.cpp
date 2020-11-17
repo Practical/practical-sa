@@ -8,14 +8,13 @@
  */
 #include "config.h"
 
-#include <practical-sa.h>
-
 #include "ast/ast.h"
 #include "ast/static_type.h"
 #include "mmap.h"
 #include "parser.h"
 
-#include "defines.h"
+#include <practical/defines.h>
+#include <practical/practical.h>
 
 DEF_TYPED_NS( PracticalSemanticAnalyzer, ModuleId );
 DEF_TYPED_NS( PracticalSemanticAnalyzer, ExpressionId );
