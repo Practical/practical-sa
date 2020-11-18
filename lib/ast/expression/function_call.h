@@ -24,8 +24,7 @@ class FunctionCall : public Base {
 public:
     explicit FunctionCall( const NonTerminals::Expression::FunctionCall &parserFunctionCall );
 
-    size_t getLine() const override;
-    size_t getCol() const override;
+    SourceLocation getLocation() const override;
 
 protected:
     void buildASTImpl(

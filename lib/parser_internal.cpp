@@ -30,7 +30,7 @@ const Tokenizer::Token *nextToken(Slice<const Tokenizer::Token> source, size_t &
         if( msg==nullptr )
             return nullptr;
         else
-            throw parser_error(msg, 0, 0);
+            throw parser_error(msg, SourceLocation());
     }
 
     return &source[index++];
@@ -48,7 +48,7 @@ const Tokenizer::Token &expectToken(
 
     if( currentToken->token!=expected ) {
         index--;
-        throw parser_error(mismatchMsg, currentToken->line, currentToken->col);
+        throw parser_error(mismatchMsg, currentToken->location);
     }
 
     return *currentToken;
@@ -138,11 +138,11 @@ size_t ConditionalExpressionOrStatement::parse(Slice<const Tokenizer::Token> sou
         {
             if( ! ifClause.isStatement() )
                 throw parser_error(
-                        "condition must have statement (not expression) as \"then\" clause", ifToken.line, ifToken.col);
+                        "condition must have statement (not expression) as \"then\" clause", ifToken.location);
 
             if( elseClause && !elseClause->isStatement() )
                 throw parser_error(
-                        "condition must have statement (not expression) as \"else\" clause", ifToken.line, ifToken.col);
+                        "condition must have statement (not expression) as \"else\" clause", ifToken.location);
 
             auto &statement=this->condition.emplace<Statement::ConditionalStatement>();
             statement.condition=std::move(condition);
@@ -155,15 +155,15 @@ size_t ConditionalExpressionOrStatement::parse(Slice<const Tokenizer::Token> sou
         {
             if( ifClause.isStatement() )
                 throw parser_error(
-                        "condition must have expression (not statement) as \"then\" clause", ifToken.line, ifToken.col);
+                        "condition must have expression (not statement) as \"then\" clause", ifToken.location);
 
             if( !elseClause )
                 throw parser_error(
-                        "conditional expression must have an \"else\" clause", ifToken.line, ifToken.col);
+                        "conditional expression must have an \"else\" clause", ifToken.location);
 
             if( elseClause->isStatement() )
                 throw parser_error(
-                        "condition must have expression (not statement) as \"else\" clause", ifToken.line, ifToken.col);
+                        "condition must have expression (not statement) as \"else\" clause", ifToken.location);
 
             auto &expression = this->condition.emplace<ConditionalExpression>();
             expression.condition = std::move(condition);
@@ -177,7 +177,7 @@ size_t ConditionalExpressionOrStatement::parse(Slice<const Tokenizer::Token> sou
             {
                 throw parser_error(
                         "Conditional expression must use compound expressions for \"then\" and \"else\" clauses",
-                        ifToken.line, ifToken.col);
+                        ifToken.location);
             }
         }
         break;

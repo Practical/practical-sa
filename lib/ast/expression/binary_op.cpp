@@ -141,12 +141,8 @@ BinaryOp::BinaryOp( const NonTerminals::Expression::BinaryOperator &parserOp ) :
     parserOp(parserOp)
 {}
 
-size_t BinaryOp::getLine() const {
-    return parserOp.op->line;
-}
-
-size_t BinaryOp::getCol() const {
-    return parserOp.op->col;
+SourceLocation BinaryOp::getLocation() const {
+    return parserOp.op->location;
 }
 
 // Protected methods

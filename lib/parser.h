@@ -51,14 +51,9 @@ namespace NonTerminals {
             return identifier->text;
         }
 
-        size_t getLine() const {
+        SourceLocation getLocation() const {
             ASSERT(identifier != nullptr) << "Dereferencing an unparsed identifier";
-            return identifier->line;
-        }
-
-        size_t getCol() const {
-            ASSERT(identifier != nullptr) << "Dereferencing an unparsed identifier";
-            return identifier->col;
+            return identifier->location;
         }
     };
 
@@ -74,8 +69,7 @@ namespace NonTerminals {
         std::variant<std::monostate, Identifier, Pointer> type;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
-        size_t getLine() const;
-        size_t getCol() const;
+        SourceLocation getLocation() const;
     };
 
     struct Literal : public NonTerminal {

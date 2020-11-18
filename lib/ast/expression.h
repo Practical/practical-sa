@@ -31,8 +31,7 @@ public:
         return dynamic_cast<const T *>(actualExpression.get());
     }
 
-    size_t getLine() const override;
-    size_t getCol() const override;
+    SourceLocation getLocation() const override;
 
 protected:
     void buildASTImpl(

@@ -25,8 +25,7 @@ public:
 
     explicit UnaryOp( const NonTerminals::Expression::UnaryOperator &parserOp );
 
-    size_t getLine() const override;
-    size_t getCol() const override;
+    SourceLocation getLocation() const override;
 
 protected:
     void buildASTImpl(

@@ -57,8 +57,7 @@ public:
     void buildAST( LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit );
     ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 
-    virtual size_t getLine() const = 0;
-    virtual size_t getCol() const = 0;
+    virtual SourceLocation getLocation() const = 0;
 
 protected:
     virtual void buildASTImpl(

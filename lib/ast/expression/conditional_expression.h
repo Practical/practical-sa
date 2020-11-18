@@ -20,8 +20,7 @@ class ConditionalExpression : public Base {
 public:
     explicit ConditionalExpression( const NonTerminals::ConditionalExpression &parserCondition );
 
-    size_t getLine() const override;
-    size_t getCol() const override;
+    SourceLocation getLocation() const override;
 
 protected:
     void buildASTImpl(

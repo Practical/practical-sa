@@ -36,6 +36,21 @@ namespace PracticalSemanticAnalyzer {
     public:
     };
 
+    struct SourceLocation {
+        unsigned line=0, col=0;
+
+        constexpr bool operator==(const SourceLocation &that) const {
+            return line==that.line && col==that.col;
+        }
+        constexpr bool operator!=(const SourceLocation &that) const {
+            return !( (*this)==that );
+        }
+
+        friend std::ostream &operator<<(std::ostream &out, const SourceLocation &location) {
+            return out<<location.line<<":"<<location.col;
+        }
+    };
+
     // Cookie type used by the backend to identify types. Backend can choose whether to use an integer or a pointer
     union TypeId {
         uintptr_t n;
@@ -166,7 +181,7 @@ namespace PracticalSemanticAnalyzer {
         // Function handling
         virtual void functionEnter(
                 String name, StaticType::CPtr returnType, Slice<const ArgumentDeclaration> arguments,
-                String file, size_t line, size_t col) = 0;
+                String file, const SourceLocation &location) = 0;
         virtual void functionLeave() = 0;
 
         virtual void returnValue(ExpressionId id) = 0;

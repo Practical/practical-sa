@@ -10,11 +10,14 @@
 #define TOKENIZER_H
 
 #include <practical/defines.h>
+#include <practical/practical.h>
 #include <practical/slice.h>
 
 #include <cstring>
 #include <iostream>
 #include <memory>
+
+using PracticalSemanticAnalyzer::SourceLocation;
 
 namespace Tokenizer {
 
@@ -97,25 +100,25 @@ enum class Tokens {
 struct Token {
     String text;
     Tokens token = Tokens::ERR;
-    size_t line=0, col=0;
+    SourceLocation location;
 };
 
 class Tokenizer {
 private:
     Slice<const char> file;
-    size_t line=0, col=0;
+    SourceLocation location;
     size_t position=0;
-    size_t tokenLine=0, tokenCol=0;
+    SourceLocation tokenLocation;
     Tokens token;
     Slice<const char> tokenText;
 
     struct SavedPoint {
-        size_t line, col;
+        SourceLocation location;
         size_t position;
     };
 
 public:
-    Tokenizer(String file) : file(file), line(1), col(1) {
+    Tokenizer(String file) : file(file), location{ .line=1, .col=1 } {
     }
 
     bool next();
@@ -124,8 +127,7 @@ public:
         Token ret;
 
         ret.text = currentTokenText();
-        ret.line = currentLine();
-        ret.col = currentCol();
+        ret.location = currentLocation();
         ret.token = currentToken();
 
         return ret;
@@ -135,12 +137,8 @@ public:
         return token;
     }
 
-    size_t currentLine() const {
-        return tokenLine;
-    }
-
-    size_t currentCol() const {
-        return tokenCol;
+    SourceLocation currentLocation() const {
+        return tokenLocation;
     }
 
     Slice<const char> currentTokenText() const {

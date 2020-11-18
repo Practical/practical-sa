@@ -65,10 +65,10 @@ class TokenizerTest : public CppUnit::TestFixture  {
 
         struct TestPoint {
             Tokenizer::Tokens token;
-            size_t line, column;
+            SourceLocation location;
         };
         std::vector<TestPoint> testPoints;
-        size_t finishLine, finishCol;
+        SourceLocation finishLocation;
 
         bool done = false;
         while( !done && testPlan.size()>0 ) {
@@ -78,12 +78,14 @@ class TokenizerTest : public CppUnit::TestFixture  {
             if( std::regex_match( l, parsedFields, csvParse ) ) {
                 TestPoint point;
 
-                size_t line = strtoul( parsedFields[2].str().c_str(), nullptr, 0 );
-                size_t col = strtoul( parsedFields[3].str().c_str(), nullptr, 0 );
+                SourceLocation location{
+                    .line = (unsigned)strtoul( parsedFields[2].str().c_str(), nullptr, 0 ),
+                    .col = (unsigned)strtoul( parsedFields[3].str().c_str(), nullptr, 0 )
+                };
 
 #define CASE(name) if( parsedFields[1].str()==#name ) {\
                     point.token = Tokenizer::Tokens::name;\
-                    point.line = line; point.column = col;\
+                    point.location = location;\
                     testPoints.push_back(point);\
                 }
                 CASE(ERR)
@@ -154,8 +156,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
                 else CASE(RESERVED_DEF)
                 else if( parsedFields[1].str()=="END" ) {
                     done = true;
-                    finishLine = line;
-                    finishCol = col;
+                    finishLocation = location;
                 } else {
                     std::cerr<<"Requested unknown token \""<<parsedFields[1].str()<<"\"\n";
                     CPPUNIT_FAIL("Test plan requested an unknown token");
@@ -173,30 +174,27 @@ class TokenizerTest : public CppUnit::TestFixture  {
             TestPoint *point = &testPoints[expectedIndex];
 
             Tokenizer::Tokens currentToken;
-            size_t currentLine, currentCol;
+            SourceLocation currentLocation;
             try {
                 if( !tokenizer.next() )
                     break;
 
                 currentToken = tokenizer.currentToken();
-                currentLine = tokenizer.currentLine();
-                currentCol = tokenizer.currentCol();
+                currentLocation = tokenizer.currentLocation();
             } catch( PracticalSemanticAnalyzer::tokenizer_error &ex ) {
                 currentToken = Tokenizer::Tokens::ERR;
-                currentLine = ex.getLine();
-                currentCol = ex.getCol();
+                currentLocation = ex.getLocation();
             }
             std::cout<<"Tokenizer matched "<<currentToken<<"\n";
 
             if( currentToken == point->token ) {
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token line", point->line, currentLine );
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token column", point->column, currentCol );
+                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected token line", point->location, currentLocation );
                 expectedIndex++;
             } else if( currentToken==Tokenizer::Tokens::WS ) {
                 // Do nothing: we're allowed to ignore white spaces
             } else {
-                std::cerr << "At " << currentLine << ":" << currentCol << ": Detected token " << currentToken <<
-                        ", expected " << point->token << " " << point->line << ":" << point->column << ": text was \"" <<
+                std::cerr << "At " << currentLocation << ": Detected token " << currentToken <<
+                        ", expected " << point->token << " " << point->location << ": text was \"" <<
                         tokenizer.currentTokenText() << "\"\n";
                 CPPUNIT_ASSERT_EQUAL_MESSAGE("Tokenizer returned unexpected token", point->token, currentToken);
                 CPPUNIT_FAIL("Unreachable code reached");
@@ -204,8 +202,7 @@ class TokenizerTest : public CppUnit::TestFixture  {
         }
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all expected tokens were matched", testPoints.size(), expectedIndex );
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Tokenizer finish line incorrect", finishLine, tokenizer.currentLine() );
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Tokenizer finish column incorrect", finishCol, tokenizer.currentCol() );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Tokenizer finish line incorrect", finishLocation, tokenizer.currentLocation() );
     }
 
     void test() {

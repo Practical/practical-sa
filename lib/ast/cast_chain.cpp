@@ -44,7 +44,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
         StaticTypeImpl::CPtr destinationType,
         const ExpressionImpl::ExpressionMetadata &srcMetadata,
         Weight &weight, Weight weightLimit,
-        bool implicit, size_t line, size_t col )
+        bool implicit, const SourceLocation &location )
 {
     ASSERT( implicit )<<"TODO explicit cast is untested";
     ASSERT( destinationType != srcMetadata.type )<<
@@ -116,7 +116,7 @@ std::unique_ptr<CastChain> CastChain::allocate(
     }
 
     if( validPaths.size()>1 )
-        throw AmbiguousCast(srcMetadata.type, destinationType, implicit, line, col);
+        throw AmbiguousCast(srcMetadata.type, destinationType, implicit, location);
 
     const Junction *currentJunction = validPaths[0];
     std::unique_ptr<CastChain> ret( new CastChain( nullptr, *currentJunction->descriptor ) );
@@ -138,7 +138,7 @@ skipAllocation:
     }
 
     try {
-        ret->calcVrp( srcMetadata, implicit, line, col );
+        ret->calcVrp( srcMetadata, implicit, location );
     } catch( CastNotAllowed &ex ) {
         return nullptr;
     }
@@ -229,13 +229,13 @@ static std::vector< StaticTypeImpl::CPtr > castCandidates(
 }
 
 void CastChain::calcVrp(
-        const ExpressionImpl::ExpressionMetadata &srcMetadata, bool isImplicit, size_t line, size_t col )
+        const ExpressionImpl::ExpressionMetadata &srcMetadata, bool isImplicit, const SourceLocation &location )
 {
     ASSERT( ! metadata.valueRange );
 
     const ExpressionImpl::ExpressionMetadata *prevMetadata = nullptr;
     if( previousCast ) {
-        previousCast->calcVrp( srcMetadata, isImplicit, line, col );
+        previousCast->calcVrp( srcMetadata, isImplicit, location );
 
         prevMetadata = &previousCast->metadata;
     } else {
@@ -249,7 +249,7 @@ void CastChain::calcVrp(
             isImplicit );
 
     if( metadata.valueRange == nullptr )
-        throw CastNotAllowed( prevMetadata->type, metadata.type, isImplicit, line, col );
+        throw CastNotAllowed( prevMetadata->type, metadata.type, isImplicit, location );
 }
 
 } // namespace AST

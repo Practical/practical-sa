@@ -14,8 +14,9 @@
 
 namespace PracticalSemanticAnalyzer {
 
-IncompatibleTypes::IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, size_t line, size_t col)
-        : compile_error(line, col)
+IncompatibleTypes::IncompatibleTypes(
+        StaticType::CPtr left, StaticType::CPtr right, const SourceLocation &location) :
+    compile_error(location)
 {
     std::stringstream buf;
 
@@ -24,8 +25,8 @@ IncompatibleTypes::IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr rig
     setMsg( buf.str().c_str() );
 }
 
-SymbolRedefined::SymbolRedefined(String symbol, size_t line, size_t col)
-    : compile_error(line, col)
+SymbolRedefined::SymbolRedefined(String symbol, const SourceLocation &location)
+    : compile_error(location)
 {
     std::stringstream buf;
 
@@ -34,8 +35,8 @@ SymbolRedefined::SymbolRedefined(String symbol, size_t line, size_t col)
     setMsg( buf.str().c_str() );
 }
 
-SymbolNotFound::SymbolNotFound(String symbol, size_t line, size_t col)
-    : compile_error(line, col)
+SymbolNotFound::SymbolNotFound(String symbol, const SourceLocation &location)
+    : compile_error(location)
 {
     std::stringstream buf;
 
@@ -45,7 +46,7 @@ SymbolNotFound::SymbolNotFound(String symbol, size_t line, size_t col)
 }
 
 CannotTakeValueOfFunction::CannotTakeValueOfFunction(const Tokenizer::Token *identifier) :
-    compile_error(identifier->line, identifier->col)
+    compile_error(identifier->location)
 {
     std::stringstream buf;
 
@@ -55,7 +56,7 @@ CannotTakeValueOfFunction::CannotTakeValueOfFunction(const Tokenizer::Token *ide
 }
 
 TryToCallNonCallable::TryToCallNonCallable(const Tokenizer::Token *identifier) :
-    compile_error(identifier->line, identifier->col)
+    compile_error(identifier->location)
 {
     std::stringstream buf;
 
@@ -65,19 +66,21 @@ TryToCallNonCallable::TryToCallNonCallable(const Tokenizer::Token *identifier) :
 }
 
 NoMatchingOverload::NoMatchingOverload(const Tokenizer::Token *identifier) :
-    compile_error(identifier->line, identifier->col)
+    compile_error(identifier->location)
 {
     setMsg( "Trying to call function with no matching overload" );
 }
 
 AmbiguousOverloads::AmbiguousOverloads(const Tokenizer::Token *identifier) :
-    compile_error(identifier->line, identifier->col)
+    compile_error(identifier->location)
 {
     setMsg( "Trying to call function with ambiguous overload resolution" );
 }
 
-CastError::CastError(const char *msg, StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
-        : compile_error(line, col)
+CastError::CastError(
+        const char *msg, StaticType::CPtr src, StaticType::CPtr dst, bool implicit,
+        const SourceLocation &location) :
+    compile_error(location)
 {
     std::stringstream buf;
 
@@ -90,17 +93,19 @@ CastError::CastError(const char *msg, StaticType::CPtr src, StaticType::CPtr dst
 }
 
 
-CastNotAllowed::CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
-    : CastError( "No cast chain", src, dst, implicit, line, col )
+CastNotAllowed::CastNotAllowed(
+        StaticType::CPtr src, StaticType::CPtr dst, bool implicit, const SourceLocation &location) :
+    CastError( "No cast chain", src, dst, implicit, location )
 {}
 
-AmbiguousCast::AmbiguousCast(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col)
-    : CastError( "Cast chain ambiguous", src, dst, implicit, line, col )
+AmbiguousCast::AmbiguousCast(
+        StaticType::CPtr src, StaticType::CPtr dst, bool implicit, const SourceLocation &location) :
+    CastError( "Cast chain ambiguous", src, dst, implicit, location )
 {
 }
 
-LValueRequired::LValueRequired(StaticType::CPtr wrongType, size_t line, size_t col) :
-    compile_error( "LValue required", line, col )
+LValueRequired::LValueRequired(StaticType::CPtr wrongType, const SourceLocation &location) :
+    compile_error( "LValue required", location )
 {}
 
 } // namespace PracticalSemanticAnalyzer

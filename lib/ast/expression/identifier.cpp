@@ -23,12 +23,8 @@ String Identifier::getName() const {
     return parserIdentifier.identifier->text;
 }
 
-size_t Identifier::getLine() const {
-    return parserIdentifier.identifier->line;
-}
-
-size_t Identifier::getCol() const {
-    return parserIdentifier.identifier->col;
+SourceLocation Identifier::getLocation() const {
+    return parserIdentifier.identifier->location;
 }
 
 void Identifier::buildASTImpl(
@@ -38,7 +34,7 @@ void Identifier::buildASTImpl(
 
     if( identifier==nullptr ) {
         throw SymbolNotFound(
-                parserIdentifier.identifier->text, parserIdentifier.identifier->line, parserIdentifier.identifier->col );
+                parserIdentifier.identifier->text, parserIdentifier.identifier->location );
     }
 
     struct Visitor {

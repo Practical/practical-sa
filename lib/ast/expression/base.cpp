@@ -35,17 +35,17 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
         throw ExpressionTooExpensive();
 
     /*
-    ASSERT( metadata.type )<<"Build AST did not set a return type "<<getLine()<<":"<<getCol();
-    ASSERT( metadata.valueRange )<<"Build AST did not set a value range "<<getLine()<<":"<<getCol();
+    ASSERT( metadata.type )<<"Build AST did not set a return type "<<getLocation();
+    ASSERT( metadata.valueRange )<<"Build AST did not set a value range "<<getLocation();
     */
     if( !expectedResult || *expectedResult.getType()==*metadata.type )
         return;
 
     castChain = CastChain::allocate(
-            lookupContext, expectedResult.getType(), metadata, weight, weightLimit, true, getLine(), getCol() );
+            lookupContext, expectedResult.getType(), metadata, weight, weightLimit, true, getLocation() );
 
     if( !castChain && expectedResult.isMandatory() ) {
-        throw CastNotAllowed( metadata.type, expectedResult.getType(), true, getLine(), getCol() );
+        throw CastNotAllowed( metadata.type, expectedResult.getType(), true, getLocation() );
     }
 }
 

@@ -16,12 +16,8 @@ CastOp::CastOp( const NonTerminals::Expression::CastOperator &parserCast ) :
 {
 }
 
-size_t CastOp::getLine() const {
-    return parserCast.op->line;
-}
-
-size_t CastOp::getCol() const {
-    return parserCast.op->col;
+SourceLocation CastOp::getLocation() const {
+    return parserCast.op->location;
 }
 
 void CastOp::buildASTImpl(

@@ -98,15 +98,13 @@ static const std::unordered_map<std::string, Tokens> reservedWords {
 bool Tokenizer::next() {
     if( file.size()==position ) {
         // We've reached our EOF
-        tokenLine = line;
-        tokenCol = col;
+        tokenLocation = location;
         return false;
     }
 
     token = Tokens::ERR;
 
-    size_t startLine = line;
-    size_t startCol = col;
+    SourceLocation startLocation = location;
     size_t tokenStart = position;
     char currentChar = file[tokenStart];
     if(isWS(currentChar)) {
@@ -145,11 +143,10 @@ bool Tokenizer::next() {
         consumeIdentifier();
     } else {
         tokenText = file.subslice(tokenStart, tokenStart+1);
-        throw tokenizer_error("Invalid character encountered", startLine, startCol);
+        throw tokenizer_error("Invalid character encountered", startLocation);
     }
     tokenText = file.subslice(tokenStart, position);
-    tokenLine = startLine;
-    tokenCol = startCol;
+    tokenLocation = startLocation;
     ASSERT( token!=Tokens::ERR );
 
     return true;
@@ -175,7 +172,7 @@ void Tokenizer::consumeWS() {
 
 void Tokenizer::consumeOp() {
     auto startPosition = position;
-    auto startLine = line, startCol = col;
+    auto startLocation = location;
 
     auto lastIdentified = savePosition();
     bool found = false;
@@ -204,26 +201,26 @@ void Tokenizer::consumeOp() {
 
     if( !found ) {
         // Man am I going to regret this error message
-        throw tokenizer_error("Practical does not support inventing weird operators", startLine, startCol);
+        throw tokenizer_error("Practical does not support inventing weird operators", startLocation);
     }
 
     restorePosition( lastIdentified );
 
     switch( token ) {
     case Tokens::ERR:
-        ABORT() << "consumeOp found operator \"" << file.subslice(startPosition, position) << "\" at " << startLine << ":" <<
-                startCol << " but token returned was ERR";
+        ABORT() << "consumeOp found operator \"" << file.subslice(startPosition, position) << "\" at " <<
+                startLocation << " but token returned was ERR";
         break;
     case Tokens::OP_RUNON_ERROR:
         throw tokenizer_error(
                 "The compiler refuses to guess which combination of operators you meant. Disambiguate the code with spaces",
-                startLine, startCol);
+                startLocation);
         break;
     case Tokens::COMMENT_LINE_END:
         consumeLineComment();
         break;
     case Tokens::COMMENT_MULTILINE:
-        consumeNestableComment( SavedPoint{ .line=startLine, .col=startCol, .position=startPosition } );
+        consumeNestableComment( SavedPoint{ .location=startLocation, .position=startPosition } );
         break;
     default:
         // Successful matching, nothing else to do
@@ -237,7 +234,7 @@ void Tokenizer::consumeStringLiteral() {
         if( file[position]=='\\' ) {
             moreData = nextChar();
         } else if( file[position]=='\n' ) {
-            throw tokenizer_error("Naked new line in string literal", line, col);
+            throw tokenizer_error("Naked new line in string literal", location);
         }
     }
 
@@ -246,12 +243,11 @@ void Tokenizer::consumeStringLiteral() {
         nextChar();
         token = Tokens::LITERAL_STRING;
     } else
-        throw tokenizer_error("Unterminated string", line, col);
+        throw tokenizer_error("Unterminated string", location);
 }
 
 void Tokenizer::consumeNumericLiteral() {
-    size_t startLine = line;
-    size_t startCol = col;
+    SourceLocation startLocation = location;
     size_t startPos = position;
     // Consume all relevant characters, whether legal in an integer literal or not. Sort everything else later.
     while( nextChar() && (isDigit(file[position]) || isIdentifierAlpha(file[position])) ) {
@@ -277,7 +273,7 @@ void Tokenizer::consumeNumericLiteral() {
     } else if( std::regex_match( start, end, re8 ) ) {
         token = Tokens::LITERAL_INT_8;
     } else {
-        throw tokenizer_error("Invalid numeric literal", startLine, startCol);
+        throw tokenizer_error("Invalid numeric literal", startLocation);
     }
 }
 
@@ -316,7 +312,7 @@ void Tokenizer::consumeNestableComment(SavedPoint startPoint) {
         }
     }
 
-    throw tokenizer_error("Unterminated multi-line comment", startPoint.line, startPoint.col);
+    throw tokenizer_error("Unterminated multi-line comment", startPoint.location);
 }
 
 bool Tokenizer::nextChar() {
@@ -325,22 +321,21 @@ bool Tokenizer::nextChar() {
         return false;
 
     if( file[position]=='\n' ) {
-        col=0;
-        line++;
+        location.col=0;
+        location.line++;
     }
     position++;
-    col++;
+    location.col++;
 
     return position<file.size();
 }
 
 Tokenizer::SavedPoint Tokenizer::savePosition() {
-    return SavedPoint{ .line=line, .col=col, .position=position };
+    return SavedPoint{ .location=location, .position=position };
 }
 
 void Tokenizer::restorePosition(Tokenizer::SavedPoint position) {
-    line = position.line;
-    col = position.col;
+    location = position.location;
     this->position = position.position;
 }
 
@@ -424,6 +419,6 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
 }
 
 std::ostream &operator<<(std::ostream &out, const Tokenizer::Token &token) {
-    out<<token.token<<" ("<<token.text<<") at "<<token.line<<":"<<token.col;
+    out<<token.token<<" ("<<token.text<<") at "<<token.location;
     return out;
 }

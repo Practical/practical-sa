@@ -53,12 +53,8 @@ UnaryOp::UnaryOp( const NonTerminals::Expression::UnaryOperator &parserOp ) :
     parserOp(parserOp)
 {}
 
-size_t UnaryOp::getLine() const {
-    return parserOp.op->line;
-}
-
-size_t UnaryOp::getCol() const {
-    return parserOp.op->col;
+SourceLocation UnaryOp::getLocation() const {
+    return parserOp.op->location;
 }
 
 // Protected methods

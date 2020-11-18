@@ -62,36 +62,18 @@ size_t Type::parse(Slice<const Tokenizer::Token> source) {
     RULE_LEAVE();
 }
 
-size_t Type::getLine() const {
+SourceLocation Type::getLocation() const {
     struct Visitor {
-        size_t operator()( std::monostate ) {
+        SourceLocation operator()( std::monostate ) {
             ABORT()<<"Unreachable state";
         }
 
-        size_t operator()( const Identifier &id ) {
-            return id.getLine();
+        SourceLocation operator()( const Identifier &id ) {
+            return id.getLocation();
         }
 
-        size_t operator()( const Pointer &ptr ) {
-            return ptr.token->line;
-        }
-    };
-
-    return std::visit( Visitor{}, type );
-}
-
-size_t Type::getCol() const {
-    struct Visitor {
-        size_t operator()( std::monostate ) {
-            ABORT()<<"Unreachable state";
-        }
-
-        size_t operator()( const Identifier &id ) {
-            return id.getCol();
-        }
-
-        size_t operator()( const Pointer &ptr ) {
-            return ptr.token->col;
+        SourceLocation operator()( const Pointer &ptr ) {
+            return ptr.token->location;
         }
     };
 
@@ -114,7 +96,7 @@ size_t Literal::parse(Slice<const Tokenizer::Token> source) {
     case Tokenizer::Tokens::RESERVED_FALSE:
         break;
     default:
-        throw parser_error("Invalid expression", currentToken->line, currentToken->col);
+        throw parser_error("Invalid expression", currentToken->location);
     }
 
     token = *currentToken;
@@ -200,7 +182,7 @@ const Type *Expression::reparseAsType() const {
             ASSERT( tokensConsumed < getNTTokens().size() ) <<
                     "Undetected range error during parse: " << tokensConsumed << "<" << getNTTokens().size();
             const Tokenizer::Token *currentToken = &getNTTokens()[ tokensConsumed ];
-            throw parser_error("Type parsing did not consume entire range", currentToken->line, currentToken->col);
+            throw parser_error("Type parsing did not consume entire range", currentToken->location);
         }
     }
 
@@ -693,7 +675,7 @@ size_t FuncDef::parse(Slice<const Tokenizer::Token> source) {
 
     const Tokenizer::Token *currentToken = nextToken(source, tokensConsumed, "EOF while looking for function definition");
     if( currentToken->token!=Tokenizer::Tokens::RESERVED_DEF ) {
-        throw parser_error("Function definition should start with \"def\"", currentToken->line, currentToken->col);
+        throw parser_error("Function definition should start with \"def\"", currentToken->location);
     }
 
     tokensConsumed += decl.parse( source.subslice(tokensConsumed) );

@@ -30,8 +30,7 @@ class Literal final : public Base {
 public:
     explicit Literal( const NonTerminals::Literal &parserLiteral );
 
-    size_t getLine() const override;
-    size_t getCol() const override;
+    SourceLocation getLocation() const override;
 
 protected:
     void buildASTImpl(

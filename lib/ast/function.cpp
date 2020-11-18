@@ -63,8 +63,7 @@ void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {
             getReturnType(),
             arguments,
             "",
-            parserFunction.decl.name.identifier->line,
-            parserFunction.decl.name.identifier->col );
+            parserFunction.decl.name.identifier->location );
 
     struct Visitor {
         Function *_this;

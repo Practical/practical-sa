@@ -108,7 +108,7 @@ void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {
     if( iter!=symbols.end() ) {
         function = std::get_if<Function>( &iter->second );
         if( function==nullptr )
-            throw pass1_error( "Function is trying to overload a variable", token->line, token->col );
+            throw pass1_error( "Function is trying to overload a variable", token->location );
             // More info: where variable was first declared
     } else {
         auto inserter = symbols.emplace( token->text, Function{} );
@@ -150,7 +150,7 @@ void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::
     auto iter = symbols.emplace( token->text, Variable(token, type, lvalue) );
 
     if( !iter.second ) {
-        throw SymbolRedefined(token->text, token->line, token->col);
+        throw SymbolRedefined(token->text, token->location);
     }
 }
 

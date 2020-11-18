@@ -40,7 +40,7 @@ public:
             StaticTypeImpl::CPtr destinationType,
             const ExpressionImpl::ExpressionMetadata &srcMetadata,
             Weight &weight, Weight weightLimit,
-            bool implicit, size_t line, size_t col );
+            bool implicit, const SourceLocation &location );
 
     ExpressionId codeGen(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
@@ -64,7 +64,8 @@ private:
             const ExpressionImpl::ExpressionMetadata &srcMetadata );
 
     void calcVrp(
-            const ExpressionImpl::ExpressionMetadata &srcMetadata, bool isImplicit, size_t line, size_t col );
+            const ExpressionImpl::ExpressionMetadata &srcMetadata, bool isImplicit,
+            const SourceLocation &location );
 };
 
 } // namespace AST

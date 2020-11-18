@@ -45,7 +45,7 @@ void AddressOf::buildASTImpl(
     }
 
     if( (operand.getType()->getFlags() & StaticType::Flags::Reference)==0 )
-        throw LValueRequired( operand.getType(), operand.getLine(), operand.getCol() );
+        throw LValueRequired( operand.getType(), operand.getLocation() );
 
     metadata.type = StaticTypeImpl::allocate( PointerTypeImpl( operand.getType() ) );
     metadata.valueRange = new PointerValueRange( operand.getValueRange() );

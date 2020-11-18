@@ -24,12 +24,8 @@ Literal::Literal( const NonTerminals::Literal &parserLiteral ) :
 {
 }
 
-size_t Literal::getLine() const {
-    return parserLiteral.token.line;
-}
-
-size_t Literal::getCol() const {
-    return parserLiteral.token.col;
+SourceLocation Literal::getLocation() const {
+    return parserLiteral.token.location;
 }
 
 void Literal::buildASTImpl(
@@ -95,16 +91,14 @@ void Literal::LiteralInt::parseInt10(
         if( result > LimitDivided )
             throw IllegalLiteral(
                     "Literal integer too big",
-                    owner->parserLiteral.token.line,
-                    owner->parserLiteral.token.col );
+                    owner->parserLiteral.token.location );
 
         ASSERT( c>='0' && c<='9' ) << "Decimal literal has character '"<<c<<"' out of allowed range";
         result *= 10;
         if( result == LimitTruncated && c-'0'>LimitLastDigit )
             throw IllegalLiteral(
                     "Literal integer too big",
-                    owner->parserLiteral.token.line,
-                    owner->parserLiteral.token.col );
+                    owner->parserLiteral.token.location );
 
         result += c-'0';
     }

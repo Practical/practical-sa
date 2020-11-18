@@ -26,12 +26,8 @@ Expression::Expression( const NonTerminals::Expression &parserExpression ) :
 {
 }
 
-size_t Expression::getLine() const {
-    return actualExpression->getLine();
-}
-
-size_t Expression::getCol() const {
-    return actualExpression->getCol();
+SourceLocation Expression::getLocation() const {
+    return actualExpression->getLocation();
 }
 
 // Protected memthods

@@ -18,84 +18,80 @@ namespace Tokenizer {
 namespace PracticalSemanticAnalyzer {
 
 class compile_error : public std::exception {
-    size_t line, col;
+    SourceLocation location;
     std::unique_ptr<char[]> msg;
 public:
-    compile_error(const char *msg, size_t line, size_t col) : line(line), col(col) {
+    compile_error(const char *msg, const SourceLocation &location) : location(location) {
         setMsg(msg);
     }
 
-    compile_error(size_t line, size_t col) : line(line), col(col) {}
+    compile_error(const SourceLocation &location) : location(location) {}
 
     const char *what() const noexcept {
         assert(msg);
         return msg.get();
     }
 
-    size_t getLine() const {
-        return line;
-    }
-
-    size_t getCol() const {
-        return col;
+    const SourceLocation getLocation() const {
+        return location;
     }
 
 protected:
     void setMsg(const char *msg) {
         size_t buffsize = strlen(msg) + 100;
         this->msg = std::unique_ptr<char[]>(new char[buffsize]);
-        snprintf(this->msg.get(), buffsize, "%s at %lu:%lu", msg, line, col);
+        snprintf(this->msg.get(), buffsize, "%s at %u:%u", msg, location.line, location.col);
     }
 };
 
 class tokenizer_error : public compile_error {
 public:
-    tokenizer_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    tokenizer_error(const char *msg, const SourceLocation &location) : compile_error(msg, location) {
     }
 };
 
 class parser_error : public compile_error {
 public:
-    parser_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    parser_error(const char *msg, const SourceLocation &location) : compile_error(msg, location) {
     }
 };
 
 class pass1_error : public compile_error {
 public:
-    pass1_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    pass1_error(const char *msg, const SourceLocation &location) : compile_error(msg, location) {
     }
 };
 
 class pass2_error : public compile_error {
 public:
-    pass2_error(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    pass2_error(const char *msg, const SourceLocation &location) : compile_error(msg, location) {
     }
 };
 
 class IllegalLiteral : public compile_error {
 public:
-    IllegalLiteral(const char *msg, size_t line, size_t col) : compile_error(msg, line, col) {
+    IllegalLiteral(const char *msg, const SourceLocation &location) : compile_error(msg, location) {
     }
 };
 
 class UndefinedBehavior : public compile_error {
 public:
-    UndefinedBehavior(const char *msg, size_t line, size_t col );
+    UndefinedBehavior(const char *msg, const SourceLocation &location );
 };
 
 class IncompatibleTypes : public compile_error {
 public:
-    IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, size_t line, size_t col);
+    IncompatibleTypes(StaticType::CPtr left, StaticType::CPtr right, const SourceLocation &location);
 };
 
 class SymbolRedefined : public compile_error {
 public:
-    SymbolRedefined(String symbol, size_t line, size_t col);
+    SymbolRedefined(String symbol, const SourceLocation &location);
 };
 
 class SymbolNotFound : public compile_error {
 public:
-    SymbolNotFound(String symbol, size_t line, size_t col);
+    SymbolNotFound(String symbol, const SourceLocation &location);
 };
 
 class CannotTakeValueOfFunction : public compile_error {
@@ -120,22 +116,24 @@ public:
 
 class CastError : public compile_error {
 public:
-    CastError(const char *msg, StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
+    CastError(
+            const char *msg, StaticType::CPtr src, StaticType::CPtr dst, bool implicit,
+            const SourceLocation &location);
 };
 
 class CastNotAllowed : public CastError {
 public:
-    CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
+    CastNotAllowed(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, const SourceLocation &location);
 };
 
 class AmbiguousCast : public CastError {
 public:
-    AmbiguousCast(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, size_t line, size_t col);
+    AmbiguousCast(StaticType::CPtr src, StaticType::CPtr dst, bool implicit, const SourceLocation &location);
 };
 
 class LValueRequired : public compile_error {
 public:
-    LValueRequired(StaticType::CPtr wrongType, size_t line, size_t col);
+    LValueRequired(StaticType::CPtr wrongType, const SourceLocation &location);
 };
 
 } // PracticalSemanticAnalyzer
