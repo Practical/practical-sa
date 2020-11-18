@@ -18,7 +18,7 @@ extern size_t PARSER_RECURSION_DEPTH;
     size_t RECURSION_CURRENT_DEPTH = PARSER_RECURSION_DEPTH++; \
     for( size_t I=0; I<RECURSION_CURRENT_DEPTH; ++I ) std::cout<<"  "; \
     if( source.size()>0 ) \
-        std::cout<<"Processing " << __PRETTY_FUNCTION__ << " of " << source[0].token << " at " << source[0].line << ":" << source[0].col << "\n" ;\
+        std::cout<<"Processing " << __PRETTY_FUNCTION__ << " of " << source[0].token << " at " << source[0].location << "\n" ;\
     else\
         std::cout<<"Processing " << __PRETTY_FUNCTION__ << " at EOF\n" ;\
     size_t tokensConsumed = 0
