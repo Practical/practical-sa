@@ -72,6 +72,13 @@ namespace NonTerminals {
         SourceLocation getLocation() const;
     };
 
+    struct TransientType : public NonTerminal {
+        Type type;
+        const Tokenizer::Token *ref = nullptr;
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+    };
+
     struct Literal : public NonTerminal {
         Tokenizer::Token token;
 
@@ -246,14 +253,14 @@ namespace NonTerminals {
     };
 
     struct FuncDeclRet : public NonTerminal {
-        Type type;
+        TransientType type;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct FuncDeclArg : public NonTerminal {
         Identifier name;
-        Type type;
+        TransientType type;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };

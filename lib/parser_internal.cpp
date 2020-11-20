@@ -54,7 +54,7 @@ const Tokenizer::Token &expectToken(
     return *currentToken;
 }
 
-bool wishForToken(
+const Tokenizer::Token *wishForToken(
         Tokenizer::Tokens expected,
         Slice<const Tokenizer::Token> source,
         size_t &index,
@@ -64,17 +64,19 @@ bool wishForToken(
     skipWS( source, indexCopy );
 
     if( indexCopy>=source.size() ) {
-        return false;
+        return nullptr;
     }
 
     if( source[indexCopy].token == expected ) {
+        const Tokenizer::Token *ret = &source[indexCopy];
+
         if( consumeTokens )
             index = indexCopy + 1;
 
-        return true;
+        return ret;
     }
 
-    return false;
+    return nullptr;
 }
 
 size_t ExpressionOrStatement::parse(Slice<const Tokenizer::Token> source) {

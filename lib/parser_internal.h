@@ -60,7 +60,7 @@ namespace InternalNonTerminals {
             Tokenizer::Tokens expected, Slice<const Tokenizer::Token> source, size_t &index, const char *mismatchMsg,
             const char *eofMsg = nullptr);
 
-    bool wishForToken(
+    const Tokenizer::Token *wishForToken(
             Tokenizer::Tokens expected,
             Slice<const Tokenizer::Token> source,
             size_t &index,

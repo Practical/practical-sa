@@ -135,6 +135,7 @@ public:
 
     StaticTypeImpl::CPtr lookupType( String name ) const;
     StaticTypeImpl::CPtr lookupType( const NonTerminals::Type &type ) const;
+    StaticTypeImpl::CPtr lookupType( const NonTerminals::TransientType &type ) const;
 
     StaticTypeImpl::CPtr registerScalarType( ScalarTypeImpl &&type, ValueRangeBase::CPtr defaultValueRange );
 

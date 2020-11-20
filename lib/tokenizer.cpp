@@ -92,6 +92,7 @@ static const std::unordered_map<std::string, Tokens> reservedWords {
     { "false", Tokens::RESERVED_FALSE },
     { "if", Tokens::RESERVED_IF },
     { "else", Tokens::RESERVED_ELSE },
+    { "ref", Tokens::RESERVED_REF },
 };
 
 
@@ -410,6 +411,7 @@ std::ostream &operator<<(std::ostream &out, Tokenizer::Tokens token) {
         CASE(RESERVED_FALSE);
         CASE(RESERVED_IF);
         CASE(RESERVED_ELSE);
+        CASE(RESERVED_REF);
     }
 
     out<<"Tokens("<<static_cast<int>(token)<<")";

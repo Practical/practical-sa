@@ -64,6 +64,14 @@ StaticTypeImpl::CPtr LookupContext::lookupType( const NonTerminals::Type &type )
     return std::visit( Visitor( { ._this = this } ), type.type );
 }
 
+StaticTypeImpl::CPtr LookupContext::lookupType( const NonTerminals::TransientType &type ) const {
+    auto ret = lookupType( type.type );
+    if( type.ref )
+        ret = downCast( ret->setFlags( StaticType::Flags::Reference ) );
+
+    return ret;
+}
+
 StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type, ValueRangeBase::CPtr defaultValueRange ) {
     std::string name = sliceToString(type.getName());
     auto iter = types.emplace(

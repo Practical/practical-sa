@@ -60,7 +60,15 @@ ExpressionId Identifier::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *fu
 
         ExpressionId operator()( const LookupContext::Variable &var ) {
             if( var.lvalueId!=ExpressionId() ) {
-                return var.lvalueId;
+                if( var.type->getFlags() & StaticType::Flags::Reference ) {
+                    // If the identifier is itself of _type_ reference, we need one derference automatically
+                    ExpressionId resultId = allocateId();
+                    functionGen->dereferencePointer( resultId, var.type, var.lvalueId );
+
+                    return resultId;
+                } else {
+                    return var.lvalueId;
+                }
             }
 
             ABORT()<<"TODO implement by name identifier lookup";

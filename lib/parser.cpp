@@ -80,6 +80,16 @@ SourceLocation Type::getLocation() const {
     return std::visit( Visitor{}, type );
 }
 
+size_t TransientType::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
+
+    tokensConsumed = type.parse(source);
+
+    ref = wishForToken( Tokenizer::Tokens::RESERVED_REF, source, tokensConsumed, true );
+
+    RULE_LEAVE();
+}
+
 size_t Literal::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
