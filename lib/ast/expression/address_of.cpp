@@ -28,19 +28,27 @@ void AddressOf::buildASTImpl(
         Weight &weight, Weight weightLimit
     )
 {
-    StaticType::Types expectedType = expectedResult.getType()->getType();
-    auto expectedPointer = std::get_if<const StaticType::Pointer *>( &expectedType );
+    bool handled = false;
 
-    if( expectedPointer ) {
-        operand.buildAST(
-                lookupContext,
-                ExpectedResult(
-                    (*expectedPointer)->getPointedType()->addFlags( StaticType::Flags::Reference ),
-                    expectedResult.isMandatory() ),
-                weight,
-                weightLimit
-            );
-    } else {
+    if( expectedResult) {
+        StaticType::Types expectedType = expectedResult.getType()->getType();
+        auto expectedPointer = std::get_if<const StaticType::Pointer *>( &expectedType );
+
+        if( expectedPointer ) {
+            operand.buildAST(
+                    lookupContext,
+                    ExpectedResult(
+                        (*expectedPointer)->getPointedType()->addFlags( StaticType::Flags::Reference ),
+                        expectedResult.isMandatory() ),
+                    weight,
+                    weightLimit
+                );
+
+            handled = true;
+        }
+    }
+
+    if( !handled ) {
         operand.buildAST( lookupContext, ExpectedResult(), weight, weightLimit );
     }
 

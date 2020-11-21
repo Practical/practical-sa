@@ -109,6 +109,9 @@ private:
             PracticalSemanticAnalyzer::StaticType::CPtr destType);
 
     // Members
+    static StaticTypeImpl::CPtr _genericFunctionType;
+    static ValueRangeBase::CPtr _genericFunctionRange;
+
     std::unordered_map< std::string, StaticTypeImpl::CPtr > types;
     const LookupContext *parent = nullptr;
 
@@ -152,6 +155,10 @@ public:
     void addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue );
 
     const Identifier *lookupIdentifier( String name ) const;
+
+    // Generic type and range to use for unspecified function
+    static StaticTypeImpl::CPtr genericFunctionType();
+    static ValueRangeBase::CPtr genericFunctionRange();
 
     void addCast(
             StaticTypeImpl::CPtr sourceType,

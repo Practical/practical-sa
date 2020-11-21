@@ -10,6 +10,7 @@
 
 #include "ast/expression.h"
 #include "ast/mangle.h"
+#include "ast/pointers.h"
 
 #include <asserts.h>
 
@@ -23,6 +24,11 @@ StaticType::CPtr LookupContext::Function::Definition::returnType() const {
     auto functionType = std::get<const StaticType::Function *>( type->getType() );
     return functionType->getReturnType();
 }
+
+StaticTypeImpl::CPtr LookupContext::_genericFunctionType =
+    StaticTypeImpl::allocate( FunctionTypeImpl( nullptr, {} ) );
+ValueRangeBase::CPtr LookupContext::_genericFunctionRange =
+    new PointerValueRange( nullptr, BoolValueRange(false, false) );
 
 StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
     auto iter = types.find( sliceToString(name) );
@@ -152,6 +158,14 @@ const LookupContext::Identifier *LookupContext::lookupIdentifier( String name ) 
     }
 
     return &iter->second;
+}
+
+StaticTypeImpl::CPtr LookupContext::genericFunctionType() {
+    return _genericFunctionType;
+}
+
+ValueRangeBase::CPtr LookupContext::genericFunctionRange() {
+    return _genericFunctionRange;
 }
 
 void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue ) {

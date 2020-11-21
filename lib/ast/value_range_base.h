@@ -9,6 +9,7 @@
 #ifndef AST_VALUE_RANGE_BASE_H
 #define AST_VALUE_RANGE_BASE_H
 
+#include "asserts.h"
 #include "nocopy.h"
 
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -24,6 +25,16 @@ public:
     virtual bool isLiteral() const = 0;
 
     using CPtr = boost::intrusive_ptr<const ValueRangeBase>;
+
+    template<typename ChildType>
+    boost::intrusive_ptr<const ChildType> downCast() const {
+        static_assert( std::is_base_of_v< ValueRangeBase, ChildType > );
+
+        const ChildType *child = dynamic_cast<const ChildType *>(this);
+        ASSERT(child != nullptr);
+
+        return boost::intrusive_ptr<const ChildType>( child );
+    }
 };
 
 } // namespace AST

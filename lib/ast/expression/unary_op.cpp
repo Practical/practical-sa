@@ -70,6 +70,11 @@ void UnaryOp::buildASTImpl(
         body.emplace<AddressOf>( *parserOp.operand ).
                 buildASTImpl(lookupContext, expectedResult, metadata, weight, weightLimit);
         break;
+    case Tokenizer::Tokens::OP_PTR:
+        defaultHandling = false;
+        body.emplace<Dereference>( *parserOp.operand ).
+                buildASTImpl(lookupContext, expectedResult, metadata, weight, weightLimit);
+        break;
     default:
         break;
     }
@@ -107,6 +112,10 @@ ExpressionId UnaryOp::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *funct
 
         ExpressionId operator()( const AddressOf &addressOf ) {
             return addressOf.codeGen( functionGen );
+        }
+
+        ExpressionId operator()( const Dereference &dereference ) {
+            return dereference.codeGen( functionGen );
         }
     };
 

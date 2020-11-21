@@ -141,6 +141,8 @@ private:
 };
 
 StaticTypeImpl::CPtr downCast( PracticalSemanticAnalyzer::StaticType::CPtr ptr );
+const PointerTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Pointer * ptr );
+const FunctionTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Function * ptr );
 
 } // End namespace AST
 

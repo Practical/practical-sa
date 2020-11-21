@@ -35,6 +35,16 @@ void OverloadResolver::resolveOverloads(
     }
 }
 
+const FunctionTypeImpl &OverloadResolver::getType() const {
+    ASSERT(definition)<<"Tried to getType from unresolved overloads";
+
+    auto functionTypeType = definition->type->getType();
+    auto functionType = std::get_if<const StaticType::Function *>( &functionTypeType );
+    ASSERT( functionType )<<"Function's type is not of type Function";
+
+    return *downCast(*functionType);
+}
+
 ExpressionId OverloadResolver::codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
     return definition->codeGen( arguments, definition, functionGen );
 }

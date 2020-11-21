@@ -108,4 +108,12 @@ LValueRequired::LValueRequired(StaticType::CPtr wrongType, const SourceLocation 
     compile_error( "LValue required", location )
 {}
 
+PointerExpected::PointerExpected(StaticType::CPtr wrongType, const SourceLocation &location) :
+    compile_error( "Expected a pointer type", location )
+{}
+
+KnownRuntimeViolation::KnownRuntimeViolation(const char *message, const SourceLocation &location) :
+    compile_error( message, location )
+{}
+
 } // namespace PracticalSemanticAnalyzer

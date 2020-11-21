@@ -8,6 +8,8 @@
  */
 #include "static_type.h"
 
+#include "ast/pointers.h"
+
 #include <sstream>
 
 using namespace PracticalSemanticAnalyzer;
@@ -162,8 +164,16 @@ StaticTypeImpl::StaticTypeImpl( FunctionTypeImpl &&function ) :
 }
 
 StaticTypeImpl::StaticTypeImpl( PointerTypeImpl &&ptr ) :
-    content( std::move(ptr) )
-{}
+    valueRange(
+            new PointerValueRange(
+                downCast(ptr.getPointedType())->defaultRange(),
+                BoolValueRange(true, true)
+            )
+        )
+{
+    // Easier to initialize content after the value range
+    content = std::move(ptr);
+}
 
 std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &type )
 {
@@ -173,6 +183,22 @@ std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &ty
 StaticTypeImpl::CPtr downCast( StaticType::CPtr ptr ) {
     auto downCasted = dynamic_cast<const StaticTypeImpl *>( ptr.get() );
     ASSERT( downCasted || !ptr );
+
+    return downCasted;
+}
+
+const PointerTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Pointer * ptr ) {
+    ASSERT( ptr );
+    auto downCasted = dynamic_cast<const PointerTypeImpl *>( ptr );
+    ASSERT( downCasted );
+
+    return downCasted;
+}
+
+const FunctionTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Function * ptr ) {
+    ASSERT( ptr );
+    auto downCasted = dynamic_cast<const FunctionTypeImpl *>( ptr );
+    ASSERT( downCasted );
 
     return downCasted;
 }

@@ -58,6 +58,8 @@ void FunctionCall::buildASTImpl(
                     lookupContext, expectedResult, function.overloads,
                     weight, weightLimit,
                     _this->metadata, Slice(arguments, numArguments), _this->parserFunctionCall.op );
+            _this->metadata.type = downCast( _this->resolver.getType().getReturnType() );
+            _this->metadata.valueRange = _this->metadata.type->defaultRange();
         }
     };
 

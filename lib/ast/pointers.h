@@ -23,13 +23,20 @@ public:
         initialized( false, true )
     {}
 
-    explicit PointerValueRange( ValueRangeBase::CPtr pointedRange, const BoolValueRange *initialized ) :
+    explicit PointerValueRange( ValueRangeBase::CPtr pointedRange, const BoolValueRange &initialized ) :
         pointedValueRange( std::move(pointedRange) ),
-        initialized( initialized->falseAllowed, initialized->trueAllowed )
+        initialized( initialized.falseAllowed, initialized.trueAllowed )
     {}
 
     bool isLiteral() const override {
-        return initialized.isLiteral() && pointedValueRange && pointedValueRange->isLiteral();
+        if( ! initialized.isLiteral() )
+            return false;
+
+        if( initialized.falseAllowed )
+            return true;
+
+        ASSERT( pointedValueRange );
+        return pointedValueRange->isLiteral();
     }
 };
 

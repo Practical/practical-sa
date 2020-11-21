@@ -7,6 +7,7 @@
  * home directory.
  */
 #include "ast/expression/identifier.h"
+#include "ast/pointers.h"
 
 #include <practical/errors.h>
 
@@ -48,6 +49,9 @@ void Identifier::buildASTImpl(
 
         void operator()( const LookupContext::Function &func ) {
             ASSERT( !expectedResult )<<"TODO implement choosing overload based on expected result";
+
+            _this->metadata.type = LookupContext::genericFunctionType();
+            _this->metadata.valueRange = LookupContext::genericFunctionRange();
         }
     };
 

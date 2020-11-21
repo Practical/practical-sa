@@ -136,6 +136,16 @@ public:
     LValueRequired(StaticType::CPtr wrongType, const SourceLocation &location);
 };
 
+class PointerExpected : public compile_error {
+public:
+    PointerExpected(StaticType::CPtr wrongType, const SourceLocation &location);
+};
+
+class KnownRuntimeViolation : public compile_error {
+public:
+    KnownRuntimeViolation(const char *message, const SourceLocation &location);
+};
+
 } // PracticalSemanticAnalyzer
 
 #endif // PRACTICAL_ERRORS_H

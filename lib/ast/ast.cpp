@@ -15,6 +15,7 @@
 #include "ast/decay.h"
 #include "ast/signed_int_value_range.h"
 #include "ast/unsigned_int_value_range.h"
+#include "ast/void_value_range.h"
 
 namespace AST {
 
@@ -48,7 +49,7 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
     // Types
     auto voidType = builtinCtx.registerScalarType(
             ScalarTypeImpl( "Void", "v", 0, 1, ScalarTypeImpl::Type::Void, ctxGen->registerVoidType(), 0 ),
-            nullptr );
+            new VoidValueRange() );
     auto boolType = builtinCtx.registerScalarType(
             ScalarTypeImpl( "Bool", "b", 1, 1, ScalarTypeImpl::Type::Bool, ctxGen->registerBoolType(), 0 ),
             BoolValueRange::allocate() );

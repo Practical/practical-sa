@@ -34,10 +34,8 @@ void Base::buildAST( LookupContext &lookupContext, ExpectedResult expectedResult
     if( weight>weightLimit )
         throw ExpressionTooExpensive();
 
-    /*
     ASSERT( metadata.type )<<"Build AST did not set a return type "<<getLocation();
     ASSERT( metadata.valueRange )<<"Build AST did not set a value range "<<getLocation();
-    */
     if( !expectedResult || *expectedResult.getType()==*metadata.type )
         return;
 

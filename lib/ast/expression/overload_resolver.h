@@ -31,6 +31,8 @@ public:
             const Tokenizer::Token *sourceLocation
         );
 
+    const FunctionTypeImpl &getType() const;
+
     ExpressionId codeGen( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 
 private:
