@@ -52,9 +52,16 @@ void Module::symbolsPass2() {
 void Module::codeGen( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) {
     moduleGen->moduleEnter( moduleId, "Module", "file.pr", 1, 1 );
 
-    for( const auto &funcDef : parserModule.functionDefinitions ) {
-        Function function(funcDef, lookupContext);
+    std::vector<Function> functions;
+    functions.reserve( parserModule.functionDefinitions.size() );
 
+    for( const auto &funcDef : parserModule.functionDefinitions ) {
+        auto &function = functions.emplace_back( funcDef, lookupContext );
+
+        moduleGen->declareIdentifier( function.getName(), function.getMangledName(), function.getType() );
+    }
+
+    for( auto &function : functions ) {
         function.codeGen( moduleGen->handleFunction() );
     }
 

@@ -274,6 +274,8 @@ namespace PracticalSemanticAnalyzer {
         virtual void moduleEnter(ModuleId id, String name, String file, size_t line, size_t col) = 0;
         virtual void moduleLeave(ModuleId id) = 0;
 
+        virtual void declareIdentifier(String name, String mangledName, StaticType::CPtr type) = 0;
+
         virtual std::shared_ptr<FunctionGen> handleFunction() = 0;
     };
 

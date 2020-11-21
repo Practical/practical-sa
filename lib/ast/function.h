@@ -30,6 +30,18 @@ public:
     void codeGen( const NonTerminals::StatementList &statementList, PracticalSemanticAnalyzer::FunctionGen *functionGen );
 
     StaticTypeImpl::CPtr getReturnType() const;
+
+    String getName() const {
+        return name;
+    }
+
+    String getMangledName() const {
+        return mangledName;
+    }
+
+    StaticTypeImpl::CPtr getType() const {
+        return functionType;
+    }
 };
 
 } // namespace AST
