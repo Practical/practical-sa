@@ -22,14 +22,16 @@ namespace AST {
 JumpPointId::Allocator<> jumpPointAllocator;
 
 LookupContext AST::builtinCtx;
+bool AST::_prepared = false;
 
 // Public methods
 void AST::prepare( BuiltinContextGen *ctxGen ) {
     registerBuiltinTypes( ctxGen );
+    _prepared = true;
 }
 
 bool AST::prepared() {
-    return builtinCtx.lookupType("Void") != StaticTypeImpl::CPtr();
+    return _prepared;
 }
 
 void AST::codeGen( const NonTerminals::Module &parserModule, PracticalSemanticAnalyzer::ModuleGen *codeGen ) {

@@ -30,15 +30,24 @@ StaticTypeImpl::CPtr LookupContext::_genericFunctionType =
 ValueRangeBase::CPtr LookupContext::_genericFunctionRange =
     new PointerValueRange( nullptr, BoolValueRange(false, false) );
 
-StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
+StaticTypeImpl::CPtr LookupContext::lookupType( String name, const SourceLocation &location ) const {
     auto iter = types.find( sliceToString(name) );
 
     if( iter==types.end() ) {
         if( parent )
-            return parent->lookupType(name);
+            return parent->lookupType(name, location);
         else
-            return StaticTypeImpl::CPtr();
+            throw SymbolNotFound( name, location );
     }
+
+    return iter->second;
+}
+
+StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
+    ASSERT( ! parent )<<"Lookup type without location only valid on built-in context";
+
+    auto iter = types.find( sliceToString(name) );
+    ASSERT( iter != types.end() )<<"Lookup failed on built-in type "<<name;
 
     return iter->second;
 }
@@ -53,7 +62,7 @@ StaticTypeImpl::CPtr LookupContext::lookupType( const NonTerminals::Type &type )
 
 
         StaticTypeImpl::CPtr operator()( const NonTerminals::Identifier &id ) {
-            return _this->lookupType( id.identifier->text );
+            return _this->lookupType( id.identifier->text, id.identifier->location );
         }
 
         StaticTypeImpl::CPtr operator()( const NonTerminals::Type::Pointer &ptr )

@@ -136,6 +136,9 @@ public:
         return parent;
     }
 
+private:
+    StaticTypeImpl::CPtr lookupType( String name, const SourceLocation &location ) const;
+public:
     StaticTypeImpl::CPtr lookupType( String name ) const;
     StaticTypeImpl::CPtr lookupType( const NonTerminals::Type &type ) const;
     StaticTypeImpl::CPtr lookupType( const NonTerminals::TransientType &type ) const;

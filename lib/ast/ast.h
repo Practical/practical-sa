@@ -21,6 +21,7 @@ extern JumpPointId::Allocator<> jumpPointAllocator;
 
 class AST {
     static LookupContext builtinCtx;
+    static bool _prepared;
     Module::Ptr module;
 
 public:
