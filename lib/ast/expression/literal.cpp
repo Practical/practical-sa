@@ -10,6 +10,7 @@
 
 #include "ast/ast.h"
 #include "ast/bool_value_range.h"
+#include "ast/pointers.h"
 #include "ast/signed_int_value_range.h"
 #include "ast/unsigned_int_value_range.h"
 
@@ -53,8 +54,16 @@ void Literal::buildASTImpl(
             literalBool->parseBool( this, weight, weightLimit, expectedResult );
         }
         break;
+    case Tokenizer::Tokens::LITERAL_STRING:
+        {
+            auto ptr = safenew< LiteralString >();
+            LiteralString *literalString = ptr.get();
+            impl = std::move( ptr );
+            literalString->parse( this, weight, weightLimit, expectedResult );
+        }
+        break;
     default:
-        ABORT()<<"Non literal parsed as literal";
+        ABORT()<<"Non literal parsed as literal: "<<parserLiteral.token.token;
     }
 }
 
@@ -209,6 +218,112 @@ void Literal::LiteralBool::parseBool(
 
     owner->metadata.type = AST::getBuiltinCtx().lookupType("Bool");
     owner->metadata.valueRange = BoolValueRange::allocate( result==false, result==true );
+}
+
+ExpressionId Literal::LiteralString::codeGen(
+        const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
+    ExpressionId id = allocateId();
+    functionGen->setLiteral( id, result );
+
+    return id;
+}
+
+void Literal::LiteralString::parse(
+        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
+{
+    static const std::unordered_map<
+            State,
+            State (Literal::LiteralString::*)( String, int &, const SourceLocation & )
+        > stateParsers
+    {
+        { State::None, &LiteralString::parserNone },
+        { State::Backslash, &LiteralString::parserBackslash }
+    };
+
+    ASSERT( owner->parserLiteral.token.token == Tokenizer::Tokens::LITERAL_STRING );
+    ASSERT( result.empty() );
+
+    String body = owner->parserLiteral.token.text;
+    ASSERT( body.size()>2 );
+    ASSERT( body[0]=='"' );
+    ASSERT( body[body.size()-1]=='"' );
+
+    SourceLocation location = owner->parserLiteral.token.location;
+
+    // Strip leading and trailing quotes
+    body = body.subslice( 1, body.size()-1 );
+    ++location;
+
+    ASSERT( state == State::None );
+
+    int stateData = 0;
+    while( body.size()>0 ) {
+        state = (this ->* stateParsers.at(state))( body, stateData, location );
+        body = body.subslice(1);
+        ++location;
+    }
+
+    result += '\0';
+
+    auto c8Type = AST::getBuiltinCtx().lookupType("C8");
+    owner->metadata.type = StaticTypeImpl::allocate( PointerTypeImpl( c8Type ) );
+    owner->metadata.valueRange = new PointerValueRange( c8Type->defaultRange() );
+}
+
+Literal::LiteralString::State Literal::LiteralString::parserNone(
+        String source, int &stateData, const SourceLocation &location )
+{
+    switch( source[0] ) {
+    case '\\':
+        return State::Backslash;
+    }
+
+    result += source[0];
+    return State::None;
+}
+
+Literal::LiteralString::State Literal::LiteralString::parserBackslash(
+        String source, int &stateData, const SourceLocation &location )
+{
+    switch( source[0] ) {
+    case '\'':
+    case '"':
+    case '?':
+    case '\\':
+        result += source[0];
+        return State::None;
+    case '0':
+        result += char(0); // NUL (Null)
+        return State::None;
+    case 'a':
+        result += 7; // BEL (Bell)
+        return State::None;
+    case 'b':
+        result += 8; // BS (Backspace)
+        return State::None;
+    case 't':
+        result += 9; // HT (Horizontal tab)
+        return State::None;
+    case 'n':
+        result += 10; // NL (Newline)
+        return State::None;
+    case 'v':
+        result += 11; // VT (Vertical tab)
+        return State::None;
+    case 'f':
+        result += 12; // FF (Form feed)
+        return State::None;
+    case 'r':
+        result += 13; // CR (Carriage return)
+        return State::None;
+    case 'x':
+        stateData = 0;
+        result += char(0);
+        return State::Hex;
+    }
+
+    throw InvalidEscapeSequence(location);
 }
 
 } // namespace AST::ExpressionImpl

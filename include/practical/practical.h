@@ -46,6 +46,11 @@ namespace PracticalSemanticAnalyzer {
             return !( (*this)==that );
         }
 
+        SourceLocation &operator++() {
+            col++;
+            return *this;
+        }
+
         friend std::ostream &operator<<(std::ostream &out, const SourceLocation &location) {
             return out<<location.line<<":"<<location.col;
         }
@@ -205,6 +210,7 @@ namespace PracticalSemanticAnalyzer {
         // Litarals
         virtual void setLiteral(ExpressionId id, LongEnoughInt value, StaticType::CPtr type) = 0;
         virtual void setLiteral(ExpressionId id, bool value) = 0;
+        virtual void setLiteral(ExpressionId id, String value) = 0;
 
         // The ExpressionId refers to a pointer to the resulting allocated variable
         virtual void allocateStackVar(ExpressionId id, StaticType::CPtr type, String name) = 0;

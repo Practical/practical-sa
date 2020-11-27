@@ -57,6 +57,27 @@ private:
 
         void parseBool( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
     };
+
+    class LiteralString final : public Impl {
+        enum class State {
+            None,
+            Backslash,
+            Hex,
+        };
+
+    public:
+        ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
+
+        void parse( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
+
+    private:
+        State parserNone( String source, int &stateData, const SourceLocation &location );
+        State parserBackslash( String source, int &stateData, const SourceLocation &location );
+
+        // Members
+        std::string result;
+        State state = State::None;
+    };
 };
 
 } // namespace AST::ExpressionImpl

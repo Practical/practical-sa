@@ -74,6 +74,13 @@ public:
     }
 };
 
+class InvalidEscapeSequence : public IllegalLiteral {
+public:
+    InvalidEscapeSequence(const SourceLocation &location) :
+        IllegalLiteral("Invalid escape sequence in string literal", location)
+    {}
+};
+
 class UndefinedBehavior : public compile_error {
 public:
     UndefinedBehavior(const char *msg, const SourceLocation &location );
