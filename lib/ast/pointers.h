@@ -28,6 +28,10 @@ public:
         initialized( initialized.falseAllowed, initialized.trueAllowed )
     {}
 
+    explicit PointerValueRange( std::nullptr_t null ) :
+        initialized( true, false )
+    {}
+
     bool isLiteral() const override {
         if( ! initialized.isLiteral() )
             return false;

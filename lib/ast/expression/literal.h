@@ -78,6 +78,12 @@ private:
         std::string result;
         State state = State::None;
     };
+
+    class LiteralNull final : public Impl {
+    public:
+        ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
+        void buildAst( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
+    };
 };
 
 } // namespace AST::ExpressionImpl

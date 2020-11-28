@@ -104,6 +104,7 @@ size_t Literal::parse(Slice<const Tokenizer::Token> source) {
     case Tokenizer::Tokens::LITERAL_STRING:
     case Tokenizer::Tokens::RESERVED_TRUE:
     case Tokenizer::Tokens::RESERVED_FALSE:
+    case Tokenizer::Tokens::RESERVED_NULL:
         break;
     default:
         throw parser_error("Invalid expression", currentToken->location);

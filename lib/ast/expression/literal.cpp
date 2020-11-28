@@ -62,6 +62,14 @@ void Literal::buildASTImpl(
             literalString->parse( this, weight, weightLimit, expectedResult );
         }
         break;
+    case Tokenizer::Tokens::RESERVED_NULL:
+        {
+            auto ptr = safenew< LiteralNull >();
+            LiteralNull *literalNull = ptr.get();
+            impl = std::move( ptr );
+            literalNull->buildAst( this, weight, weightLimit, expectedResult );
+        }
+        break;
     default:
         ABORT()<<"Non literal parsed as literal: "<<parserLiteral.token.token;
     }
@@ -324,6 +332,31 @@ Literal::LiteralString::State Literal::LiteralString::parserBackslash(
     }
 
     throw InvalidEscapeSequence(location);
+}
+
+ExpressionId Literal::LiteralNull::codeGen(
+        const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
+    ExpressionId id = allocateId();
+
+    functionGen->setLiteralNull( id, owner->metadata.type );
+    return id;
+}
+
+void Literal::LiteralNull::buildAst(
+        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
+{
+    if( ! expectedResult )
+        throw PointerExpected( nullptr, owner->parserLiteral.token.location );
+
+    auto expectedType = expectedResult.getType();
+    auto expectedTypeType = expectedType->getType();
+    auto pointedType = std::get_if<const StaticType::Pointer *>(&expectedTypeType);
+    if( pointedType == nullptr )
+        throw PointerExpected( expectedType, owner->parserLiteral.token.location );
+
+    owner->metadata.type = expectedType;
+    owner->metadata.valueRange = new PointerValueRange( nullptr );
 }
 
 } // namespace AST::ExpressionImpl
