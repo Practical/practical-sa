@@ -90,6 +90,7 @@ enum class Tokens {
     // Identifier like
     IDENTIFIER,
     RESERVED_DEF,
+    RESERVED_DECL,
     RESERVED_EXPECT,
     RESERVED_TRUE,
     RESERVED_FALSE,

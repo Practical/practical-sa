@@ -18,10 +18,19 @@ static void genMangledSymbol( std::stringstream &formatter, String symbolName ) 
     formatter<<symbolName.size()<<symbolName;
 }
 
-std::string getFunctionMangledName( String baseName, PracticalSemanticAnalyzer::StaticType::CPtr type ) {
+std::string getFunctionMangledName(
+        String baseName, PracticalSemanticAnalyzer::StaticType::CPtr type, LookupContext::AbiType abi )
+{
     // TODO To allow runnable programs
     if( baseName==String("main") )
         return sliceToString(baseName);
+
+    switch( abi ) {
+    case LookupContext::AbiType::Practical:
+        break;
+    case LookupContext::AbiType::C:
+        return sliceToString(baseName);
+    }
 
     std::stringstream formatter;
 

@@ -26,13 +26,13 @@ Literal::Literal( const NonTerminals::Literal &parserLiteral ) :
 }
 
 SourceLocation Literal::getLocation() const {
-    return parserLiteral.token.location;
+    return parserLiteral.token->location;
 }
 
 void Literal::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
-    switch( parserLiteral.token.token ) {
+    switch( parserLiteral.token->token ) {
     case Tokenizer::Tokens::LITERAL_INT_10:
         {
             auto ptr = safenew< LiteralInt >();
@@ -71,7 +71,7 @@ void Literal::buildASTImpl(
         }
         break;
     default:
-        ABORT()<<"Non literal parsed as literal: "<<parserLiteral.token.token;
+        ABORT()<<"Non literal parsed as literal: "<<parserLiteral.token->token;
     }
 }
 
@@ -96,7 +96,7 @@ void Literal::LiteralInt::parseInt10(
 {
     result = 0;
 
-    for( char c: owner->parserLiteral.token.text ) {
+    for( char c: owner->parserLiteral.token->text ) {
         static constexpr LongEnoughInt
                 LimitDivided = std::numeric_limits<LongEnoughInt>::max() / 10,
                 LimitTruncated = LimitDivided * 10,
@@ -108,14 +108,14 @@ void Literal::LiteralInt::parseInt10(
         if( result > LimitDivided )
             throw IllegalLiteral(
                     "Literal integer too big",
-                    owner->parserLiteral.token.location );
+                    owner->parserLiteral.token->location );
 
         ASSERT( c>='0' && c<='9' ) << "Decimal literal has character '"<<c<<"' out of allowed range";
         result *= 10;
         if( result == LimitTruncated && c-'0'>LimitLastDigit )
             throw IllegalLiteral(
                     "Literal integer too big",
-                    owner->parserLiteral.token.location );
+                    owner->parserLiteral.token->location );
 
         result += c-'0';
     }
@@ -213,7 +213,7 @@ ExpressionId Literal::LiteralBool::codeGen(
 void Literal::LiteralBool::parseBool(
         Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
 {
-    switch( owner->parserLiteral.token.token ) {
+    switch( owner->parserLiteral.token->token ) {
     case Tokenizer::Tokens::RESERVED_TRUE:
         result = true;
         break;
@@ -249,15 +249,15 @@ void Literal::LiteralString::parse(
         { State::Backslash, &LiteralString::parserBackslash }
     };
 
-    ASSERT( owner->parserLiteral.token.token == Tokenizer::Tokens::LITERAL_STRING );
+    ASSERT( owner->parserLiteral.token->token == Tokenizer::Tokens::LITERAL_STRING );
     ASSERT( result.empty() );
 
-    String body = owner->parserLiteral.token.text;
+    String body = owner->parserLiteral.token->text;
     ASSERT( body.size()>2 );
     ASSERT( body[0]=='"' );
     ASSERT( body[body.size()-1]=='"' );
 
-    SourceLocation location = owner->parserLiteral.token.location;
+    SourceLocation location = owner->parserLiteral.token->location;
 
     // Strip leading and trailing quotes
     body = body.subslice( 1, body.size()-1 );
@@ -347,13 +347,13 @@ void Literal::LiteralNull::buildAst(
         Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
 {
     if( ! expectedResult )
-        throw PointerExpected( nullptr, owner->parserLiteral.token.location );
+        throw PointerExpected( nullptr, owner->parserLiteral.token->location );
 
     auto expectedType = expectedResult.getType();
     auto expectedTypeType = expectedType->getType();
     auto pointedType = std::get_if<const StaticType::Pointer *>(&expectedTypeType);
     if( pointedType == nullptr )
-        throw PointerExpected( expectedType, owner->parserLiteral.token.location );
+        throw PointerExpected( expectedType, owner->parserLiteral.token->location );
 
     owner->metadata.type = expectedType;
     owner->metadata.valueRange = new PointerValueRange( nullptr );

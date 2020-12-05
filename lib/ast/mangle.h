@@ -9,13 +9,16 @@
 #ifndef AST_MANGLE_H
 #define AST_MANGLE_H
 
+#include "ast/lookup_context.h"
+
 #include <practical/practical.h>
 
 #include <string>
 
 namespace AST {
 
-std::string getFunctionMangledName( String baseName, PracticalSemanticAnalyzer::StaticType::CPtr type );
+std::string getFunctionMangledName(
+        String baseName, PracticalSemanticAnalyzer::StaticType::CPtr type, LookupContext::AbiType abi );
 std::string getMangledSymbol( String symbol );
 
 } // namespace AST

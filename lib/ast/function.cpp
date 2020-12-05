@@ -26,18 +26,19 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
     ASSERT( identifierDef );
     const LookupContext::Function *funcDef = std::get_if<LookupContext::Function>( identifierDef );
     ASSERT( funcDef );
-    auto overloadIdx = funcDef->firstPassOverloads.find( parserFunction.decl.name.identifier );
-    ASSERT( overloadIdx!=funcDef->firstPassOverloads.end() );
-    auto funcType = funcDef->overloads.at(overloadIdx->second).type->getType();
+    auto overloadIterIter = funcDef->firstPassOverloads.find( parserFunction.decl.name.identifier );
+    ASSERT( overloadIterIter != funcDef->firstPassOverloads.end() );
+    ASSERT( overloadIterIter->second != funcDef->overloads.end() );
+
+    functionType = overloadIterIter->second->second.type;
+    mangledName = overloadIterIter->second->second.mangledName;
+
+    auto funcType = overloadIterIter->second->first->getType();
     auto function = std::get_if< const StaticType::Function * >( &funcType );
     ASSERT( function!=nullptr );
 
-    StaticTypeImpl::CPtr returnType = static_cast<const StaticTypeImpl *>( (*function)->getReturnType().get() );
-    std::vector<StaticTypeImpl::CPtr> argumentTypes;
-
     size_t numArguments = (*function)->getNumArguments();
     arguments.reserve( numArguments );
-    argumentTypes.reserve( numArguments );
     for( unsigned i=0; i<numArguments; ++i ) {
         ExpressionId varExpressionId = Expression::allocateId();
         StaticTypeImpl::CPtr argumentType = static_cast<const StaticTypeImpl *>( (*function)->getArgumentType(i).get() );
@@ -50,11 +51,7 @@ Function::Function( const NonTerminals::FuncDef &parserFunction, const LookupCon
                 parserFunction.decl.arguments.arguments[i].name.identifier->text,
                 varExpressionId
         );
-        argumentTypes.emplace_back( argumentType );
     }
-
-    functionType = StaticTypeImpl::allocate( FunctionTypeImpl( std::move(returnType), std::move(argumentTypes) ) );
-    mangledName = getFunctionMangledName( name, functionType );
 }
 
 void Function::codeGen( std::shared_ptr<FunctionGen> functionGen ) {

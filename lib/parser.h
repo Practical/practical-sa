@@ -80,7 +80,7 @@ namespace NonTerminals {
     };
 
     struct Literal : public NonTerminal {
-        Tokenizer::Token token;
+        const Tokenizer::Token *token = nullptr;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
@@ -300,8 +300,23 @@ namespace NonTerminals {
         }
     };
 
+    struct FuncDecl : public NonTerminal {
+        FuncDeclBody decl;
+        Literal abiSpecifier;
+
+        FuncDecl() {}
+        FuncDecl( FuncDecl &&that ) = default;
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+
+        String getName() const {
+            return decl.name.getName();
+        }
+    };
+
     struct Module : public NonTerminal {
         std::vector< FuncDef > functionDefinitions;
+        std::vector< FuncDecl > functionDeclarations;
         std::vector< Tokenizer::Token > tokens;
 
         void parse(String source);

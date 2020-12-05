@@ -27,6 +27,8 @@ public:
     void symbolsPass1();
     void symbolsPass2();
     void codeGen( PracticalSemanticAnalyzer::ModuleGen *codeGen );
+
+    StaticTypeImpl::CPtr constructFunctionType( const NonTerminals::FuncDeclBody &decl ) const;
 };
 
 } // End namespace AST

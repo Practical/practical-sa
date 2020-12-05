@@ -20,6 +20,11 @@ using namespace PracticalSemanticAnalyzer;
 
 namespace AST {
 
+static std::unordered_map< String, LookupContext::AbiType > abiLookupTable {
+    { "\"Practical\"", LookupContext::AbiType::Practical },
+    { "\"C\"", LookupContext::AbiType::C }
+};
+
 StaticType::CPtr LookupContext::Function::Definition::returnType() const {
     auto functionType = std::get<const StaticType::Function *>( type->getType() );
     return functionType->getReturnType();
@@ -112,19 +117,44 @@ void LookupContext::addBuiltinFunction(
         function = &std::get<Function>(inserter.first->second);
     }
 
-    Function::Definition &definition = function->overloads.emplace_back(name);
-    definition.type =
-                StaticTypeImpl::allocate(
+    StaticTypeImpl::CPtr type = StaticTypeImpl::allocate(
                     FunctionTypeImpl(
                         std::move(returnType),
                         std::vector(argumentTypes.begin(), argumentTypes.end())
                     )
                 );
+    auto insertIter = function->overloads.emplace(
+            std::piecewise_construct,
+            std::make_tuple( type ),
+            std::make_tuple( nullptr, name ) );
+    ASSERT( insertIter.second )<<"Builtin function "<<name<<" "<<*type<<" added twice";
+
+    Function::Definition &definition = insertIter.first->second;
+    definition.type = type;
     definition.codeGen = codeGen;
     definition.calcVrp = calcVrp;
 }
 
-void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {
+std::ostream &operator<<( std::ostream &out, LookupContext::AbiType abi ) {
+
+#define CASE(a) case LookupContext::AbiType::a:\
+    return out << #a
+
+    switch(abi) {
+        CASE(Practical);
+        CASE(C);
+    }
+
+#undef CASE
+
+    return out<<"AbiType("<< static_cast<int>(abi) << ")";
+}
+
+void LookupContext::addFunctionDeclarationPass1( const Tokenizer::Token *token ) {
+    addFunctionDefinitionPass1(token);
+}
+
+void LookupContext::addFunctionDefinitionPass1( const Tokenizer::Token *token ) {
     auto iter = symbols.find( token->text );
 
     Function *function = nullptr;
@@ -138,23 +168,47 @@ void LookupContext::addFunctionPass1( const Tokenizer::Token *token ) {
         function = &std::get<Function>(inserter.first->second);
     }
 
-    function->overloads.emplace_back( token );
-    function->firstPassOverloads.emplace( token, function->overloads.size()-1 );
+    function->firstPassOverloads.emplace( token, function->overloads.end() );
 }
 
-void LookupContext::addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type ) {
-    auto iter = symbols.find( token->text );
-    ASSERT( iter!=symbols.end() )<<"addFunctionPass2 called for "<<token->text<<", but not for addFunctionPass1";
-    Function *function = std::get_if<Function>( &iter->second );
-    ASSERT( function!=nullptr );
+void LookupContext::addFunctionDeclarationPass2(
+        const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi )
+{
+    addFunctionPass2( token, type, abi, false );
+}
 
-    auto definitionIdx = function->firstPassOverloads.find( token );
-    ASSERT( definitionIdx!=function->firstPassOverloads.end() );
+void LookupContext::addFunctionDefinitionPass2(
+        const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi )
+{
+    Function::Definition &definition = addFunctionPass2( token, type, abi, true );
 
-    Function::Definition *definition = &function->overloads.at(definitionIdx->second);
-    definition->mangledName = getFunctionMangledName( token->text, type );
-    definition->type = std::move(type);
-    definition->codeGen = globalFunctionCall;
+    if( !definition.declarationOnly ) {
+        throw MultipleDefinitions( token->location );
+    }
+
+    definition.declarationOnly = false;
+}
+
+void LookupContext::declareFunctions( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const
+{
+    for( auto &symbol : symbols ) {
+        const Function *function = std::get_if<Function>( &symbol.second );
+        if( function==nullptr )
+            continue;
+
+        for( const auto &overload : function->overloads ) {
+            moduleGen->declareIdentifier( overload.second.token->text, overload.second.mangledName, overload.first );
+        }
+    }
+}
+
+LookupContext::AbiType LookupContext::parseAbiString( String abiString, const SourceLocation &location ) {
+    auto abiType = abiLookupTable.find( abiString );
+    if( abiType==abiLookupTable.end() ) {
+        throw UnidentifiedAbiString(location);
+    }
+
+    return abiType->second;
 }
 
 const LookupContext::Identifier *LookupContext::lookupIdentifier( String name ) const {
@@ -298,6 +352,38 @@ ExpressionId LookupContext::globalFunctionCall(
             std::get<const StaticType::Function *>(definition->type->getType())->getReturnType() );
 
     return resultId;
+}
+
+LookupContext::Function::Definition &LookupContext::addFunctionPass2(
+        const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi, bool isDefinition )
+{
+    auto iter = symbols.find( token->text );
+    ASSERT( iter!=symbols.end() )<<"addFunctionPass2 called for "<<token->text<<" without 1st pass";
+    Function *function = std::get_if<Function>( &iter->second );
+    ASSERT( function!=nullptr );
+
+    auto insertIter = function->overloads.emplace(
+            std::piecewise_construct,
+            std::make_tuple( type ),
+            std::make_tuple( token, sliceToString(token->text) ) );
+    Function::Definition &definition = insertIter.first->second;
+
+    if( ! insertIter.second && ( !definition.declarationOnly || !isDefinition ) ) {
+        // Function already declared/defined
+        return definition;
+    }
+
+    auto firstPassIter = function->firstPassOverloads.find(token);
+    if( firstPassIter != function->firstPassOverloads.end() ) {
+        ASSERT( firstPassIter->second == function->overloads.end() );
+        firstPassIter->second = insertIter.first;
+    }
+
+    definition.mangledName = getFunctionMangledName( token->text, type, abi );
+    definition.type = std::move(type);
+    definition.codeGen = globalFunctionCall;
+
+    return definition;
 }
 
 } // End namespace AST

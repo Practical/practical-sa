@@ -155,7 +155,8 @@ void BinaryOp::buildASTImpl(
     const LookupContext::Function &function =
             std::get<LookupContext::Function>(*identifier);
 
-    resolver.resolveOverloads( lookupContext, expectedResult, function.overloads, weight, weightLimit, metadata,
+    resolver.resolveOverloads(
+            lookupContext, expectedResult, function.overloads, weight, weightLimit, metadata,
             { parserOp.operands[0].get(), parserOp.operands[1].get() }, parserOp.op );
 }
 

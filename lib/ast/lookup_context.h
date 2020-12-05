@@ -45,20 +45,23 @@ public:
                     ValueRangeBase::CPtr(StaticTypeImpl::CPtr functType, Slice<ValueRangeBase::CPtr> inputRanges);
 
 
-            const Tokenizer::Token *token;
+            const Tokenizer::Token *token = nullptr;
             StaticTypeImpl::CPtr type;
             std::string mangledName;
             CodeGenProto *codeGen = nullptr;
             VrpProto *calcVrp = nullptr;
+            bool declarationOnly = true;
 
-            Definition( const std::string &name ) : mangledName(name) {}
-            explicit Definition( const Tokenizer::Token *token ) : token(token) {}
+            Definition( const Tokenizer::Token *token, const std::string &name ) :
+                token(token), mangledName(name)
+            {}
 
             StaticType::CPtr returnType() const;
         };
 
-        std::unordered_map<const Tokenizer::Token *, unsigned> firstPassOverloads;
-        std::vector<Definition> overloads;
+        using OverloadsContainer = std::unordered_map< StaticTypeImpl::CPtr, Definition >;
+        std::unordered_map<const Tokenizer::Token *, OverloadsContainer::const_iterator> firstPassOverloads;
+        OverloadsContainer overloads;
     };
 
     using Identifier = std::variant<Variable, Function>;
@@ -152,8 +155,19 @@ public:
 
         );
 
-    void addFunctionPass1( const Tokenizer::Token *token );
-    void addFunctionPass2( const Tokenizer::Token *token, StaticTypeImpl::CPtr type );
+    enum class AbiType { Practical, C };
+    friend std::ostream &operator<<( std::ostream &out, AbiType abi );
+
+    void addFunctionDeclarationPass1( const Tokenizer::Token *token );
+    void addFunctionDefinitionPass1( const Tokenizer::Token *token );
+    void addFunctionDeclarationPass2(
+            const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi = AbiType::Practical );
+    void addFunctionDefinitionPass2(
+            const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi = AbiType::Practical );
+
+    void declareFunctions( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const;
+
+    static AbiType parseAbiString( String abiString, const SourceLocation &location );
 
     void addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue );
 
@@ -217,6 +231,9 @@ private:
             Slice<const Expression>,
             const Function::Definition *definition,
             PracticalSemanticAnalyzer::FunctionGen *functionGen);
+
+    Function::Definition &addFunctionPass2(
+            const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi, bool isDefinition );
 };
 
 } // End namespace AST

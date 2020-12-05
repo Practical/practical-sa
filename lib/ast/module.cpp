@@ -21,44 +21,47 @@ Module::Module( const NonTerminals::Module &parserModule, const LookupContext &p
 {} 
 
 void Module::symbolsPass1() {
+    for( const auto &funcDecl : parserModule.functionDeclarations ) {
+        lookupContext.addFunctionDeclarationPass1( funcDecl.decl.name.identifier );
+    }
+
     for( const auto &funcDef : parserModule.functionDefinitions ) {
-        lookupContext.addFunctionPass1( funcDef.decl.name.identifier );
+        lookupContext.addFunctionDefinitionPass1( funcDef.decl.name.identifier );
     }
 }
 
 void Module::symbolsPass2() {
-    for( const auto &funcDef : parserModule.functionDefinitions ) {
-        const NonTerminals::FuncDeclBody &decl = funcDef.decl;
+    for( const auto &funcDecl : parserModule.functionDeclarations ) {
+        StaticTypeImpl::CPtr funcType = constructFunctionType( funcDecl.decl );
 
-        StaticTypeImpl::CPtr returnType = lookupContext.lookupType( decl.returnType.type );
-
-        std::vector<StaticTypeImpl::CPtr> arguments;
-        arguments.reserve( decl.arguments.arguments.size() );
-        for( const auto &argument : decl.arguments.arguments ) {
-            arguments.emplace_back( lookupContext.lookupType( argument.type ) );
+        if( funcDecl.abiSpecifier.token != nullptr ) {
+            lookupContext.addFunctionDeclarationPass2(
+                    funcDecl.decl.name.identifier,
+                    funcType,
+                    LookupContext::parseAbiString(
+                        funcDecl.abiSpecifier.token->text, funcDecl.abiSpecifier.token->location)
+                );
+        } else {
+            lookupContext.addFunctionDeclarationPass2( funcDecl.decl.name.identifier, funcType );
         }
+    }
 
-        lookupContext.addFunctionPass2(
-                decl.name.identifier,
-                StaticTypeImpl::allocate(
-                    FunctionTypeImpl(
-                        std::move(returnType),
-                        std::move(arguments)
-                    )
-                ) );
+    for( const auto &funcDef : parserModule.functionDefinitions ) {
+        lookupContext.addFunctionDefinitionPass2(
+                funcDef.decl.name.identifier, constructFunctionType(funcDef.decl) );
     }
 }
 
 void Module::codeGen( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) {
     moduleGen->moduleEnter( moduleId, "Module", "file.pr", 1, 1 );
 
+    lookupContext.declareFunctions( moduleGen );
+
     std::vector<Function> functions;
     functions.reserve( parserModule.functionDefinitions.size() );
 
     for( const auto &funcDef : parserModule.functionDefinitions ) {
-        auto &function = functions.emplace_back( funcDef, lookupContext );
-
-        moduleGen->declareIdentifier( function.getName(), function.getMangledName(), function.getType() );
+        functions.emplace_back( funcDef, lookupContext );
     }
 
     for( auto &function : functions ) {
@@ -66,6 +69,23 @@ void Module::codeGen( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) {
     }
 
     moduleGen->moduleLeave( moduleId );
+}
+
+StaticTypeImpl::CPtr Module::constructFunctionType( const NonTerminals::FuncDeclBody &decl ) const {
+    StaticTypeImpl::CPtr returnType = lookupContext.lookupType( decl.returnType.type );
+
+    std::vector<StaticTypeImpl::CPtr> arguments;
+    arguments.reserve( decl.arguments.arguments.size() );
+    for( const auto &argument : decl.arguments.arguments ) {
+        arguments.emplace_back( lookupContext.lookupType( argument.type ) );
+    }
+
+    return StaticTypeImpl::allocate(
+            FunctionTypeImpl(
+                std::move(returnType),
+                std::move(arguments)
+            )
+        );
 }
 
 } // namespace AST

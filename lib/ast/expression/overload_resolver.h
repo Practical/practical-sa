@@ -23,7 +23,7 @@ public:
     void resolveOverloads(
             LookupContext &lookupContext,
             ExpectedResult expectedResult,
-            const std::vector<LookupContext::Function::Definition> &overloads,
+            const LookupContext::Function::OverloadsContainer &overloads,
             Weight &weight,
             Weight weightLimit,
             ExpressionMetadata &metadata,
@@ -45,7 +45,7 @@ private:
     void resolveOverloadsByReturn(
             LookupContext &lookupContext,
             ExpectedResult expectedResult,
-            const std::vector<LookupContext::Function::Definition> &overloads,
+            const LookupContext::Function::OverloadsContainer &overloads,
             Weight &weight,
             Weight weightLimit,
             ExpressionMetadata &metadata,
@@ -54,7 +54,7 @@ private:
         );
     void resolveOverloadsByArguments(
             LookupContext &lookupContext,
-            const std::vector<LookupContext::Function::Definition> &overloads,
+            const LookupContext::Function::OverloadsContainer &overloads,
             Weight &weight,
             Weight weightLimit,
             ExpressionMetadata &metadata,

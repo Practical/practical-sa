@@ -153,6 +153,20 @@ public:
     KnownRuntimeViolation(const char *message, const SourceLocation &location);
 };
 
+class UnidentifiedAbiString : public compile_error {
+public:
+    UnidentifiedAbiString( const SourceLocation &location ) :
+        compile_error( "Unidentified ABI string", location )
+    {}
+};
+
+class MultipleDefinitions : public compile_error {
+public:
+    MultipleDefinitions( const SourceLocation &location ) :
+        compile_error( "Symbol defined multiple times", location )
+    {}
+};
+
 } // PracticalSemanticAnalyzer
 
 #endif // PRACTICAL_ERRORS_H

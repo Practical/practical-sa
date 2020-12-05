@@ -17,7 +17,7 @@ namespace AST::ExpressionImpl {
 void OverloadResolver::resolveOverloads(
         LookupContext &lookupContext,
         ExpectedResult expectedResult,
-        const std::vector<LookupContext::Function::Definition> &overloads,
+        const LookupContext::Function::OverloadsContainer &overloads,
         Weight &weight,
         Weight weightLimit,
         ExpressionMetadata &metadata,
@@ -92,7 +92,7 @@ void OverloadResolver::buildActualCall(
 void OverloadResolver::resolveOverloadsByReturn(
         LookupContext &lookupContext,
         ExpectedResult expectedResult,
-        const std::vector<LookupContext::Function::Definition> &overloads,
+        const LookupContext::Function::OverloadsContainer &overloads,
         Weight &weight,
         Weight weightLimit,
         ExpressionMetadata &metadata,
@@ -107,9 +107,9 @@ void OverloadResolver::resolveOverloadsByReturn(
     size_t numArguments = parserArguments.size();
 
     for( auto &overload : overloads ) {
-        auto overloadType = std::get<const StaticType::Function *>(overload.type->getType());
+        auto overloadType = std::get<const StaticType::Function *>(overload.second.type->getType());
         if( overloadType->getNumArguments() == numArguments ) {
-            sortedOverloads[ overloadType->getReturnType() ].emplace_back( &overload );
+            sortedOverloads[ overloadType->getReturnType() ].emplace_back( &overload.second );
         }
     }
 
@@ -155,7 +155,7 @@ void OverloadResolver::resolveOverloadsByReturn(
 
 void OverloadResolver::resolveOverloadsByArguments(
         LookupContext &lookupContext,
-        const std::vector<LookupContext::Function::Definition> &overloads,
+        const LookupContext::Function::OverloadsContainer &overloads,
         Weight &weight,
         Weight weightLimit,
         ExpressionMetadata &metadata,
@@ -167,9 +167,9 @@ void OverloadResolver::resolveOverloadsByArguments(
     size_t numArguments = parserArguments.size();
 
     for( auto &overload : overloads ) {
-        auto overloadType = std::get<const StaticType::Function *>(overload.type->getType());
+        auto overloadType = std::get<const StaticType::Function *>(overload.second.type->getType());
         if( overloadType->getNumArguments() == numArguments ) {
-            relevantOverloads.emplace_back( &overload );
+            relevantOverloads.emplace_back( &overload.second );
         }
     }
 

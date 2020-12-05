@@ -44,7 +44,17 @@ bool StaticType::Scalar::operator==( const Scalar &rhs ) const {
 }
 
 bool StaticType::Function::operator==( const Function &rhs ) const {
-    ABORT()<<"TODO implement";
+    if( getReturnType() != rhs.getReturnType() )
+        return false;
+    if( getNumArguments() != rhs.getNumArguments() )
+        return false;
+
+    for( size_t argumentIdx=0; argumentIdx<getNumArguments(); ++argumentIdx ) {
+        if( getArgumentType(argumentIdx) != rhs.getArgumentType(argumentIdx) )
+            return false;
+    }
+
+    return true;
 }
 
 bool StaticType::Pointer::operator==( const Pointer &rhs ) const {
