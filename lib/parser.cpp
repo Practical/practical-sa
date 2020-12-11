@@ -1,6 +1,6 @@
 /* This file is part of the Practical programming langauge. https://github.com/Practical/practical-sa
  *
- * This file is file is copyright (C) 2018-2019 by its authors.
+ * This file is file is copyright (C) 2018-2020 by its authors.
  * You can see the file's authors in the AUTHORS file in the project's home repository.
  *
  * This is available under the Boost license. The license's text is available under the LICENSE file in the project's
@@ -90,29 +90,75 @@ size_t TransientType::parse(Slice<const Tokenizer::Token> source) {
     RULE_LEAVE();
 }
 
+size_t LiteralPointer::parse(Slice<const Tokenizer::Token> source) {
+    RULE_ENTER(source);
+
+    token = &expectToken(
+            Tokenizer::Tokens::RESERVED_NULL, source, tokensConsumed,
+            "Expected null literal", "EOF while parsing literal");
+
+    RULE_LEAVE();
+}
+
 size_t Literal::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
     const Tokenizer::Token *currentToken = nextToken(source, tokensConsumed, "EOF while parsing literal");
+
+    NonTerminal *underlyingLiteral = nullptr;
 
     switch( currentToken->token ) {
     case Tokenizer::Tokens::LITERAL_INT_2:
     case Tokenizer::Tokens::LITERAL_INT_8:
     case Tokenizer::Tokens::LITERAL_INT_10:
     case Tokenizer::Tokens::LITERAL_INT_16:
+        underlyingLiteral = &literal.emplace<LiteralInt>();
+        break;
     case Tokenizer::Tokens::LITERAL_FP:
+        ABORT()<<"TODO implement";
+        break;
     case Tokenizer::Tokens::LITERAL_STRING:
+        underlyingLiteral = &literal.emplace<LiteralString>();
+        break;
     case Tokenizer::Tokens::RESERVED_TRUE:
     case Tokenizer::Tokens::RESERVED_FALSE:
+        underlyingLiteral = &literal.emplace<LiteralBool>();
+        break;
     case Tokenizer::Tokens::RESERVED_NULL:
+        underlyingLiteral = &literal.emplace<LiteralPointer>();
         break;
     default:
-        throw parser_error("Invalid expression", currentToken->location);
+        throw parser_error("Not a literal", currentToken->location);
     }
 
-    token = currentToken;
+    ASSERT( tokensConsumed>0 );
+    tokensConsumed--;
+    tokensConsumed += underlyingLiteral->parse( source.subslice(tokensConsumed) );
 
     RULE_LEAVE();
+}
+
+SourceLocation Literal::getLocation() const {
+    struct Visitor {
+        SourceLocation operator()( const LiteralInt &literal ) {
+            return literal.token->location;
+        }
+
+        SourceLocation operator()( const LiteralBool &literal ) {
+            return literal.token->location;
+        }
+
+        SourceLocation operator()( const LiteralPointer &literal ) {
+            return literal.token->location;
+        }
+
+        SourceLocation operator()( const LiteralString &literal ) {
+            return literal.token->location;
+        }
+
+    };
+
+    return std::visit( Visitor{}, literal );
 }
 
 size_t FunctionArguments::parse(Slice<const Tokenizer::Token> source) {

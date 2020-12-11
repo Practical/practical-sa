@@ -15,17 +15,8 @@
 namespace AST::ExpressionImpl {
 
 class Literal final : public Base {
-    class Impl {
-    public:
-        virtual ~Impl() {}
-
-        virtual ExpressionId codeGen(
-                const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const = 0;
-    };
-
     // Members
     const NonTerminals::Literal &parserLiteral;
-    std::unique_ptr<Impl> impl;
 
 public:
     explicit Literal( const NonTerminals::Literal &parserLiteral );
@@ -39,51 +30,31 @@ protected:
     ExpressionId codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
 
 private:
-    class LiteralInt final : public Impl {
-        LongEnoughInt result = 0;
+    void buildAstInt(
+            const NonTerminals::LiteralInt &literal, Weight &weight, Weight weightLimit,
+            ExpectedResult expectedResult );
+    void buildAstBool(
+            const NonTerminals::LiteralBool &literal, Weight &weight, Weight weightLimit,
+            ExpectedResult expectedResult );
+    void buildAstPointer(
+            const NonTerminals::LiteralPointer &literal, Weight &weight, Weight weightLimit,
+            ExpectedResult expectedResult );
+    void buildAstString(
+            const NonTerminals::LiteralString &literal, Weight &weight, Weight weightLimit,
+            ExpectedResult expectedResult );
 
-    public:
-        ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
-
-        void parseInt10( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
-        void parseInt( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
-    };
-
-    class LiteralBool final : public Impl {
-        bool result = false;
-
-    public:
-        ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
-
-        void parseBool( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
-    };
-
-    class LiteralString final : public Impl {
-        enum class State {
-            None,
-            Backslash,
-            Hex,
-        };
-
-    public:
-        ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
-
-        void parse( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
-
-    private:
-        State parserNone( String source, int &stateData, const SourceLocation &location );
-        State parserBackslash( String source, int &stateData, const SourceLocation &location );
-
-        // Members
-        std::string result;
-        State state = State::None;
-    };
-
-    class LiteralNull final : public Impl {
-    public:
-        ExpressionId codeGen( const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const override;
-        void buildAst( Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult );
-    };
+    ExpressionId codeGenInt(
+            const NonTerminals::LiteralInt &literal,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
+    ExpressionId codeGenBool(
+            const NonTerminals::LiteralBool &literal,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
+    ExpressionId codeGenString(
+            const NonTerminals::LiteralString &literal,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
+    ExpressionId codeGenPointer(
+            const NonTerminals::LiteralPointer &literal,
+            PracticalSemanticAnalyzer::FunctionGen *functionGen ) const;
 };
 
 } // namespace AST::ExpressionImpl

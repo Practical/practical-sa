@@ -26,122 +26,89 @@ Literal::Literal( const NonTerminals::Literal &parserLiteral ) :
 }
 
 SourceLocation Literal::getLocation() const {
-    return parserLiteral.token->location;
+    return parserLiteral.getLocation();
 }
 
 void Literal::buildASTImpl(
         LookupContext &lookupContext, ExpectedResult expectedResult, Weight &weight, Weight weightLimit )
 {
-    switch( parserLiteral.token->token ) {
-    case Tokenizer::Tokens::LITERAL_INT_10:
-        {
-            auto ptr = safenew< LiteralInt >();
-            LiteralInt *literalInt = ptr.get();
-            impl = std::move( ptr );
-            literalInt->parseInt10( this, weight, weightLimit, expectedResult );
+    struct Visitor {
+        Literal &_this;
+        Weight &weight;
+        Weight weightLimit;
+        const ExpectedResult &expectedResult;
+
+        void operator()( const NonTerminals::LiteralInt &literal ) {
+            _this.buildAstInt( literal, weight, weightLimit, expectedResult );
         }
-        break;
-    case Tokenizer::Tokens::LITERAL_INT_16:
-    case Tokenizer::Tokens::LITERAL_INT_2:
-        ABORT()<<"TODO implement";
-        break;
-    case Tokenizer::Tokens::RESERVED_TRUE:
-    case Tokenizer::Tokens::RESERVED_FALSE:
-        {
-            auto ptr = safenew< LiteralBool >();
-            LiteralBool *literalBool = ptr.get();
-            impl = std::move( ptr );
-            literalBool->parseBool( this, weight, weightLimit, expectedResult );
+
+        void operator()( const NonTerminals::LiteralBool &literal ) {
+            _this.buildAstBool( literal, weight, weightLimit, expectedResult );
         }
-        break;
-    case Tokenizer::Tokens::LITERAL_STRING:
-        {
-            auto ptr = safenew< LiteralString >();
-            LiteralString *literalString = ptr.get();
-            impl = std::move( ptr );
-            literalString->parse( this, weight, weightLimit, expectedResult );
+
+        void operator()( const NonTerminals::LiteralPointer &literal ) {
+            _this.buildAstPointer( literal, weight, weightLimit, expectedResult );
         }
-        break;
-    case Tokenizer::Tokens::RESERVED_NULL:
-        {
-            auto ptr = safenew< LiteralNull >();
-            LiteralNull *literalNull = ptr.get();
-            impl = std::move( ptr );
-            literalNull->buildAst( this, weight, weightLimit, expectedResult );
+
+        void operator()( const NonTerminals::LiteralString &literal ) {
+            _this.buildAstString( literal, weight, weightLimit, expectedResult );
         }
-        break;
-    default:
-        ABORT()<<"Non literal parsed as literal: "<<parserLiteral.token->token;
-    }
+    };
+
+    std::visit(
+            Visitor{
+                ._this = *this, .weight = weight, .weightLimit = weightLimit,
+                .expectedResult = expectedResult
+            },
+            parserLiteral.literal );
 }
 
 ExpressionId Literal::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *functionGen ) const {
-    ASSERT( impl )<<"Literal::codeGen called without calling buildAST first";
-    return impl->codeGen( this, functionGen );
+    struct Visitor {
+        const Literal &_this;
+        PracticalSemanticAnalyzer::FunctionGen *functionGen;
+
+        ExpressionId operator()( const NonTerminals::LiteralInt &literal ) {
+            return _this.codeGenInt( literal, functionGen );
+        }
+
+        ExpressionId operator()( const NonTerminals::LiteralBool &literal ) {
+            return _this.codeGenBool( literal, functionGen );
+        }
+
+        ExpressionId operator()( const NonTerminals::LiteralPointer &literal ) {
+            return _this.codeGenPointer( literal, functionGen );
+        }
+
+        ExpressionId operator()( const NonTerminals::LiteralString &literal ) {
+            return _this.codeGenString( literal, functionGen );
+        }
+    };
+
+    return std::visit( Visitor{ ._this = *this, .functionGen = functionGen }, parserLiteral.literal );
 }
 
 // Private
-ExpressionId Literal::LiteralInt::codeGen(
-        const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+void Literal::buildAstInt(
+        const NonTerminals::LiteralInt &literal, Weight &weight, Weight weightLimit,
+        ExpectedResult expectedResult )
 {
-    ExpressionId id = allocateId();
-
-    functionGen->setLiteral( id, result, owner->metadata.type );
-
-    return id;
-}
-
-void Literal::LiteralInt::parseInt10(
-        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
-{
-    result = 0;
-
-    for( char c: owner->parserLiteral.token->text ) {
-        static constexpr LongEnoughInt
-                LimitDivided = std::numeric_limits<LongEnoughInt>::max() / 10,
-                LimitTruncated = LimitDivided * 10,
-                LimitLastDigit = std::numeric_limits<LongEnoughInt>::max() % 10;
-
-        if( c=='_' )
-            continue;
-
-        if( result > LimitDivided )
-            throw IllegalLiteral(
-                    "Literal integer too big",
-                    owner->parserLiteral.token->location );
-
-        ASSERT( c>='0' && c<='9' ) << "Decimal literal has character '"<<c<<"' out of allowed range";
-        result *= 10;
-        if( result == LimitTruncated && c-'0'>LimitLastDigit )
-            throw IllegalLiteral(
-                    "Literal integer too big",
-                    owner->parserLiteral.token->location );
-
-        result += c-'0';
-    }
-
-    parseInt( owner, weight, weightLimit, expectedResult );
-}
-
-void Literal::LiteralInt::parseInt(
-        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
-{
-    ASSERT( !owner->metadata.type )<<"Cannot reuse AST nodes";
+    ASSERT( !metadata.type )<<"Cannot reuse AST nodes";
 
     StaticTypeImpl::CPtr naturalType;
-    if( result>std::numeric_limits<uint32_t>::max() ) {
-        ASSERT( result<=std::numeric_limits<uint64_t>::max() );
+    if( literal.value>std::numeric_limits<uint32_t>::max() ) {
+        ASSERT( literal.value<=std::numeric_limits<uint64_t>::max() );
         naturalType = AST::getBuiltinCtx().lookupType("U64");
-    } else if( result>std::numeric_limits<uint16_t>::max() ) {
+    } else if( literal.value>std::numeric_limits<uint16_t>::max() ) {
         naturalType = AST::getBuiltinCtx().lookupType("U32");
-    } else if( result>std::numeric_limits<uint8_t>::max() ) {
+    } else if( literal.value>std::numeric_limits<uint8_t>::max() ) {
         naturalType = AST::getBuiltinCtx().lookupType("U16");
     } else {
         naturalType = AST::getBuiltinCtx().lookupType("U8");
     }
     ASSERT( naturalType );
 
-    owner->metadata.valueRange = UnsignedIntValueRange::allocate( result, result );
+    metadata.valueRange = UnsignedIntValueRange::allocate( literal.value, literal.value );
 
     if( !expectedResult ) {
         static const StaticTypeImpl::CPtr DefaultLiteralIntType =
@@ -150,8 +117,8 @@ void Literal::LiteralInt::parseInt(
                 Weight( std::get< const StaticType::Scalar *>( DefaultLiteralIntType->getType() )->getLiteralWeight(), 0 );
 
         // If nothing is expected, return the maximal unsigned type
-        owner->metadata.type =  DefaultLiteralIntType;
-        ASSERT( owner->metadata.type );
+        metadata.type =  DefaultLiteralIntType;
+        ASSERT( metadata.type );
 
         weight += DefaultLiteralIntWeight;
         return;
@@ -163,9 +130,9 @@ void Literal::LiteralInt::parseInt(
         if( (*expectedScalar)->getType() == StaticType::Scalar::Type::SignedInt ) {
             LongEnoughInt limit=1;
             limit <<= (*expectedScalar)->getSize()-1;
-            if( result<limit ) {
-                owner->metadata.type = expectedResult.getType();
-                owner->metadata.valueRange = SignedIntValueRange::allocate( result, result );
+            if( literal.value<limit ) {
+                metadata.type = expectedResult.getType();
+                metadata.valueRange = SignedIntValueRange::allocate( literal.value, literal.value );
 
                 weight += Weight( (*expectedScalar)->getLiteralWeight(), 0 );
 
@@ -176,187 +143,103 @@ void Literal::LiteralInt::parseInt(
 
             if( (*expectedScalar)->getSize()==64 ) {
                 weight += Weight( (*expectedScalar)->getLiteralWeight(), 0 );
-                owner->metadata.type = expectedResult.getType();
+                metadata.type = expectedResult.getType();
                 return;
             }
 
             LongEnoughInt limit=1;
             limit <<= (*expectedScalar)->getSize();
 
-            if( result < limit ) {
+            if( literal.value < limit ) {
                 weight += Weight( (*expectedScalar)->getLiteralWeight(), 0 );
-                owner->metadata.type = expectedResult.getType();
+                metadata.type = expectedResult.getType();
                 return;
             }
         }
     }
 
-    ASSERT( ! owner->metadata.type );
+    ASSERT( ! metadata.type );
 
     // A type is expected, but it is not a scalar (or otherwise doesn't work). Put in the default type and
     // let the caller try a cast
-    owner->metadata.type = naturalType;
-    ASSERT( owner->metadata.type );
+    metadata.type = naturalType;
+    ASSERT( metadata.type );
 
     weight += Weight( std::get< const StaticType::Scalar *>( naturalType->getType() )->getLiteralWeight() );
 }
 
-ExpressionId Literal::LiteralBool::codeGen(
-        const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+void Literal::buildAstBool(
+        const NonTerminals::LiteralBool &literal, Weight &weight, Weight weightLimit,
+        ExpectedResult expectedResult )
 {
-    ExpressionId id = allocateId();
-    functionGen->setLiteral( id, result );
-
-    return id;
+    metadata.type = AST::getBuiltinCtx().lookupType("Bool");
+    metadata.valueRange = BoolValueRange::allocate( literal.value==false, literal.value==true );
 }
 
-void Literal::LiteralBool::parseBool(
-        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
-{
-    switch( owner->parserLiteral.token->token ) {
-    case Tokenizer::Tokens::RESERVED_TRUE:
-        result = true;
-        break;
-    case Tokenizer::Tokens::RESERVED_FALSE:
-        result = false;
-        break;
-    default:
-        ABORT()<<"Unreachable code reached";
-    }
-
-    owner->metadata.type = AST::getBuiltinCtx().lookupType("Bool");
-    owner->metadata.valueRange = BoolValueRange::allocate( result==false, result==true );
-}
-
-ExpressionId Literal::LiteralString::codeGen(
-        const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
-{
-    ExpressionId id = allocateId();
-    functionGen->setLiteral( id, result );
-
-    return id;
-}
-
-void Literal::LiteralString::parse(
-        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
-{
-    static const std::unordered_map<
-            State,
-            State (Literal::LiteralString::*)( String, int &, const SourceLocation & )
-        > stateParsers
-    {
-        { State::None, &LiteralString::parserNone },
-        { State::Backslash, &LiteralString::parserBackslash }
-    };
-
-    ASSERT( owner->parserLiteral.token->token == Tokenizer::Tokens::LITERAL_STRING );
-    ASSERT( result.empty() );
-
-    String body = owner->parserLiteral.token->text;
-    ASSERT( body.size()>2 );
-    ASSERT( body[0]=='"' );
-    ASSERT( body[body.size()-1]=='"' );
-
-    SourceLocation location = owner->parserLiteral.token->location;
-
-    // Strip leading and trailing quotes
-    body = body.subslice( 1, body.size()-1 );
-    ++location;
-
-    ASSERT( state == State::None );
-
-    int stateData = 0;
-    while( body.size()>0 ) {
-        state = (this ->* stateParsers.at(state))( body, stateData, location );
-        body = body.subslice(1);
-        ++location;
-    }
-
-    result += '\0';
-
-    auto c8Type = AST::getBuiltinCtx().lookupType("C8");
-    owner->metadata.type = StaticTypeImpl::allocate( PointerTypeImpl( c8Type ) );
-    owner->metadata.valueRange = new PointerValueRange( c8Type->defaultRange() );
-}
-
-Literal::LiteralString::State Literal::LiteralString::parserNone(
-        String source, int &stateData, const SourceLocation &location )
-{
-    switch( source[0] ) {
-    case '\\':
-        return State::Backslash;
-    }
-
-    result += source[0];
-    return State::None;
-}
-
-Literal::LiteralString::State Literal::LiteralString::parserBackslash(
-        String source, int &stateData, const SourceLocation &location )
-{
-    switch( source[0] ) {
-    case '\'':
-    case '"':
-    case '?':
-    case '\\':
-        result += source[0];
-        return State::None;
-    case '0':
-        result += char(0); // NUL (Null)
-        return State::None;
-    case 'a':
-        result += 7; // BEL (Bell)
-        return State::None;
-    case 'b':
-        result += 8; // BS (Backspace)
-        return State::None;
-    case 't':
-        result += 9; // HT (Horizontal tab)
-        return State::None;
-    case 'n':
-        result += 10; // NL (Newline)
-        return State::None;
-    case 'v':
-        result += 11; // VT (Vertical tab)
-        return State::None;
-    case 'f':
-        result += 12; // FF (Form feed)
-        return State::None;
-    case 'r':
-        result += 13; // CR (Carriage return)
-        return State::None;
-    case 'x':
-        stateData = 0;
-        result += char(0);
-        return State::Hex;
-    }
-
-    throw InvalidEscapeSequence(location);
-}
-
-ExpressionId Literal::LiteralNull::codeGen(
-        const Literal *owner, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
-{
-    ExpressionId id = allocateId();
-
-    functionGen->setLiteralNull( id, owner->metadata.type );
-    return id;
-}
-
-void Literal::LiteralNull::buildAst(
-        Literal *owner, Weight &weight, Weight weightLimit, ExpectedResult expectedResult )
+void Literal::buildAstPointer(
+        const NonTerminals::LiteralPointer &literal, Weight &weight, Weight weightLimit,
+        ExpectedResult expectedResult )
 {
     if( ! expectedResult )
-        throw PointerExpected( nullptr, owner->parserLiteral.token->location );
+        throw PointerExpected( nullptr, literal.token->location );
 
     auto expectedType = expectedResult.getType();
     auto expectedTypeType = expectedType->getType();
     auto pointedType = std::get_if<const StaticType::Pointer *>(&expectedTypeType);
     if( pointedType == nullptr )
-        throw PointerExpected( expectedType, owner->parserLiteral.token->location );
+        throw PointerExpected( expectedType, literal.token->location );
 
-    owner->metadata.type = expectedType;
-    owner->metadata.valueRange = new PointerValueRange( nullptr );
+    metadata.type = expectedType;
+    metadata.valueRange = new PointerValueRange( nullptr );
+}
+
+void Literal::buildAstString(
+        const NonTerminals::LiteralString &literal, Weight &weight, Weight weightLimit,
+        ExpectedResult expectedResult )
+{
+    auto c8Type = AST::getBuiltinCtx().lookupType("C8");
+    metadata.type = StaticTypeImpl::allocate( PointerTypeImpl( c8Type ) );
+    metadata.valueRange = new PointerValueRange( c8Type->defaultRange() );
+}
+
+ExpressionId Literal::codeGenInt(
+        const NonTerminals::LiteralInt &literal, PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
+    ExpressionId id = allocateId();
+
+    functionGen->setLiteral( id, literal.value, metadata.type );
+
+    return id;
+}
+
+ExpressionId Literal::codeGenBool(
+        const NonTerminals::LiteralBool &literal,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
+    ExpressionId id = allocateId();
+    functionGen->setLiteral( id, literal.value );
+
+    return id;
+}
+
+ExpressionId Literal::codeGenString(
+        const NonTerminals::LiteralString &literal,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
+    ExpressionId id = allocateId();
+    functionGen->setLiteral( id, literal.value + '\0' );
+
+    return id;
+}
+
+ExpressionId Literal::codeGenPointer(
+        const NonTerminals::LiteralPointer &literal,
+        PracticalSemanticAnalyzer::FunctionGen *functionGen ) const
+{
+    ExpressionId id = allocateId();
+
+    functionGen->setLiteralNull( id, metadata.type );
+    return id;
 }
 
 } // namespace AST::ExpressionImpl

@@ -81,7 +81,30 @@ void dumpParseTree( const NonTerminals::Expression &node, size_t depth ) {
         }
 
         void operator()( const Literal &literal ) {
-            indent(out, depth) << "Literal "<<literal.token<<"\n";
+            struct Visitor2 {
+                const Visitor &_this;
+
+                void operator()( const NonTerminals::LiteralInt &literal ) {
+                    indent(_this.out, _this.depth) << "Literal int "<<literal.value<<"\n";
+                }
+
+                void operator()( const NonTerminals::LiteralBool &literal ) {
+                    indent(_this.out, _this.depth) << "Literal bool "<<(
+                            literal.value ?
+                            "true" :
+                            "false" )<<"\n";
+                }
+
+                void operator()( const NonTerminals::LiteralPointer &literal ) {
+                    indent(_this.out, _this.depth) << "Literal null\n";
+                }
+
+                void operator()( const NonTerminals::LiteralString &literal ) {
+                    indent(_this.out, _this.depth) << "Literal string "<<literal.token->text<<"\n";
+                }
+            };
+
+            std::visit( Visitor2{ ._this = *this }, literal.literal );
         }
 
         void operator()( const Identifier &id ) {

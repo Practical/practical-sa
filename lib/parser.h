@@ -9,9 +9,12 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "parser/literal_bool.h"
+#include "parser/literal_int.h"
+#include "parser/literal_string.h"
+
 #include "asserts.h"
 #include "operators.h"
-#include "tokenizer.h"
 
 #include <practical/defines.h>
 #include <practical/practical.h>
@@ -25,23 +28,6 @@ using namespace PracticalSemanticAnalyzer;
 
 namespace NonTerminals {
     // Base class for all non-terminals.
-    struct NonTerminal {
-    protected:
-        Slice<const Tokenizer::Token> parsedSlice;
-
-    public:
-        // This function is not really virtual. It's used this way to force all children to have the same signature
-        // Returns how many tokens were consumed
-        // Throws parser_error if fails to parse
-        virtual size_t parse(Slice<const Tokenizer::Token> source) = 0;
-
-        virtual ~NonTerminal() {}
-
-        Slice<const Tokenizer::Token> getNTTokens() const {
-            return parsedSlice;
-        }
-    };
-
     struct Identifier : public NonTerminal {
         const Tokenizer::Token *identifier = nullptr;
 
@@ -79,10 +65,18 @@ namespace NonTerminals {
         size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
-    struct Literal : public NonTerminal {
+    struct LiteralPointer : public NonTerminal {
         const Tokenizer::Token *token = nullptr;
 
         size_t parse(Slice<const Tokenizer::Token> source) override final;
+    };
+
+    struct Literal : public NonTerminal {
+        std::variant<LiteralInt, LiteralBool, LiteralPointer, LiteralString> literal;
+
+        size_t parse(Slice<const Tokenizer::Token> source) override final;
+
+        SourceLocation getLocation() const;
     };
 
     struct Expression;
@@ -302,7 +296,7 @@ namespace NonTerminals {
 
     struct FuncDecl : public NonTerminal {
         FuncDeclBody decl;
-        Literal abiSpecifier;
+        LiteralString abiSpecifier;
 
         FuncDecl() {}
         FuncDecl( FuncDecl &&that ) = default;
