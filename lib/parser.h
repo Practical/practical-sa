@@ -9,9 +9,11 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "parser/identifier.h"
 #include "parser/literal_bool.h"
 #include "parser/literal_int.h"
 #include "parser/literal_string.h"
+#include "parser/type.h"
 
 #include "asserts.h"
 #include "operators.h"
@@ -27,37 +29,6 @@
 using namespace PracticalSemanticAnalyzer;
 
 namespace NonTerminals {
-    // Base class for all non-terminals.
-    struct Identifier : public NonTerminal {
-        const Tokenizer::Token *identifier = nullptr;
-
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
-
-        String getName() const {
-            return identifier->text;
-        }
-
-        SourceLocation getLocation() const {
-            ASSERT(identifier != nullptr) << "Dereferencing an unparsed identifier";
-            return identifier->location;
-        }
-    };
-
-    struct Type : public NonTerminal {
-        struct Pointer {
-            std::unique_ptr< const Type > pointed;
-            const Tokenizer::Token *token = nullptr;
-
-            Pointer( std::unique_ptr< const Type > pointed, const Tokenizer::Token *token ) :
-                pointed(std::move(pointed)), token(token)
-            {}
-        };
-        std::variant<std::monostate, Identifier, Pointer> type;
-
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
-        SourceLocation getLocation() const;
-    };
-
     struct TransientType : public NonTerminal {
         Type type;
         const Tokenizer::Token *ref = nullptr;

@@ -17,69 +17,6 @@ using namespace InternalNonTerminals;
 
 namespace NonTerminals {
 
-size_t Identifier::parse(Slice<const Tokenizer::Token> source) {
-    RULE_ENTER(source);
-
-    identifier = &expectToken(Tokenizer::Tokens::IDENTIFIER, source, tokensConsumed, "Expected an identifier",
-            "EOF while parsing an identifier" );
-
-    RULE_LEAVE();
-}
-
-size_t Type::parse(Slice<const Tokenizer::Token> source) {
-    RULE_ENTER(source);
-
-    Identifier &id = type.emplace<Identifier>();
-
-    tokensConsumed = id.parse( source );
-
-    bool done=false;
-
-    do {
-        size_t provisionalyConsumed = 0;
-        const Tokenizer::Token *token = nextToken( source.subslice(tokensConsumed), provisionalyConsumed, nullptr );
-        if( !token )
-            break;
-
-        switch( token->token ) {
-        case Tokenizer::Tokens::OP_PTR:
-            {
-                auto pointedType = std::make_unique<Type>();
-                pointedType->type = std::move(type);
-
-                type.emplace< Pointer >( std::move(pointedType), token );
-            }
-            break;
-        default:
-            done=true;
-            break;
-        }
-
-        if( !done )
-            tokensConsumed += provisionalyConsumed;
-    } while(!done);
-
-    RULE_LEAVE();
-}
-
-SourceLocation Type::getLocation() const {
-    struct Visitor {
-        SourceLocation operator()( std::monostate ) {
-            ABORT()<<"Unreachable state";
-        }
-
-        SourceLocation operator()( const Identifier &id ) {
-            return id.getLocation();
-        }
-
-        SourceLocation operator()( const Pointer &ptr ) {
-            return ptr.token->location;
-        }
-    };
-
-    return std::visit( Visitor{}, type );
-}
-
 size_t TransientType::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 

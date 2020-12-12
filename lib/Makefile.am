@@ -5,7 +5,8 @@ noinst_PROGRAMS = practical-sa-ut
 libpractical_sa_la_LDFLAGS = -version-info 0:0:0
 libpractical_sa_la_SOURCES = practical-sa.cpp practical-errors.cpp scope_tracing.cpp \
 			     tokenizer.cpp parser.cpp parser_internal.cpp operators.cpp \
-			     parser/literal_string.cpp parser/literal_int.cpp parser/literal_bool.cpp \
+			     parser/literal_string.cpp parser/literal_int.cpp parser/literal_bool.cpp parser/type.cpp \
+			     parser/identifier.cpp \
 			     ast/ast.cpp ast/cast_op.cpp ast/casts.cpp ast/lookup_context.cpp ast/static_type.cpp \
 			     ast/module.cpp ast/function.cpp ast/statement_list.cpp ast/expected_result.cpp \
 			     ast/statement.cpp ast/signed_int_value_range.cpp ast/unsigned_int_value_range.cpp \
