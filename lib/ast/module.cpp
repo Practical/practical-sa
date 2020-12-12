@@ -39,7 +39,7 @@ void Module::symbolsPass2() {
                     funcDecl.decl.name.identifier,
                     funcType,
                     LookupContext::parseAbiString(
-                        funcDecl.abiSpecifier.token->text, funcDecl.abiSpecifier.token->location)
+                        funcDecl.abiSpecifier.value, funcDecl.abiSpecifier.token->location)
                 );
         } else {
             lookupContext.addFunctionDeclarationPass2( funcDecl.decl.name.identifier, funcType );

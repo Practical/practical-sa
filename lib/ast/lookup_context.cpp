@@ -21,8 +21,8 @@ using namespace PracticalSemanticAnalyzer;
 namespace AST {
 
 static std::unordered_map< String, LookupContext::AbiType > abiLookupTable {
-    { "\"Practical\"", LookupContext::AbiType::Practical },
-    { "\"C\"", LookupContext::AbiType::C }
+    { "Practical", LookupContext::AbiType::Practical },
+    { "C", LookupContext::AbiType::C }
 };
 
 StaticType::CPtr LookupContext::Function::Definition::returnType() const {
