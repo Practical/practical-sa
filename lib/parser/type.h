@@ -10,10 +10,19 @@
 #define PARSER_TYPE_H
 
 #include "parser/identifier.h"
+#include "parser/literal_int.h"
 
 namespace NonTerminals {
 
 struct Type : public NonTerminal {
+    struct Array {
+        std::unique_ptr< const Type > elementType;
+        LiteralInt dimension;
+        const Tokenizer::Token *token = nullptr;
+
+        Array( std::unique_ptr< const Type > elementType, const Tokenizer::Token *token );
+    };
+
     struct Pointer {
         std::unique_ptr< const Type > pointed;
         const Tokenizer::Token *token = nullptr;
@@ -22,7 +31,7 @@ struct Type : public NonTerminal {
             pointed(std::move(pointed)), token(token)
         {}
     };
-    std::variant<std::monostate, Identifier, Pointer> type;
+    std::variant<std::monostate, Identifier, Array, Pointer> type;
 
     size_t parse(Slice<const Tokenizer::Token> source) override final;
     SourceLocation getLocation() const;

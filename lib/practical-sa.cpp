@@ -61,6 +61,10 @@ bool StaticType::Pointer::operator==( const Pointer &rhs ) const {
     return getPointedType() == rhs.getPointedType();
 }
 
+bool StaticType::Array::operator==( const Array &rhs ) const {
+    return getNumElements()==rhs.getNumElements() && getElementType() == rhs.getElementType();
+}
+
 bool StaticType::operator==( const StaticType &rhs ) const {
     auto leftType = getType();
     auto rightType = rhs.getType();
@@ -84,6 +88,10 @@ bool StaticType::operator==( const StaticType &rhs ) const {
 
         bool operator()( const StaticType::Pointer *pointer ) {
             return (*pointer)==*( std::get<const Pointer *>( rightTypes ) );
+        }
+
+        bool operator()( const StaticType::Array *array ) {
+            return (*array)==*( std::get<const Array *>( rightTypes ) );
         }
     };
 
@@ -114,6 +122,10 @@ std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
 
         void operator()( const StaticType::Pointer *pointer ) {
             out << pointer->getPointedType() << "@";
+        }
+
+        void operator()( const StaticType::Array *array ) {
+            out << array->getElementType() << "[" << array->getNumElements() << "]";
         }
     };
 
@@ -168,6 +180,7 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
     static constexpr size_t PointerModifier = 4;
     static constexpr size_t ReferenceModifier = 6;
     static constexpr size_t MutableModifier = 10;
+    static constexpr size_t ArrayModifier = 14;
 
     auto typeType = type.getType();
 
@@ -192,6 +205,11 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
 
         size_t operator()( const StaticType::Pointer *pointer ) {
             return hash{}( *pointer->getPointedType() ) * (FibonacciHashMultiplier - PointerModifier);
+        }
+
+        size_t operator()( const StaticType::Array *array ) {
+            return hash{}( *array->getElementType() ) * (FibonacciHashMultiplier - ArrayModifier) +
+                   array->getNumElements();
         }
     };
 

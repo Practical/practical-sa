@@ -14,6 +14,11 @@ namespace NonTerminals {
 
 using namespace InternalNonTerminals;
 
+Type::Array::Array( std::unique_ptr< const Type > elementType, const Tokenizer::Token *token ) :
+    elementType( std::move(elementType) ),
+    token(token)
+{}
+
 size_t Type::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
@@ -30,6 +35,18 @@ size_t Type::parse(Slice<const Tokenizer::Token> source) {
             break;
 
         switch( token->token ) {
+        case Tokenizer::Tokens::BRACKET_SQUARE_OPEN:
+            {
+                auto elementType = std::make_unique<Type>();
+                elementType->type = std::move(type);
+
+                Array &array = type.emplace< Array >( std::move(elementType), token );
+                provisionalyConsumed += array.dimension.parse( source.subslice(tokensConsumed + provisionalyConsumed) );
+                expectToken(
+                        Tokenizer::Tokens::BRACKET_SQUARE_CLOSE, source.subslice(tokensConsumed), provisionalyConsumed,
+                        "Array type with no closing bracket", "Array type with no closing bracket" );
+            }
+            break;
         case Tokenizer::Tokens::OP_PTR:
             {
                 auto pointedType = std::make_unique<Type>();
@@ -58,6 +75,10 @@ SourceLocation Type::getLocation() const {
 
         SourceLocation operator()( const Identifier &id ) {
             return id.getLocation();
+        }
+
+        SourceLocation operator()( const Array &array ) {
+            return array.token->location;
         }
 
         SourceLocation operator()( const Pointer &ptr ) {

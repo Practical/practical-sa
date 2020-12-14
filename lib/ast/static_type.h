@@ -76,6 +76,18 @@ public:
     void getMangledName(std::ostringstream &formatter) const;
 };
 
+class ArrayTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Array {
+    boost::intrusive_ptr<const StaticTypeImpl> elementType;
+    size_t dimension;
+
+public:
+    explicit ArrayTypeImpl( boost::intrusive_ptr<const StaticTypeImpl> elementType, size_t dimension );
+
+    void getMangledName(std::ostringstream &formatter) const;
+    virtual PracticalSemanticAnalyzer::StaticType::CPtr getElementType() const override;
+    virtual size_t getNumElements() const override;
+};
+
 class PointerTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Pointer {
     boost::intrusive_ptr<const StaticTypeImpl> pointed;
 
@@ -91,7 +103,8 @@ private:
     std::variant<
             std::unique_ptr<ScalarTypeImpl>,
             std::unique_ptr<FunctionTypeImpl>,
-            PointerTypeImpl
+            PointerTypeImpl,
+            ArrayTypeImpl
     > content;
     ValueRangeBase::CPtr valueRange;
     mutable std::string mangledName;
@@ -137,12 +150,14 @@ private:
 
     explicit StaticTypeImpl( ScalarTypeImpl &&scalar, ValueRangeBase::CPtr valueRange );
     explicit StaticTypeImpl( FunctionTypeImpl &&function );
+    explicit StaticTypeImpl( ArrayTypeImpl &&array );
     explicit StaticTypeImpl( PointerTypeImpl &&ptr );
 };
 
 StaticTypeImpl::CPtr downCast( PracticalSemanticAnalyzer::StaticType::CPtr ptr );
 const PointerTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Pointer * ptr );
 const FunctionTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Function * ptr );
+const ArrayTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Array * ptr );
 
 } // End namespace AST
 

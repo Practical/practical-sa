@@ -41,6 +41,11 @@ void dumpType( const NonTerminals::Type &type, size_t depth ) {
             dumpIdentifier( id, depth );
         }
 
+        void operator()( const NonTerminals::Type::Array &array ) {
+            indent( std::cout, depth ) << "Array["<<array.dimension.value<<"]\n";
+            dumpType( *array.elementType, depth+1 );
+        }
+
         void operator()( const NonTerminals::Type::Pointer &ptr ) {
             indent( std::cout, depth ) << "Pointer\n";
             dumpType( *ptr.pointed, depth+1 );

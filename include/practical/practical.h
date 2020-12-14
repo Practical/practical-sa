@@ -137,7 +137,17 @@ namespace PracticalSemanticAnalyzer {
             bool operator==( const Pointer &rhs ) const;
         };
 
-        using Types = std::variant<const Scalar *, const Function *, const Pointer *>;
+        class Array {
+        public:
+            virtual ~Array() {}
+
+            virtual CPtr getElementType() const = 0;
+            virtual size_t getNumElements() const = 0;
+
+            bool operator==( const Array &rhs ) const;
+        };
+
+        using Types = std::variant<const Scalar *, const Function *, const Pointer *, const Array *>;
 
         virtual ~StaticType() {}
 

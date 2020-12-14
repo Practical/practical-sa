@@ -80,7 +80,7 @@ void AST::registerBuiltinTypes( BuiltinContextGen *ctxGen ) {
             ScalarTypeImpl( "U64", "u8", 64, 8, ScalarTypeImpl::Type::UnsignedInt, ctxGen->registerIntegerType( 64, 8, false ), 6 ),
             UnsignedIntValueRange::allocate<uint64_t>() );
     auto c8Type = builtinCtx.registerScalarType(
-            ScalarTypeImpl( "C8", "c", 8, 1, ScalarTypeImpl::Type::Char, ctxGen->registerCharType( 8, 1, false ), 0 ),
+            ScalarTypeImpl( "C8", "c1", 8, 1, ScalarTypeImpl::Type::Char, ctxGen->registerCharType( 8, 1, false ), 0 ),
             UnsignedIntValueRange::allocate<uint8_t>() );
 
     // Implicit conversions

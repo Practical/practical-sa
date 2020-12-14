@@ -70,6 +70,16 @@ StaticTypeImpl::CPtr LookupContext::lookupType( const NonTerminals::Type &type )
             return _this->lookupType( id.identifier->text, id.identifier->location );
         }
 
+        StaticTypeImpl::CPtr operator()( const NonTerminals::Type::Array &array )
+        {
+            auto ret = _this->lookupType( *array.elementType );
+
+            if( !ret )
+                return StaticTypeImpl::CPtr();
+
+            return StaticTypeImpl::allocate( ArrayTypeImpl( std::move(ret), array.dimension.value ) );
+        }
+
         StaticTypeImpl::CPtr operator()( const NonTerminals::Type::Pointer &ptr )
         {
             auto ret = _this->lookupType( *ptr.pointed );

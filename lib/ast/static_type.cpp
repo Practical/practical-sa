@@ -8,6 +8,7 @@
  */
 #include "static_type.h"
 
+#include "ast/arrays.h"
 #include "ast/pointers.h"
 
 #include <sstream>
@@ -71,6 +72,10 @@ StaticType::Types StaticTypeImpl::getType() const {
         Types operator()( const PointerTypeImpl &ptr ) {
             return &ptr;
         }
+
+        Types operator()( const ArrayTypeImpl &array ) {
+            return &array;
+        }
     };
 
     return std::visit( Visitor{ ._this=this }, content );
@@ -107,11 +112,15 @@ void StaticTypeImpl::getMangledName( std::ostringstream &formatter ) const {
         }
 
         void operator()( const Function *function ) {
-            static_cast<const FunctionTypeImpl *>(function)->getMangledName(formatter);
+            downCast(function)->getMangledName(formatter);
         }
 
         void operator()( const Pointer *pointer ) {
-            static_cast<const PointerTypeImpl *>(pointer)->getMangledName(formatter);
+            downCast(pointer)->getMangledName(formatter);
+        }
+
+        void operator()( const Array *array ) {
+            downCast(array)->getMangledName(formatter);
         }
     };
 
@@ -127,6 +136,24 @@ void FunctionTypeImpl::getMangledName(std::ostringstream &formatter) const {
         formatter<<getArgumentType(i)->getMangledName();
     }
     formatter<<"E";
+}
+
+ArrayTypeImpl::ArrayTypeImpl( boost::intrusive_ptr<const StaticTypeImpl> elementType, size_t dimension ) :
+    elementType(elementType), dimension(dimension)
+{}
+
+void ArrayTypeImpl::getMangledName(std::ostringstream &formatter) const {
+    formatter<<"A"<<getNumElements();
+
+    downCast(getElementType())->getMangledName(formatter);
+}
+
+PracticalSemanticAnalyzer::StaticType::CPtr ArrayTypeImpl::getElementType() const {
+    return elementType;
+}
+
+size_t ArrayTypeImpl::getNumElements() const {
+    return dimension;
 }
 
 StaticTypeImpl::StaticTypeImpl( const StaticTypeImpl &that ) :
@@ -146,6 +173,10 @@ StaticTypeImpl::StaticTypeImpl( const StaticTypeImpl &that ) :
 
         void operator()( const PointerTypeImpl &pointer ) {
             _this->content = pointer;
+        }
+
+        void operator()( const ArrayTypeImpl &array ) {
+            _this->content = array;
         }
     };
 
@@ -168,6 +199,18 @@ StaticTypeImpl::StaticTypeImpl( PointerTypeImpl &&ptr ) :
             new PointerValueRange(
                 downCast(ptr.getPointedType())->defaultRange(),
                 BoolValueRange(true, true)
+            )
+        )
+{
+    // Easier to initialize content after the value range
+    content = std::move(ptr);
+}
+
+StaticTypeImpl::StaticTypeImpl( ArrayTypeImpl &&ptr ) :
+    valueRange(
+            new ArrayValueRange(
+                downCast(ptr.getElementType())->defaultRange(),
+                ptr.getNumElements()
             )
         )
 {
@@ -198,6 +241,14 @@ const PointerTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Po
 const FunctionTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Function * ptr ) {
     ASSERT( ptr );
     auto downCasted = dynamic_cast<const FunctionTypeImpl *>( ptr );
+    ASSERT( downCasted );
+
+    return downCasted;
+}
+
+const ArrayTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Array * ptr ) {
+    ASSERT( ptr );
+    auto downCasted = dynamic_cast<const ArrayTypeImpl *>( ptr );
     ASSERT( downCasted );
 
     return downCasted;
