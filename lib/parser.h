@@ -14,6 +14,7 @@
 #include "parser/literal_int.h"
 #include "parser/literal_string.h"
 #include "parser/type.h"
+#include "parser/variable_definition.h"
 
 #include "asserts.h"
 #include "operators.h"
@@ -135,21 +136,6 @@ namespace NonTerminals {
     struct ConditionalExpression {
         Expression condition;
         Expression ifClause, elseClause;
-    };
-
-
-    struct VariableDeclBody : public NonTerminal {
-        Identifier name;
-        Type type;
-
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
-    };
-
-    struct VariableDefinition : public NonTerminal {
-        VariableDeclBody body;
-        std::unique_ptr<Expression> initValue;
-
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
     };
 
     struct CompoundStatement;
@@ -279,18 +265,6 @@ namespace NonTerminals {
         }
     };
 
-    struct Module : public NonTerminal {
-        std::vector< FuncDef > functionDefinitions;
-        std::vector< FuncDecl > functionDeclarations;
-        std::vector< Tokenizer::Token > tokens;
-
-        void parse(String source);
-        size_t parse(Slice<const Tokenizer::Token> source) override final;
-        String getName() const {
-            return toSlice("__main");
-        }
-
-    };
 } // NonTerminals namespace
 
 #endif // PARSER_H

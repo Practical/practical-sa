@@ -11,7 +11,7 @@
 
 #include <unistd.h>
 
-#include "parser.h"
+#include "parser/module.h"
 #include "mmap.h"
 
 size_t indentWidth = 3;

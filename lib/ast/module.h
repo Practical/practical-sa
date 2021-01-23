@@ -10,7 +10,7 @@
 #define AST_MODULE_H
 
 #include "ast/lookup_context.h"
-#include "parser.h"
+#include "parser/module.h"
 
 namespace AST {
 

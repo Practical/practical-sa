@@ -98,6 +98,7 @@ enum class Tokens {
     RESERVED_ELSE,
     RESERVED_REF,
     RESERVED_NULL,
+    RESERVED_STRUCT,
 };
 
 struct Token {

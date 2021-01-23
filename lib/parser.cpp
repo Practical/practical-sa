@@ -452,42 +452,6 @@ size_t Expression::parsePostfixOp(
     RULE_LEAVE();
 }
 
-size_t VariableDeclBody::parse(Slice<const Tokenizer::Token> source) {
-    RULE_ENTER(source);
-
-    tokensConsumed += name.parse(source);
-    expectToken( Tokenizer::Tokens::OP_COLON, source, tokensConsumed, "Expected \":\" after variable name", "Unexpected EOF" );
-    tokensConsumed += type.parse( source.subslice(tokensConsumed) );
-
-    RULE_LEAVE();
-}
-
-size_t VariableDefinition::parse(Slice<const Tokenizer::Token> source) {
-    RULE_ENTER(source);
-
-    expectToken( Tokenizer::Tokens::RESERVED_DEF, source, tokensConsumed, "Variable definition does not start with def keyword",
-            "Unexpected EOF" );
-
-    tokensConsumed += body.parse(source.subslice(tokensConsumed));
-
-    try {
-        size_t provisionalConsumed = tokensConsumed;
-
-        expectToken( Tokenizer::Tokens::OP_ASSIGN, source, provisionalConsumed, "", "" );
-
-        // XXX parse outside the catch
-        Expression initValue;
-        provisionalConsumed += initValue.parse( source.subslice(provisionalConsumed) );
-
-        this->initValue = safenew<Expression>( std::move(initValue) );
-        tokensConsumed = provisionalConsumed;
-    } catch( parser_error &err ) {
-        EXCEPTION_CAUGHT(err);
-    }
-
-    RULE_LEAVE();
-}
-
 size_t Statement::parse(Slice<const Tokenizer::Token> source) {
     RULE_ENTER(source);
 
@@ -699,50 +663,6 @@ size_t FuncDecl::parse(Slice<const Tokenizer::Token> source) {
     tokensConsumed += decl.parse( source.subslice(tokensConsumed) );
 
     expectToken( Tokenizer::Tokens::SEMICOLON, source, tokensConsumed, "Function declaration must end with `;`" );
-
-    RULE_LEAVE();
-}
-
-void Module::parse(String source) {
-    tokens = Tokenizer::Tokenizer::tokenize(source);
-    parse(tokens);
-}
-
-size_t Module::parse(Slice<const Tokenizer::Token> source) {
-    RULE_ENTER(source);
-
-    skipWS(source, tokensConsumed);
-    while( tokensConsumed<source.size() ) {
-        const Tokenizer::Token *currentToken = wishForToken(
-                Tokenizer::Tokens::RESERVED_DEF,
-                source, tokensConsumed,
-                false);
-        if( currentToken != nullptr ) {
-            FuncDef func;
-
-            tokensConsumed += func.parse( source.subslice(tokensConsumed) );
-            functionDefinitions.emplace_back( std::move(func) );
-
-            skipWS(source, tokensConsumed);
-            continue;
-        }
-
-        currentToken = wishForToken(
-                Tokenizer::Tokens::RESERVED_DECL,
-                source, tokensConsumed,
-                false);
-        if( currentToken != nullptr ) {
-            FuncDecl func;
-
-            tokensConsumed += func.parse( source.subslice(tokensConsumed) );
-            functionDeclarations.emplace_back( std::move(func) );
-
-            skipWS(source, tokensConsumed);
-            continue;
-        }
-
-        throw parser_error("Unidentified statement in global context", source[tokensConsumed].location );
-    }
 
     RULE_LEAVE();
 }
