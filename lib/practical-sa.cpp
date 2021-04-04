@@ -36,6 +36,16 @@ std::ostream &operator<<(std::ostream &out, StaticType::Scalar::Type type) {
     return out<<"Unkown type "<<static_cast<unsigned>(type);
 }
 
+size_t StaticType::ptrSize() {
+    // XXX BUG this should depend on the selected platform rather than the current platform
+    return sizeof(void*);
+}
+
+size_t StaticType::ptrAlignment() {
+    // XXX BUG this should depend on the selected platform rather than the current platform
+    return alignof(void*);
+}
+
 bool StaticType::Scalar::operator==( const Scalar &rhs ) const {
     return
             size==rhs.size &&
@@ -61,8 +71,36 @@ bool StaticType::Pointer::operator==( const Pointer &rhs ) const {
     return getPointedType() == rhs.getPointedType();
 }
 
+size_t StaticType::Array::getSize() const {
+    return getElementType()->getSize() * getNumElements();
+}
+
+size_t StaticType::Array::getAlignment() const {
+    return getElementType()->getAlignment();
+}
+
 bool StaticType::Array::operator==( const Array &rhs ) const {
     return getNumElements()==rhs.getNumElements() && getElementType() == rhs.getElementType();
+}
+
+bool StaticType::Struct::MemberDescriptor::operator==(const MemberDescriptor &rhs) const {
+    return name==rhs.name && type==rhs.type;
+}
+
+bool StaticType::Struct::operator==( const Struct &rhs ) const {
+    if( getName() != rhs.getName() )
+        return false;
+
+    const size_t numMembers = getNumMembers();
+    if( numMembers != rhs.getNumMembers() )
+        return false;
+
+    for( size_t i=0; i<numMembers; ++i ) {
+        if( getMember(i) != rhs.getMember(i) )
+            return false;
+    }
+
+    return true;
 }
 
 bool StaticType::operator==( const StaticType &rhs ) const {
@@ -92,6 +130,10 @@ bool StaticType::operator==( const StaticType &rhs ) const {
 
         bool operator()( const StaticType::Array *array ) {
             return (*array)==*( std::get<const Array *>( rightTypes ) );
+        }
+
+        bool operator()( const StaticType::Struct *strct ) {
+            return (*strct)==*( std::get<const StaticType::Struct *>( rightTypes ) );
         }
     };
 
@@ -126,6 +168,21 @@ std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
 
         void operator()( const StaticType::Array *array ) {
             out << array->getElementType() << "[" << array->getNumElements() << "]";
+        }
+
+        void operator()( const StaticType::Struct *strct ) {
+            String name = strct->getName();
+            if( !name )
+                name = "<anonymous>";
+
+            out <<"Struct "<<name<<" { ";
+            for( size_t i=0; i<strct->getNumMembers(); ++i ) {
+                if( i>0 )
+                    out<<", ";
+                StaticType::Struct::MemberDescriptor member = strct->getMember(i);
+                out << member.name <<" : "<< member.type;
+            }
+            out<<" }";
         }
     };
 
@@ -181,6 +238,7 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
     static constexpr size_t ReferenceModifier = 6;
     static constexpr size_t MutableModifier = 10;
     static constexpr size_t ArrayModifier = 14;
+    static constexpr size_t StructModifier = 22;
 
     auto typeType = type.getType();
 
@@ -210,6 +268,23 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
         size_t operator()( const StaticType::Array *array ) {
             return hash{}( *array->getElementType() ) * (FibonacciHashMultiplier - ArrayModifier) +
                    array->getNumElements();
+        }
+
+        size_t operator()( const StaticType::Struct *strct ) {
+            size_t result = FibonacciHashMultiplier - StructModifier;
+
+            result += hash<String>()( strct->getName() );
+
+            for( size_t i=0; i<strct->getNumMembers(); ++i ) {
+                StaticType::Struct::MemberDescriptor member = strct->getMember(i);
+
+                result *= FibonacciHashMultiplier;
+                result += hash<String>()( member.name );
+                result *= FibonacciHashMultiplier;
+                result += hash<StaticType::CPtr>()( member.type );
+            }
+
+            return result;
         }
     };
 

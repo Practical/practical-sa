@@ -61,6 +61,9 @@ void FunctionCall::buildASTImpl(
             _this->metadata.type = downCast( _this->resolver.getType().getReturnType() );
             _this->metadata.valueRange = _this->metadata.type->defaultRange();
         }
+
+        void operator()( const LookupContext::StructMember &member ) {
+        }
     };
 
     std::visit(

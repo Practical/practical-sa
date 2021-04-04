@@ -53,6 +53,9 @@ void Identifier::buildASTImpl(
             _this->metadata.type = LookupContext::genericFunctionType();
             _this->metadata.valueRange = LookupContext::genericFunctionRange();
         }
+
+        void operator()( const LookupContext::StructMember &member ) {
+        }
     };
 
     std::visit( Visitor{._this=this, .expectedResult=expectedResult}, *identifier );
@@ -80,6 +83,9 @@ ExpressionId Identifier::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *fu
 
         ExpressionId operator()( const LookupContext::Function &func ) {
             ABORT()<<"Code gen called for function name";
+        }
+
+        ExpressionId operator()( const LookupContext::StructMember &member ) {
         }
     };
 

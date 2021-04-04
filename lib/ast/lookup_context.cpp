@@ -36,11 +36,11 @@ ValueRangeBase::CPtr LookupContext::_genericFunctionRange =
     new PointerValueRange( nullptr, BoolValueRange(false, false) );
 
 StaticTypeImpl::CPtr LookupContext::lookupType( String name, const SourceLocation &location ) const {
-    auto iter = types.find( sliceToString(name) );
+    auto iter = _types.find( sliceToString(name) );
 
-    if( iter==types.end() ) {
-        if( parent )
-            return parent->lookupType(name, location);
+    if( iter==_types.end() ) {
+        if( _parent )
+            return _parent->lookupType(name, location);
         else
             throw SymbolNotFound( name, location );
     }
@@ -49,10 +49,10 @@ StaticTypeImpl::CPtr LookupContext::lookupType( String name, const SourceLocatio
 }
 
 StaticTypeImpl::CPtr LookupContext::lookupType( String name ) const {
-    ASSERT( ! parent )<<"Lookup type without location only valid on built-in context";
+    ASSERT( ! _parent )<<"Lookup type without location only valid on built-in context";
 
-    auto iter = types.find( sliceToString(name) );
-    ASSERT( iter != types.end() )<<"Lookup failed on built-in type "<<name;
+    auto iter = _types.find( sliceToString(name) );
+    ASSERT( iter != _types.end() )<<"Lookup failed on built-in type "<<name;
 
     return iter->second;
 }
@@ -104,7 +104,7 @@ StaticTypeImpl::CPtr LookupContext::lookupType( const NonTerminals::TransientTyp
 
 StaticTypeImpl::CPtr LookupContext::registerScalarType( ScalarTypeImpl &&type, ValueRangeBase::CPtr defaultValueRange ) {
     std::string name = sliceToString(type.getName());
-    auto iter = types.emplace(
+    auto iter = _types.emplace(
             name,
             StaticTypeImpl::allocate( std::move(type), std::move(defaultValueRange) ) );
     ASSERT( iter.second )<<"registerBuiltinType called on "<<iter.first->second<<" ("<<iter.first->first<<", "<<name<<") which is already registered";
@@ -116,14 +116,14 @@ void LookupContext::addBuiltinFunction(
         const std::string &name, StaticTypeImpl::CPtr returnType, Slice<const StaticTypeImpl::CPtr> argumentTypes,
         Function::Definition::CodeGenProto *codeGen, Function::Definition::VrpProto *calcVrp)
 {
-    auto iter = symbols.find( name );
+    auto iter = _symbols.find( name );
 
     Function *function = nullptr;
-    if( iter!=symbols.end() ) {
+    if( iter!=_symbols.end() ) {
         function = std::get_if<Function>( &iter->second );
         ASSERT( function!=nullptr );
     } else {
-        auto inserter = symbols.emplace( name, Function{} );
+        auto inserter = _symbols.emplace( name, Function{} );
         function = &std::get<Function>(inserter.first->second);
     }
 
@@ -165,20 +165,47 @@ void LookupContext::addFunctionDeclarationPass1( const Tokenizer::Token *token )
 }
 
 void LookupContext::addFunctionDefinitionPass1( const Tokenizer::Token *token ) {
-    auto iter = symbols.find( token->text );
+    auto iter = _symbols.find( token->text );
 
     Function *function = nullptr;
-    if( iter!=symbols.end() ) {
+    if( iter!=_symbols.end() ) {
         function = std::get_if<Function>( &iter->second );
         if( function==nullptr )
             throw pass1_error( "Function is trying to overload a variable", token->location );
             // More info: where variable was first declared
     } else {
-        auto inserter = symbols.emplace( token->text, Function{} );
+        auto inserter = _symbols.emplace( token->text, Function{} );
         function = &std::get<Function>(inserter.first->second);
     }
 
     function->firstPassOverloads.emplace( token, function->overloads.end() );
+}
+
+void LookupContext::addStructPass1( const NonTerminals::StructDef &def ) {
+    auto inserter = _typesUnderConstruction.emplace(
+            sliceToString(def.identifier.identifier->text),
+            StaticTypeImpl::allocate( StructTypeImpl{ def.identifier.identifier->text, this } ) );
+    if( !inserter.second )
+        throw pass1_error( "Type redefinition", def.identifier.identifier->location );
+
+    StructTypeImpl *strct = inserter.first->second->getMutableStruct();
+
+    auto inserter2 = _types.emplace( sliceToString(def.identifier.identifier->text), inserter.first->second );
+    if( !inserter2.second )
+        throw pass1_error( "Type redefinition", def.identifier.identifier->location );
+
+    strct->definitionPass1( def );
+}
+
+void LookupContext::addStructPass2( const NonTerminals::StructDef &def ) {
+    auto iter = _typesUnderConstruction.find( sliceToString(def.identifier.identifier->text) );
+    ASSERT( iter!=_typesUnderConstruction.end() );
+    StructTypeImpl *strct = iter->second->getMutableStruct();
+
+    strct->definitionPass2( def );
+
+    iter->second->completeConstruction();
+    _typesUnderConstruction.erase(iter);
 }
 
 void LookupContext::addFunctionDeclarationPass2(
@@ -201,7 +228,7 @@ void LookupContext::addFunctionDefinitionPass2(
 
 void LookupContext::declareFunctions( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const
 {
-    for( auto &symbol : symbols ) {
+    for( auto &symbol : _symbols ) {
         const Function *function = std::get_if<Function>( &symbol.second );
         if( function==nullptr )
             continue;
@@ -222,8 +249,8 @@ LookupContext::AbiType LookupContext::parseAbiString( String abiString, const So
 }
 
 const LookupContext::Identifier *LookupContext::lookupIdentifier( String name ) const {
-    auto iter = symbols.find(name);
-    if( iter==symbols.end() ) {
+    auto iter = _symbols.find(name);
+    if( iter==_symbols.end() ) {
         if( getParent()==nullptr )
             return nullptr;
 
@@ -241,8 +268,18 @@ ValueRangeBase::CPtr LookupContext::genericFunctionRange() {
     return _genericFunctionRange;
 }
 
-void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue ) {
-    auto iter = symbols.emplace( token->text, Variable(token, type, lvalue) );
+void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue )
+{
+    auto iter = _symbols.emplace( token->text, Variable(token, type, lvalue) );
+
+    if( !iter.second ) {
+        throw SymbolRedefined(token->text, token->location);
+    }
+}
+
+void LookupContext::addStructMember( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, size_t offset )
+{
+    auto iter = _symbols.emplace( token->text, StructMember(token, type, offset) );
 
     if( !iter.second ) {
         throw SymbolRedefined(token->text, token->location);
@@ -258,7 +295,7 @@ void LookupContext::addCast(
     ASSERT( getParent()==nullptr )<<"Non-builtin lookups not yet implemented";
 
     {
-        auto &sourceTypeMap = typeConversionsFrom[sourceType];
+        auto &sourceTypeMap = _typeConversionsFrom[sourceType];
 
         auto insertIterator = sourceTypeMap.emplace(
                 std::piecewise_construct,
@@ -268,7 +305,7 @@ void LookupContext::addCast(
     }
 
     {
-        auto &destTypeSet = typeConversionsTo[destType];
+        auto &destTypeSet = _typeConversionsTo[destType];
 
         auto insertIterator = destTypeSet.emplace( sourceType );
         ASSERT( insertIterator.second );
@@ -290,8 +327,8 @@ const LookupContext::CastDescriptor *LookupContext::lookupCast(
         PracticalSemanticAnalyzer::StaticType::CPtr destType
     ) const
 {
-    auto conversionIter = typeConversionsFrom.find( sourceType );
-    if( conversionIter!=typeConversionsFrom.end() ) {
+    auto conversionIter = _typeConversionsFrom.find( sourceType );
+    if( conversionIter!=_typeConversionsFrom.end() ) {
         auto conversionFuncIter = conversionIter->second.find( destType );
         if( conversionFuncIter!=conversionIter->second.end() ) {
             return &conversionFuncIter->second;
@@ -309,13 +346,13 @@ LookupContext::CastsList LookupContext::allCastsTo(
 {
     CastsList ret;
 
-    for( const LookupContext *_this = this; _this!=nullptr; _this = _this->parent ) {
-        auto destTypeIter = _this->typeConversionsTo.find(destType);
+    for( const LookupContext *_this = this; _this!=nullptr; _this = _this->_parent ) {
+        auto destTypeIter = _this->_typeConversionsTo.find(destType);
 
-        if( destTypeIter != _this->typeConversionsTo.end() ) {
+        if( destTypeIter != _this->_typeConversionsTo.end() ) {
             for( auto sourceType : destTypeIter->second ) {
                 ret.casts.emplace_back(
-                        & _this->typeConversionsFrom.at( sourceType ).at( destType )
+                        & _this->_typeConversionsFrom.at( sourceType ).at( destType )
                     );
             }
         }
@@ -331,10 +368,10 @@ LookupContext::CastsList LookupContext::allCastsFrom(
 {
     CastsList ret;
 
-    for( const LookupContext *_this = this; _this!=nullptr; _this = _this->parent ) {
-        auto sourceTypeIter = _this->typeConversionsFrom.find(sourceType);
+    for( const LookupContext *_this = this; _this!=nullptr; _this = _this->_parent ) {
+        auto sourceTypeIter = _this->_typeConversionsFrom.find(sourceType);
 
-        if( sourceTypeIter != _this->typeConversionsFrom.end() ) {
+        if( sourceTypeIter != _this->_typeConversionsFrom.end() ) {
             for( auto &destTypeIter : sourceTypeIter->second ) {
                 ret.casts.emplace_back( & destTypeIter.second );
             }
@@ -367,8 +404,8 @@ ExpressionId LookupContext::globalFunctionCall(
 LookupContext::Function::Definition &LookupContext::addFunctionPass2(
         const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi, bool isDefinition )
 {
-    auto iter = symbols.find( token->text );
-    ASSERT( iter!=symbols.end() )<<"addFunctionPass2 called for "<<token->text<<" without 1st pass";
+    auto iter = _symbols.find( token->text );
+    ASSERT( iter!=_symbols.end() )<<"addFunctionPass2 called for "<<token->text<<" without 1st pass";
     Function *function = std::get_if<Function>( &iter->second );
     ASSERT( function!=nullptr );
 

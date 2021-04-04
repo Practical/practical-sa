@@ -10,6 +10,7 @@
 #define AST_LOOKUP_CONTEXT_H
 
 #include "ast/static_type.h"
+#include "parser/struct.h"
 #include "parser.h"
 #include "tokenizer.h"
 
@@ -64,7 +65,19 @@ public:
         OverloadsContainer overloads;
     };
 
-    using Identifier = std::variant<Variable, Function>;
+    struct StructMember {
+        const Tokenizer::Token *token;
+        StaticTypeImpl::CPtr type;
+        size_t offset;
+
+        StructMember(const Tokenizer::Token *token, StaticTypeImpl::CPtr type, size_t offset) :
+            token(token),
+            type(std::move(type)),
+            offset(offset)
+        {}
+    };
+
+    using Identifier = std::variant<Variable, Function, StructMember>;
 
     using CodeGenCast = ExpressionId (*)(
             PracticalSemanticAnalyzer::StaticType::CPtr sourceType, ExpressionId sourceExpression,
@@ -111,32 +124,13 @@ private:
             ValueRangeBase::CPtr sourceRange,
             PracticalSemanticAnalyzer::StaticType::CPtr destType);
 
-    // Members
-    static StaticTypeImpl::CPtr _genericFunctionType;
-    static ValueRangeBase::CPtr _genericFunctionRange;
-
-    std::unordered_map< std::string, StaticTypeImpl::CPtr > types;
-    const LookupContext *parent = nullptr;
-
-    std::unordered_map< String, Identifier > symbols;
-
-    std::unordered_map<
-            PracticalSemanticAnalyzer::StaticType::CPtr,
-            std::unordered_map< PracticalSemanticAnalyzer::StaticType::CPtr, CastDescriptor >
-    > typeConversionsFrom;
-
-    std::unordered_map<
-            PracticalSemanticAnalyzer::StaticType::CPtr,
-            std::unordered_set< PracticalSemanticAnalyzer::StaticType::CPtr >
-    > typeConversionsTo;
-
 public:
     explicit LookupContext(const LookupContext *parent = nullptr) :
-        parent(parent)
+        _parent(parent)
     {}
 
     const LookupContext *getParent() const {
-        return parent;
+        return _parent;
     }
 
 private:
@@ -160,16 +154,19 @@ public:
 
     void addFunctionDeclarationPass1( const Tokenizer::Token *token );
     void addFunctionDefinitionPass1( const Tokenizer::Token *token );
+    void addStructPass1( const NonTerminals::StructDef &token );
     void addFunctionDeclarationPass2(
             const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi = AbiType::Practical );
     void addFunctionDefinitionPass2(
             const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi = AbiType::Practical );
+    void addStructPass2( const NonTerminals::StructDef &token );
 
     void declareFunctions( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const;
 
     static AbiType parseAbiString( String abiString, const SourceLocation &location );
 
     void addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue );
+    void addStructMember( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, size_t offset );
 
     const Identifier *lookupIdentifier( String name ) const;
 
@@ -234,6 +231,26 @@ private:
 
     Function::Definition &addFunctionPass2(
             const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi, bool isDefinition );
+
+    // Members
+    static StaticTypeImpl::CPtr _genericFunctionType;
+    static ValueRangeBase::CPtr _genericFunctionRange;
+
+    std::unordered_map< std::string, StaticTypeImpl::Ptr > _typesUnderConstruction;
+    std::unordered_map< std::string, StaticTypeImpl::CPtr > _types;
+    const LookupContext *_parent = nullptr;
+
+    std::unordered_map< String, Identifier > _symbols;
+
+    std::unordered_map<
+            PracticalSemanticAnalyzer::StaticType::CPtr,
+            std::unordered_map< PracticalSemanticAnalyzer::StaticType::CPtr, CastDescriptor >
+    > _typeConversionsFrom;
+
+    std::unordered_map<
+            PracticalSemanticAnalyzer::StaticType::CPtr,
+            std::unordered_set< PracticalSemanticAnalyzer::StaticType::CPtr >
+    > _typeConversionsTo;
 };
 
 } // End namespace AST

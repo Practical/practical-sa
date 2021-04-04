@@ -9,6 +9,7 @@
 #ifndef AST_STATIC_TYPE_H
 #define AST_STATIC_TYPE_H
 
+#include "ast/struct.h"
 #include "ast/value_range_base.h"
 #include "asserts.h"
 
@@ -100,11 +101,14 @@ public:
 
 class StaticTypeImpl final : public PracticalSemanticAnalyzer::StaticType {
 private:
+    // Members
     std::variant<
             std::unique_ptr<ScalarTypeImpl>,
             std::unique_ptr<FunctionTypeImpl>,
             PointerTypeImpl,
-            ArrayTypeImpl
+            ArrayTypeImpl,
+            StructTypeImpl::Ptr,
+            StructTypeImpl::CPtr
     > content;
     ValueRangeBase::CPtr valueRange;
     mutable std::string mangledName;
@@ -124,6 +128,9 @@ public:
     virtual String getMangledName() const override;
     void getMangledName( std::ostringstream &formatter ) const;
 
+    virtual size_t getSize() const override;
+    virtual size_t getAlignment() const override;
+
     ValueRangeBase::CPtr defaultRange() const {
         return valueRange;
     }
@@ -142,6 +149,17 @@ public:
         return ret;
     }
 
+    // For use during construction
+    StructTypeImpl *getMutableStruct() {
+        auto ret = std::get_if<StructTypeImpl::Ptr>(&content);
+        ASSERT( ret!=nullptr )<<
+                "getMutableStruct called on type that is not a struct "<<content.index();
+
+        return ret->get();
+    }
+
+    void completeConstruction();
+
     friend std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &type );
 
 private:
@@ -152,12 +170,17 @@ private:
     explicit StaticTypeImpl( FunctionTypeImpl &&function );
     explicit StaticTypeImpl( ArrayTypeImpl &&array );
     explicit StaticTypeImpl( PointerTypeImpl &&ptr );
+    explicit StaticTypeImpl( StructTypeImpl &&strct );
 };
 
 StaticTypeImpl::CPtr downCast( PracticalSemanticAnalyzer::StaticType::CPtr ptr );
 const PointerTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Pointer * ptr );
 const FunctionTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Function * ptr );
 const ArrayTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Array * ptr );
+const StructTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Struct * ptr );
+
+size_t alignUp( size_t ptr, size_t alignment );
+size_t alignDown( size_t ptr, size_t alignment );
 
 } // End namespace AST
 

@@ -139,6 +139,10 @@ public:
         return true;
     }
 
+    bool operator!=(const Slice &rhs) const {
+        return ! operator==(rhs);
+    }
+
     T* begin() {
         return get();
     }

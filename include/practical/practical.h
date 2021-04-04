@@ -144,16 +144,51 @@ namespace PracticalSemanticAnalyzer {
             virtual CPtr getElementType() const = 0;
             virtual size_t getNumElements() const = 0;
 
+            size_t getSize() const;
+            size_t getAlignment() const;
+
             bool operator==( const Array &rhs ) const;
         };
 
-        using Types = std::variant<const Scalar *, const Function *, const Pointer *, const Array *>;
+        class Struct : public boost::intrusive_ref_counter<Struct, boost::thread_unsafe_counter> {
+        public:
+            using CPtr = boost::intrusive_ptr<const Struct>;
+
+            struct MemberDescriptor {
+                StaticType::CPtr type;
+                String name;
+
+                bool operator==(const MemberDescriptor &rhs) const;
+                bool operator!=(const MemberDescriptor &rhs) const {
+                    return ! operator==(rhs);
+                }
+            };
+
+            virtual ~Struct() {}
+
+            virtual String getName() const = 0;
+            virtual size_t getNumMembers() const = 0;
+            virtual MemberDescriptor getMember( size_t index ) const = 0;
+
+            virtual size_t getSize() const = 0;
+            virtual size_t getAlignment() const = 0;
+
+            bool operator==( const Struct &rhs ) const;
+        };
+
+        using Types = std::variant<
+                const Scalar *, const Function *, const Pointer *, const Array *, const Struct *>;
 
         virtual ~StaticType() {}
 
         virtual Types getType() const = 0;
 
         virtual String getMangledName() const = 0;
+        virtual size_t getSize() const = 0;
+        virtual size_t getAlignment() const = 0;
+
+        static size_t ptrSize();
+        static size_t ptrAlignment();
 
         bool operator==( const StaticType &rhs ) const;
         bool operator!=( const StaticType &rhs ) const {

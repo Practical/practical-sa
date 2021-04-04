@@ -13,11 +13,15 @@
 
 namespace NonTerminals {
 
-struct NonTerminal {
+struct NonTerminal : private NoCopy {
 protected:
     Slice<const Tokenizer::Token> parsedSlice;
 
 public:
+    NonTerminal() = default;
+    NonTerminal( NonTerminal &&that ) = default;
+    NonTerminal &operator=( NonTerminal &&that ) = default;
+
     // This function is not really virtual. It's used this way to force all children to have the same signature
     // Returns how many tokens were consumed
     // Throws parser_error if fails to parse

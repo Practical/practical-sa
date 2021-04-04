@@ -76,6 +76,10 @@ StaticType::Types StaticTypeImpl::getType() const {
         Types operator()( const ArrayTypeImpl &array ) {
             return &array;
         }
+
+        Types operator()( StructTypeImpl::CPtr strct ) {
+            return strct.get();
+        }
     };
 
     return std::visit( Visitor{ ._this=this }, content );
@@ -122,9 +126,65 @@ void StaticTypeImpl::getMangledName( std::ostringstream &formatter ) const {
         void operator()( const Array *array ) {
             downCast(array)->getMangledName(formatter);
         }
+
+        void operator()( const Struct *strct ) {
+            downCast(strct)->getMangledName(formatter);
+        }
     };
 
     std::visit( Visitor{ .formatter=formatter }, getType() );
+}
+
+size_t StaticTypeImpl::getSize() const {
+    Flags::Type flags = getFlags();
+    if( (flags & Flags::Reference) != 0 )
+        return ptrSize();
+
+    struct Visitor {
+        size_t operator()( const Scalar *scalar ) {
+            return scalar->getSize();
+        }
+        size_t operator()( const Function *function ) {
+            ABORT()<<"Trying to get sizeof(function)";
+        }
+        size_t operator()( const Pointer *pointer ) {
+            return ptrSize();
+        }
+        size_t operator()( const Array *array ) {
+            return array->getSize();
+        }
+        size_t operator()( const Struct *strct ) {
+            return strct->getSize();
+        }
+    };
+
+    return std::visit( Visitor{}, getType() );
+}
+
+size_t StaticTypeImpl::getAlignment() const {
+    Flags::Type flags = getFlags();
+    if( (flags & Flags::Reference) != 0 )
+        return ptrAlignment();
+
+    struct Visitor {
+        size_t operator()( const Scalar *scalar ) {
+            return scalar->getAlignment();
+        }
+        size_t operator()( const Function *function ) {
+            ABORT()<<"Trying to get alignof(function)";
+        }
+        size_t operator()( const Pointer *pointer ) {
+            return ptrAlignment();
+        }
+        size_t operator()( const Array *array ) {
+            return array->getAlignment();
+        }
+        size_t operator()( const Struct *strct ) {
+            return strct->getAlignment();
+        }
+    };
+
+    return std::visit( Visitor{}, getType() );
 }
 
 void FunctionTypeImpl::getMangledName(std::ostringstream &formatter) const {
@@ -178,6 +238,14 @@ StaticTypeImpl::StaticTypeImpl( const StaticTypeImpl &that ) :
         void operator()( const ArrayTypeImpl &array ) {
             _this->content = array;
         }
+
+        void operator()( StructTypeImpl::Ptr strct ) {
+            _this->content = strct;
+        }
+
+        void operator()( StructTypeImpl::CPtr strct ) {
+            _this->content = strct;
+        }
     };
 
     std::visit( Visitor{ ._this=this }, that.content );
@@ -218,6 +286,15 @@ StaticTypeImpl::StaticTypeImpl( ArrayTypeImpl &&ptr ) :
     content = std::move(ptr);
 }
 
+StaticTypeImpl::StaticTypeImpl( StructTypeImpl &&strct ) :
+    content( StructTypeImpl::Ptr(new StructTypeImpl( std::move(strct) )) )
+{}
+
+void StaticTypeImpl::completeConstruction() {
+    StructTypeImpl::CPtr typeUnderConstruction( getMutableStruct() );
+    content = typeUnderConstruction;
+}
+
 std::ostream &operator<<( std::ostream &out, const AST::StaticTypeImpl::CPtr &type )
 {
     return out<<static_cast<PracticalSemanticAnalyzer::StaticType::CPtr>(type);
@@ -252,6 +329,22 @@ const ArrayTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Arra
     ASSERT( downCasted );
 
     return downCasted;
+}
+
+const StructTypeImpl *downCast( const PracticalSemanticAnalyzer::StaticType::Struct * ptr ) {
+    ASSERT( ptr );
+    auto downCasted = dynamic_cast<const StructTypeImpl *>( ptr );
+    ASSERT( downCasted );
+
+    return downCasted;
+}
+
+size_t alignUp( size_t ptr, size_t alignment ) {
+    ASSERT( alignment>0 );
+    ptr += alignment - 1;
+    ptr -= ptr % alignment;
+
+    return ptr;
 }
 
 } // End namespace AST

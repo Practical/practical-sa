@@ -17,12 +17,15 @@ namespace NonTerminals {
 struct StructDef : public NonTerminal {
     const Tokenizer::Token *keyword = nullptr;
     Identifier identifier;
-    std::vector<VariableDefinition> definitions;
+    std::vector<VariableDefinition> variables;
 
     size_t parse(Slice<const Tokenizer::Token> source) override final;
     SourceLocation getLocation() const {
         ASSERT(keyword != nullptr) << "Dereferencing an unparsed struct";
         return keyword->location;
+    }
+    String getName() const {
+        return identifier.getName();
     }
 };
 

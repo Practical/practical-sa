@@ -33,7 +33,7 @@ size_t StructDef::parse(Slice<const Tokenizer::Token> source) {
         expectToken( Tokenizer::Tokens::SEMICOLON, source, tokensConsumed,
                 "Struct definitions must end with semicolon", "EOF while defining a struct" );
 
-        definitions.emplace_back( std::move(def) );
+        variables.emplace_back( std::move(def) );
 
         closingBracket = wishForToken( Tokenizer::Tokens::BRACKET_CURLY_CLOSE, source, tokensConsumed, true );
     }

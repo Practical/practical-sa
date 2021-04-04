@@ -21,6 +21,10 @@ Module::Module( const NonTerminals::Module &parserModule, const LookupContext &p
 {} 
 
 void Module::symbolsPass1() {
+    for( const auto &structDef : parserModule.structureDefinitions ) {
+        lookupContext.addStructPass1( structDef );
+    }
+
     for( const auto &funcDecl : parserModule.functionDeclarations ) {
         lookupContext.addFunctionDeclarationPass1( funcDecl.decl.name.identifier );
     }
@@ -31,6 +35,10 @@ void Module::symbolsPass1() {
 }
 
 void Module::symbolsPass2() {
+    for( const auto &structDef : parserModule.structureDefinitions ) {
+        lookupContext.addStructPass2( structDef );
+    }
+
     for( const auto &funcDecl : parserModule.functionDeclarations ) {
         StaticTypeImpl::CPtr funcType = constructFunctionType( funcDecl.decl );
 
