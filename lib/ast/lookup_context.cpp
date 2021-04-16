@@ -239,6 +239,19 @@ void LookupContext::declareFunctions( PracticalSemanticAnalyzer::ModuleGen *modu
     }
 }
 
+void LookupContext::defineStructs( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const {
+    ASSERT( _typesUnderConstruction.empty() );
+
+    for( const auto &type : _types ) {
+        StaticType::Types typeType = type.second->getType();
+        auto strct = std::get_if<const StaticType::Struct *>(& typeType);
+        if( strct==nullptr )
+            continue;
+
+        moduleGen->defineStruct(type.second);
+    }
+}
+
 LookupContext::AbiType LookupContext::parseAbiString( String abiString, const SourceLocation &location ) {
     auto abiType = abiLookupTable.find( abiString );
     if( abiType==abiLookupTable.end() ) {
@@ -277,13 +290,16 @@ void LookupContext::addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::
     }
 }
 
-void LookupContext::addStructMember( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, size_t offset )
+String LookupContext::addStructMember(
+        const Tokenizer::Token *token, StaticTypeImpl::CPtr type, size_t offset )
 {
     auto iter = _symbols.emplace( token->text, StructMember(token, type, offset) );
 
     if( !iter.second ) {
         throw SymbolRedefined(token->text, token->location);
     }
+
+    return token->text;
 }
 
 void LookupContext::addCast(

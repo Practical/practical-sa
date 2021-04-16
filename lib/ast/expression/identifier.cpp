@@ -54,7 +54,8 @@ void Identifier::buildASTImpl(
             _this->metadata.valueRange = LookupContext::genericFunctionRange();
         }
 
-        void operator()( const LookupContext::StructMember &member ) {
+        void operator()( const StructMember &member ) {
+            ABORT()<<"TODO implement";
         }
     };
 
@@ -85,7 +86,8 @@ ExpressionId Identifier::codeGenImpl( PracticalSemanticAnalyzer::FunctionGen *fu
             ABORT()<<"Code gen called for function name";
         }
 
-        ExpressionId operator()( const LookupContext::StructMember &member ) {
+        ExpressionId operator()( const StructMember &member ) {
+            ABORT()<<"TODO implement";
         }
     };
 

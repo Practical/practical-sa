@@ -63,6 +63,8 @@ void Module::symbolsPass2() {
 void Module::codeGen( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) {
     moduleGen->moduleEnter( moduleId, "Module", "file.pr", 1, 1 );
 
+    lookupContext.defineStructs( moduleGen );
+
     lookupContext.declareFunctions( moduleGen );
 
     std::vector<Function> functions;

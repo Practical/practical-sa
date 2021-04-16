@@ -10,6 +10,7 @@
 #define AST_LOOKUP_CONTEXT_H
 
 #include "ast/static_type.h"
+#include "ast/struct_member.h"
 #include "parser/struct.h"
 #include "parser.h"
 #include "tokenizer.h"
@@ -63,18 +64,6 @@ public:
         using OverloadsContainer = std::unordered_map< StaticTypeImpl::CPtr, Definition >;
         std::unordered_map<const Tokenizer::Token *, OverloadsContainer::const_iterator> firstPassOverloads;
         OverloadsContainer overloads;
-    };
-
-    struct StructMember {
-        const Tokenizer::Token *token;
-        StaticTypeImpl::CPtr type;
-        size_t offset;
-
-        StructMember(const Tokenizer::Token *token, StaticTypeImpl::CPtr type, size_t offset) :
-            token(token),
-            type(std::move(type)),
-            offset(offset)
-        {}
     };
 
     using Identifier = std::variant<Variable, Function, StructMember>;
@@ -162,11 +151,13 @@ public:
     void addStructPass2( const NonTerminals::StructDef &token );
 
     void declareFunctions( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const;
+    void defineStructs( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const;
 
     static AbiType parseAbiString( String abiString, const SourceLocation &location );
 
     void addLocalVar( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, ExpressionId lvalue );
-    void addStructMember( const Tokenizer::Token *token, StaticTypeImpl::CPtr type, size_t offset );
+    String addStructMember(
+            const Tokenizer::Token *token, StaticTypeImpl::CPtr type, size_t offset );
 
     const Identifier *lookupIdentifier( String name ) const;
 

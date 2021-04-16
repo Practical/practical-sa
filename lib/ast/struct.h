@@ -18,11 +18,6 @@ namespace AST {
 class LookupContext;
 
 class StructTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Struct {
-    std::string _name;
-    std::unique_ptr<LookupContext> _context;
-    size_t _size = 0;
-    size_t _alignment = 0;
-
 public:
     using Ptr = boost::intrusive_ptr<StructTypeImpl>;
     using CPtr = boost::intrusive_ptr<const StructTypeImpl>;
@@ -43,6 +38,14 @@ public:
 
     void definitionPass1( const NonTerminals::StructDef &parserStruct );
     void definitionPass2( const NonTerminals::StructDef &parserStruct );
+
+private:
+    // Members
+    std::string _name;
+    std::unique_ptr<LookupContext> _context;
+    std::vector<String> _members;
+    size_t _size = 0;
+    size_t _alignment = 0;
 };
 
 } // namespace AST

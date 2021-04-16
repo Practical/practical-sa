@@ -62,7 +62,8 @@ void FunctionCall::buildASTImpl(
             _this->metadata.valueRange = _this->metadata.type->defaultRange();
         }
 
-        void operator()( const LookupContext::StructMember &member ) {
+        void operator()( const StructMember &member ) {
+            ABORT()<<"TODO calling function through a struct member not yet implemented";
         }
     };
 

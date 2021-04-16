@@ -26,9 +26,17 @@ String StructTypeImpl::getName() const {
 }
 
 size_t StructTypeImpl::getNumMembers() const {
+    return _members.size();
 }
 
 StaticType::Struct::MemberDescriptor StructTypeImpl::getMember( size_t index ) const {
+    ASSERT( index<getNumMembers() );
+
+    StaticType::Struct::MemberDescriptor ret;
+    ret.name = _members.at(index);
+    ret.type = std::get<StructMember>( *_context->lookupIdentifier(ret.name) ).type;
+
+    return ret;
 }
 
 size_t StructTypeImpl::getSize() const {
@@ -51,14 +59,16 @@ void StructTypeImpl::definitionPass2( const NonTerminals::StructDef &parserStruc
     ASSERT( _context )<<"definitionPass2 called without initializing a context";
     ASSERT( _size==0 );
     ASSERT( _alignment==0 );
+    ASSERT( _members.size()==0 );
 
     _alignment = 1;
 
+    _members.reserve( parserStruct.variables.size() );
     for( auto &parserVar : parserStruct.variables ) {
         auto varType = _context->lookupType( parserVar.body.type );
         _size = alignUp(_size, varType->getAlignment());
         _alignment = std::max( _alignment, varType->getAlignment() );
-        _context->addStructMember( parserVar.body.name.identifier, varType, _size );
+        _members.push_back( _context->addStructMember( parserVar.body.name.identifier, varType, _size ) );
         _size += varType->getSize();
     }
 }
