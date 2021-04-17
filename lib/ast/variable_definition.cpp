@@ -13,16 +13,19 @@ using namespace PracticalSemanticAnalyzer;
 namespace AST {
 
 VariableDefinition::VariableDefinition(const NonTerminals::VariableDefinition &parserVarDef) :
-    parserVarDef( parserVarDef ),
-    initValue( *parserVarDef.initValue )
+    parserVarDef( parserVarDef )
 {
+    if( parserVarDef.initValue )
+        initValue.emplace( *parserVarDef.initValue );
 }
 
 void VariableDefinition::buildAST( LookupContext &lookupCtx ) {
     auto varType = lookupCtx.lookupType( parserVarDef.body.type );
 
-    Weight weight;
-    initValue.buildAST(lookupCtx, varType, weight, Expression::NoWeightLimit);
+    if( initValue ) {
+        Weight weight;
+        initValue->buildAST(lookupCtx, varType, weight, Expression::NoWeightLimit);
+    }
 
     lookupCtx.addLocalVar( parserVarDef.body.name.identifier, varType, Expression::allocateId() );
 }
@@ -33,11 +36,13 @@ void VariableDefinition::codeGen(
     const LookupContext::Identifier *identifier = lookupCtx.lookupIdentifier( parserVarDef.body.name.identifier->text );
     const auto &varDef = std::get< LookupContext::Variable >(*identifier);
 
-    ExpressionId initValueExpressionId = initValue.codeGen(functionGen);
-
     functionGen->allocateStackVar(varDef.lvalueId, varDef.type, parserVarDef.body.name.identifier->text);
 
-    functionGen->assign( varDef.lvalueId, initValueExpressionId );
+    if( initValue ) {
+        ExpressionId initValueExpressionId = initValue->codeGen(functionGen);
+
+        functionGen->assign( varDef.lvalueId, initValueExpressionId );
+    }
 }
 
 } // namespace AST

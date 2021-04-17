@@ -19,7 +19,7 @@ namespace AST {
 
 class VariableDefinition {
     const NonTerminals::VariableDefinition &parserVarDef;
-    Expression initValue;
+    std::optional<Expression> initValue;
 
 public:
     explicit VariableDefinition(const NonTerminals::VariableDefinition &parserVarDef);
