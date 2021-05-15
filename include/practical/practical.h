@@ -327,6 +327,7 @@ namespace PracticalSemanticAnalyzer {
         virtual void moduleLeave(ModuleId id) = 0;
 
         virtual void declareIdentifier(String name, String mangledName, StaticType::CPtr type) = 0;
+        virtual void declareStruct(StaticType::CPtr structType) = 0;
         virtual void defineStruct(StaticType::CPtr structType) = 0;
 
         virtual std::shared_ptr<FunctionGen> handleFunction() = 0;

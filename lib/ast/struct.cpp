@@ -55,22 +55,45 @@ void StructTypeImpl::definitionPass1( const NonTerminals::StructDef &parserStruc
     ASSERT( _context )<<"definitionPass1 called without initializing a context";
 }
 
-void StructTypeImpl::definitionPass2( const NonTerminals::StructDef &parserStruct ) {
+bool StructTypeImpl::definitionPass2(
+        const NonTerminals::StructDef &parserStruct, DelayedDefinitions &delayedDefs )
+{
     ASSERT( _context )<<"definitionPass2 called without initializing a context";
     ASSERT( _size==0 );
     ASSERT( _alignment==0 );
     ASSERT( _members.size()==0 );
 
-    _alignment = 1;
-
+    bool incomplete = false;
     _members.reserve( parserStruct.variables.size() );
     for( auto &parserVar : parserStruct.variables ) {
         auto varType = _context->lookupType( parserVar.body.type );
-        _size = alignUp(_size, varType->getAlignment());
-        _alignment = std::max( _alignment, varType->getAlignment() );
-        _members.push_back( _context->addStructMember( parserVar.body.name.identifier, varType, _size ) );
-        _size += varType->getSize();
+
+        if( varType->sizeKnown() ) {
+            _size = alignUp(_size, varType->getAlignment());
+            _alignment = std::max( _alignment, varType->getAlignment() );
+            _members.push_back( _context->addStructMember( parserVar.body.name.identifier, varType, _size ) );
+            _size += varType->getSize();
+        } else {
+            auto inserter = delayedDefs.pending.emplace( &parserStruct, _context.get() );
+            inserter.first->second.dependencies.emplace( varType->coreType() );
+            delayedDefs.reverseDependencies[varType].dependants.emplace(inserter.first);
+
+            incomplete = true;
+        }
     }
+
+    if( incomplete ) {
+        _size = 0;
+        _alignment = 0;
+        _members.clear();
+
+        return false;
+    }
+
+    if( _size==0 )
+        _size=1;
+
+    return true;
 }
 
 } // namespace AST

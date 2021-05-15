@@ -167,6 +167,13 @@ public:
     {}
 };
 
+class CircularDependency : public compile_error {
+public:
+    CircularDependency( const SourceLocation &location ) :
+        compile_error( "Circular dependency in definition", location )
+    {}
+};
+
 } // PracticalSemanticAnalyzer
 
 #endif // PRACTICAL_ERRORS_H

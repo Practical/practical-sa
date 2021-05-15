@@ -124,10 +124,12 @@ public:
     }
 
     virtual Types getType() const override final;
+    CPtr coreType() const;
 
     virtual String getMangledName() const override;
     void getMangledName( std::ostringstream &formatter ) const;
 
+    bool sizeKnown() const;
     virtual size_t getSize() const override;
     virtual size_t getAlignment() const override;
 

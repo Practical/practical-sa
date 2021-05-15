@@ -9,6 +9,7 @@
 #ifndef AST_LOOKUP_CONTEXT_H
 #define AST_LOOKUP_CONTEXT_H
 
+#include "ast/delayed_definitions.h"
 #include "ast/static_type.h"
 #include "ast/struct_member.h"
 #include "parser/struct.h"
@@ -148,9 +149,10 @@ public:
             const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi = AbiType::Practical );
     void addFunctionDefinitionPass2(
             const Tokenizer::Token *token, StaticTypeImpl::CPtr type, AbiType abi = AbiType::Practical );
-    void addStructPass2( const NonTerminals::StructDef &token );
+    void addStructPass2( const NonTerminals::StructDef &token, DelayedDefinitions &delayedDefs );
 
     void declareFunctions( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const;
+    void declareStructs( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const;
     void defineStructs( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const;
 
     static AbiType parseAbiString( String abiString, const SourceLocation &location );

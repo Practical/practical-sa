@@ -59,8 +59,6 @@ PracticalSemanticAnalyzer::StaticType::CPtr PointerTypeImpl::getPointedType() co
 
 StaticType::Types StaticTypeImpl::getType() const {
     struct Visitor {
-        const StaticType *_this;
-
         Types operator()( const std::unique_ptr<ScalarTypeImpl> &scalar ) {
             return scalar.get();
         }
@@ -79,6 +77,34 @@ StaticType::Types StaticTypeImpl::getType() const {
 
         Types operator()( StructTypeImpl::CPtr strct ) {
             return strct.get();
+        }
+    };
+
+    return std::visit( Visitor{}, content );
+}
+
+StaticTypeImpl::CPtr StaticTypeImpl::coreType() const {
+    struct Visitor {
+        const StaticTypeImpl *_this;
+
+        CPtr operator()( const std::unique_ptr<ScalarTypeImpl> &scalar ) {
+            return downCast( _this->setFlags( 0 ) );
+        }
+
+        CPtr operator()( const std::unique_ptr<FunctionTypeImpl> &function ) {
+            return downCast( _this->setFlags( 0 ) );
+        }
+
+        CPtr operator()( const PointerTypeImpl &ptr ) {
+            return downCast( ptr.getPointedType() )->coreType();
+        }
+
+        CPtr operator()( const ArrayTypeImpl &array ) {
+            return downCast( array.getElementType() )->coreType();
+        }
+
+        CPtr operator()( StructTypeImpl::CPtr strct ) {
+            return downCast( _this->setFlags( 0 ) );
         }
     };
 
@@ -133,6 +159,32 @@ void StaticTypeImpl::getMangledName( std::ostringstream &formatter ) const {
     };
 
     std::visit( Visitor{ .formatter=formatter }, getType() );
+}
+
+bool StaticTypeImpl::sizeKnown() const {
+    Flags::Type flags = getFlags();
+    if( (flags & Flags::Reference) != 0 )
+        return true;
+
+    struct Visitor {
+        size_t operator()( const Scalar *scalar ) {
+            return true;
+        }
+        size_t operator()( const Function *function ) {
+            ABORT()<<"Trying to get sizeof(function)";
+        }
+        size_t operator()( const Pointer *pointer ) {
+            return true;
+        }
+        size_t operator()( const Array *array ) {
+            return downCast( array->getElementType() )->sizeKnown();
+        }
+        size_t operator()( const Struct *strct ) {
+            return strct->getSize()!=0;
+        }
+    };
+
+    return std::visit( Visitor{}, getType() );
 }
 
 size_t StaticTypeImpl::getSize() const {

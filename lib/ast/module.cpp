@@ -10,6 +10,8 @@
 
 #include "ast/function.h"
 
+#include <practical/errors.h>
+
 namespace AST {
 
 static ModuleId::Allocator<> moduleIdAllocator;
@@ -35,8 +37,14 @@ void Module::symbolsPass1() {
 }
 
 void Module::symbolsPass2() {
+    AST::DelayedDefinitions delayedDefs;
+
     for( const auto &structDef : parserModule.structureDefinitions ) {
-        lookupContext.addStructPass2( structDef );
+        lookupContext.addStructPass2( structDef, delayedDefs );
+    }
+
+    if( !delayedDefs.pending.empty() ) {
+        throw CircularDependency( delayedDefs.pending.begin()->first->keyword->location );
     }
 
     for( const auto &funcDecl : parserModule.functionDeclarations ) {
@@ -63,9 +71,10 @@ void Module::symbolsPass2() {
 void Module::codeGen( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) {
     moduleGen->moduleEnter( moduleId, "Module", "file.pr", 1, 1 );
 
-    lookupContext.defineStructs( moduleGen );
-
+    lookupContext.declareStructs( moduleGen );
     lookupContext.declareFunctions( moduleGen );
+
+    lookupContext.defineStructs( moduleGen );
 
     std::vector<Function> functions;
     functions.reserve( parserModule.functionDefinitions.size() );

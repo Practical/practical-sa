@@ -197,15 +197,15 @@ void LookupContext::addStructPass1( const NonTerminals::StructDef &def ) {
     strct->definitionPass1( def );
 }
 
-void LookupContext::addStructPass2( const NonTerminals::StructDef &def ) {
+void LookupContext::addStructPass2( const NonTerminals::StructDef &def, DelayedDefinitions &delayedDefs ) {
     auto iter = _typesUnderConstruction.find( sliceToString(def.identifier.identifier->text) );
     ASSERT( iter!=_typesUnderConstruction.end() );
     StructTypeImpl *strct = iter->second->getMutableStruct();
 
-    strct->definitionPass2( def );
-
-    iter->second->completeConstruction();
-    _typesUnderConstruction.erase(iter);
+    if( strct->definitionPass2( def, delayedDefs ) ) {
+        iter->second->completeConstruction();
+        _typesUnderConstruction.erase(iter);
+    }
 }
 
 void LookupContext::addFunctionDeclarationPass2(
@@ -239,7 +239,19 @@ void LookupContext::declareFunctions( PracticalSemanticAnalyzer::ModuleGen *modu
     }
 }
 
-void LookupContext::defineStructs( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const {
+void LookupContext::declareStructs( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const {
+    for( const auto &type : _types ) {
+        StaticType::Types typeType = type.second->getType();
+        auto strct = std::get_if<const StaticType::Struct *>(& typeType);
+        if( strct==nullptr )
+            continue;
+
+        moduleGen->declareStruct(type.second);
+    }
+}
+
+void LookupContext::defineStructs( PracticalSemanticAnalyzer::ModuleGen *moduleGen ) const
+{
     ASSERT( _typesUnderConstruction.empty() );
 
     for( const auto &type : _types ) {
