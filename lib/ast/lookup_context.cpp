@@ -202,7 +202,7 @@ void LookupContext::addStructPass2( const NonTerminals::StructDef &def, DelayedD
     ASSERT( iter!=_typesUnderConstruction.end() );
     StructTypeImpl *strct = iter->second->getMutableStruct();
 
-    if( strct->definitionPass2( def, delayedDefs ) ) {
+    if( strct->definitionPass2( iter->second.get(), def, delayedDefs ) ) {
         iter->second->completeConstruction();
         _typesUnderConstruction.erase(iter);
     }

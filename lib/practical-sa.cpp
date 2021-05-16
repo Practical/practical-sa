@@ -175,14 +175,11 @@ std::ostream &operator<<(std::ostream &out, StaticType::CPtr type) {
             if( !name )
                 name = "<anonymous>";
 
-            out <<"Struct "<<name<<" { ";
-            for( size_t i=0; i<strct->getNumMembers(); ++i ) {
-                if( i>0 )
-                    out<<", ";
-                StaticType::Struct::MemberDescriptor member = strct->getMember(i);
-                out << member.name <<" : "<< member.type;
+            out <<"Struct "<<name;
+
+            if( strct->getSize()==0 ) {
+                out<<"(incomplete)";
             }
-            out<<" }";
         }
     };
 
@@ -243,6 +240,8 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
     auto typeType = type.getType();
 
     struct Visitor {
+        const StaticType &_this;
+
         size_t operator()( const StaticType::Scalar *scalar ) {
             return hash<String>{}( scalar->getName() );
         }
@@ -271,6 +270,9 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
         }
 
         size_t operator()( const StaticType::Struct *strct ) {
+            ASSERT( strct->getAlignment()!=0 )
+                    <<"Tried to get hash of incomplete type "<<StaticType::CPtr(&_this);
+
             size_t result = FibonacciHashMultiplier - StructModifier;
 
             result += hash<String>()( strct->getName() );
@@ -288,7 +290,8 @@ size_t hash< StaticType >::operator()(const StaticType &type) const {
         }
     };
 
-    size_t retVal = typeType.index() * FibonacciHashMultiplier + std::visit( Visitor{}, typeType );
+    size_t retVal =
+            typeType.index() * FibonacciHashMultiplier + std::visit( Visitor{._this = type}, typeType );
 
     size_t asserter = 0;
     if( (type.getFlags() & StaticType::Flags::Reference) != 0 ) {

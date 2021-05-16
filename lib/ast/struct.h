@@ -17,6 +17,7 @@ namespace AST {
 
 class LookupContext;
 struct DelayedDefinitions;
+class StaticTypeImpl;
 
 class StructTypeImpl final : public PracticalSemanticAnalyzer::StaticType::Struct {
 public:
@@ -38,7 +39,10 @@ public:
     void getMangledName(std::ostringstream &formatter) const;
 
     void definitionPass1( const NonTerminals::StructDef &parserStruct );
-    bool definitionPass2( const NonTerminals::StructDef &parserStruct, DelayedDefinitions &delayedDefs );
+    bool definitionPass2(
+            const StaticTypeImpl *containingType,
+            const NonTerminals::StructDef &parserStruct,
+            DelayedDefinitions &delayedDefs );
 
 private:
     // Members

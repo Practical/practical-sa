@@ -43,6 +43,13 @@ void Module::symbolsPass2() {
         lookupContext.addStructPass2( structDef, delayedDefs );
     }
 
+    while( ! delayedDefs.ready.empty() ) {
+        auto i = delayedDefs.ready.begin();
+        std::pair< const NonTerminals::StructDef *, LookupContext * > ready = *i;
+        delayedDefs.ready.erase(i);
+        ready.second->addStructPass2( *ready.first, delayedDefs );
+    }
+
     if( !delayedDefs.pending.empty() ) {
         throw CircularDependency( delayedDefs.pending.begin()->first->keyword->location );
     }

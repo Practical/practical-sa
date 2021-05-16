@@ -56,7 +56,9 @@ void StructTypeImpl::definitionPass1( const NonTerminals::StructDef &parserStruc
 }
 
 bool StructTypeImpl::definitionPass2(
-        const NonTerminals::StructDef &parserStruct, DelayedDefinitions &delayedDefs )
+        const StaticTypeImpl *containingType,
+        const NonTerminals::StructDef &parserStruct,
+        DelayedDefinitions &delayedDefs )
 {
     ASSERT( _context )<<"definitionPass2 called without initializing a context";
     ASSERT( _size==0 );
@@ -74,9 +76,12 @@ bool StructTypeImpl::definitionPass2(
             _members.push_back( _context->addStructMember( parserVar.body.name.identifier, varType, _size ) );
             _size += varType->getSize();
         } else {
-            auto inserter = delayedDefs.pending.emplace( &parserStruct, _context.get() );
-            inserter.first->second.dependencies.emplace( varType->coreType() );
-            delayedDefs.reverseDependencies[varType].dependants.emplace(inserter.first);
+            auto inserter = delayedDefs.pending.emplace( &parserStruct, const_cast<LookupContext*>(_context->getParent()) );
+            inserter.first->second.dependencies.emplace( varType->coreType()->getType() );
+            delayedDefs
+                    .reverseDependencies[ varType->getType() ]
+                    .dependants
+                    .emplace(inserter.first);
 
             incomplete = true;
         }
@@ -92,6 +97,19 @@ bool StructTypeImpl::definitionPass2(
 
     if( _size==0 )
         _size=1;
+
+    auto revDepIter = delayedDefs.reverseDependencies.find( this );
+    if( revDepIter!=delayedDefs.reverseDependencies.end() ) {
+        for( auto dependant : revDepIter->second.dependants ) {
+            dependant->second.dependencies.erase( this );
+
+            if( dependant->second.dependencies.empty() ) {
+                delayedDefs.ready.emplace( dependant->first, dependant->second.context );
+
+                delayedDefs.pending.erase( dependant );
+            }
+        }
+    }
 
     return true;
 }

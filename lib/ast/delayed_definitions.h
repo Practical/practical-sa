@@ -9,8 +9,9 @@
 #ifndef AST_DELAYED_DEFINITIONS_H
 #define AST_DELAYED_DEFINITIONS_H
 
-#include "ast/static_type.h"
 #include "parser/struct.h"
+
+#include <practical/practical.h>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -21,7 +22,7 @@ class LookupContext;
 
 struct PendingType {
     LookupContext *context;
-    std::unordered_set<StaticTypeImpl::CPtr> dependencies;
+    std::unordered_set<PracticalSemanticAnalyzer::StaticType::Types> dependencies;
 
     explicit PendingType( LookupContext *ctx ) :
         context(ctx)
@@ -50,7 +51,8 @@ struct ReverseDependency {
     std::unordered_set<PendingTypes::iterator> dependants;
 };
 
-using ReverseDependencies = std::unordered_map<StaticTypeImpl::CPtr, ReverseDependency>;
+using ReverseDependencies =
+    std::unordered_map<PracticalSemanticAnalyzer::StaticType::Types, ReverseDependency>;
 
 struct DelayedDefinitions {
     ReadyTypes ready;
