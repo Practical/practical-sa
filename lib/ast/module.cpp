@@ -37,21 +37,28 @@ void Module::symbolsPass1() {
 }
 
 void Module::symbolsPass2() {
-    AST::DelayedDefinitions delayedDefs;
+    {
+        // Scope the delayed definitions data structures
+        AST::DelayedDefinitions delayedDefs;
 
-    for( const auto &structDef : parserModule.structureDefinitions ) {
-        lookupContext.addStructPass2( structDef, delayedDefs );
-    }
+        for( const auto &structDef : parserModule.structureDefinitions ) {
+            lookupContext.addStructPass2( structDef, delayedDefs );
+        }
 
-    while( ! delayedDefs.ready.empty() ) {
-        auto i = delayedDefs.ready.begin();
-        std::pair< const NonTerminals::StructDef *, LookupContext * > ready = *i;
-        delayedDefs.ready.erase(i);
-        ready.second->addStructPass2( *ready.first, delayedDefs );
-    }
+        while( ! delayedDefs.ready.empty() ) {
+            auto i = delayedDefs.ready.begin();
+            std::pair< const NonTerminals::StructDef *, LookupContext * > ready = *i;
+            delayedDefs.ready.erase(i);
+            ready.second->addStructPass2( *ready.first, delayedDefs );
+        }
 
-    if( !delayedDefs.pending.empty() ) {
-        throw CircularDependency( delayedDefs.pending.begin()->first->keyword->location );
+        if( !delayedDefs.pending.empty() ) {
+            throw CircularDependency( delayedDefs.pending.begin()->first->keyword->location );
+        }
+
+        for( StructTypeImpl *needHash : delayedDefs.hashless ) {
+            needHash->calcHash();
+        }
     }
 
     for( const auto &funcDecl : parserModule.functionDeclarations ) {

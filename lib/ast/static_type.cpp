@@ -9,6 +9,7 @@
 #include "static_type.h"
 
 #include "ast/arrays.h"
+#include "ast/hash_modifiers.h"
 #include "ast/pointers.h"
 
 #include <sstream>
@@ -232,11 +233,102 @@ size_t StaticTypeImpl::getAlignment() const {
             return array->getAlignment();
         }
         size_t operator()( const Struct *strct ) {
-            return strct->getAlignment();
+            return downCast( strct )->getAlignment();
         }
     };
 
     return std::visit( Visitor{}, getType() );
+}
+
+size_t StaticTypeImpl::getHash() const {
+    auto typeType = getType();
+
+    struct Visitor {
+        const StaticTypeImpl &_this;
+
+        size_t operator()( const StaticType::Scalar *scalar ) {
+            return std::hash<String>{}( scalar->getName() );
+        }
+
+        size_t operator()( const StaticType::Function *function ) {
+            size_t result = 0;
+
+            auto numArguments = function->getNumArguments();
+            for( unsigned i=0; i<numArguments; ++i ) {
+                result += downCast( function->getArgumentType(i) )->getHash();
+                result *= FibonacciHashMultiplier;
+            }
+
+            result += downCast( function->getReturnType() )->getHash();
+
+            return result;
+        }
+
+        size_t operator()( const StaticType::Pointer *pointer ) {
+            return
+                    downCast( pointer->getPointedType() )->getHash() *
+                    (FibonacciHashMultiplier - PointerModifier);
+        }
+
+        size_t operator()( const StaticType::Array *array ) {
+            return downCast( array->getElementType() )->getHash() * (FibonacciHashMultiplier - ArrayModifier) +
+                   array->getNumElements();
+        }
+
+        size_t operator()( const StaticType::Struct *strct ) {
+            return downCast( strct )->getHash();
+        }
+    };
+
+    size_t retVal =
+            typeType.index() * FibonacciHashMultiplier + std::visit( Visitor{._this = *this}, typeType );
+
+    size_t asserter = 0;
+    if( (getFlags() & Flags::Reference) != 0 ) {
+        retVal *= FibonacciHashMultiplier-ReferenceModifier;
+        asserter |= StaticType::Flags::Reference;
+    }
+    if( (getFlags() & Flags::Mutable) != 0 ) {
+        retVal *= FibonacciHashMultiplier-MutableModifier;
+        asserter |= StaticType::Flags::Mutable;
+    }
+    ASSERT( getFlags() == asserter )<<"Unhandled type flag. Flags "<<getFlags()<<", handled "<<asserter;
+
+    return retVal;
+}
+
+size_t StaticTypeImpl::calcHashInternal( const StructTypeImpl *anchor ) const {
+    struct Visitor {
+        const StructTypeImpl *anchor;
+        const StaticTypeImpl &this_;
+
+        size_t operator()( const Scalar *scalar ) const {
+            return this_.getHash();
+        }
+
+        size_t operator()( const Function *function ) const {
+            return this_.getHash();
+        }
+
+        size_t operator()( const Pointer *pointer ) const {
+            return
+                    downCast( pointer->getPointedType() )->calcHashInternal( anchor ) *
+                    (FibonacciHashMultiplier - PointerModifier);
+        }
+
+        size_t operator()( const Array *array ) const {
+            return
+                    downCast( array->getElementType() )->calcHashInternal( anchor ) *
+                    (FibonacciHashMultiplier - ArrayModifier) +
+                    array->getNumElements();
+        }
+
+        size_t operator()( const Struct *strct ) const {
+            return downCast( strct )->calcHash( anchor );
+        }
+    };
+
+    return std::visit( Visitor{.anchor = anchor, .this_ = *this}, getType() );
 }
 
 void FunctionTypeImpl::getMangledName(std::ostringstream &formatter) const {

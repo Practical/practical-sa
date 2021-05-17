@@ -35,6 +35,13 @@ public:
 
     virtual size_t getSize() const override;
     virtual size_t getAlignment() const override;
+    size_t getHash() const {
+        ASSERT( getSize()!=0 );
+        return _hash;
+    }
+
+    void calcHash();
+    size_t calcHash( const StructTypeImpl *anchor ) const;
 
     void getMangledName(std::ostringstream &formatter) const;
 
@@ -45,12 +52,15 @@ public:
             DelayedDefinitions &delayedDefs );
 
 private:
+    size_t calcHashHelper( const StructTypeImpl *anchor ) const;
+
     // Members
     std::string _name;
     std::unique_ptr<LookupContext> _context;
     std::vector<String> _members;
     size_t _size = 0;
     size_t _alignment = 0;
+    size_t _hash = 0;
 };
 
 } // namespace AST

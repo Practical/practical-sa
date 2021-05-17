@@ -104,6 +104,9 @@ bool StaticType::Struct::operator==( const Struct &rhs ) const {
 }
 
 bool StaticType::operator==( const StaticType &rhs ) const {
+    if( this==&rhs )
+        return true;
+
     auto leftType = getType();
     auto rightType = rhs.getType();
 
@@ -230,81 +233,11 @@ using namespace PracticalSemanticAnalyzer;
 
 namespace std {
 
+static size_t indent = 0;
 size_t hash< StaticType >::operator()(const StaticType &type) const {
-    static constexpr size_t PointerModifier = 4;
-    static constexpr size_t ReferenceModifier = 6;
-    static constexpr size_t MutableModifier = 10;
-    static constexpr size_t ArrayModifier = 14;
-    static constexpr size_t StructModifier = 22;
-
-    auto typeType = type.getType();
-
-    struct Visitor {
-        const StaticType &_this;
-
-        size_t operator()( const StaticType::Scalar *scalar ) {
-            return hash<String>{}( scalar->getName() );
-        }
-
-        size_t operator()( const StaticType::Function *function ) {
-            size_t result = 0;
-
-            auto numArguments = function->getNumArguments();
-            for( unsigned i=0; i<numArguments; ++i ) {
-                result += hash{}( *function->getArgumentType(i) );
-                result *= FibonacciHashMultiplier;
-            }
-
-            result += hash{}( *function->getReturnType() );
-
-            return result;
-        }
-
-        size_t operator()( const StaticType::Pointer *pointer ) {
-            return hash{}( *pointer->getPointedType() ) * (FibonacciHashMultiplier - PointerModifier);
-        }
-
-        size_t operator()( const StaticType::Array *array ) {
-            return hash{}( *array->getElementType() ) * (FibonacciHashMultiplier - ArrayModifier) +
-                   array->getNumElements();
-        }
-
-        size_t operator()( const StaticType::Struct *strct ) {
-            ASSERT( strct->getAlignment()!=0 )
-                    <<"Tried to get hash of incomplete type "<<StaticType::CPtr(&_this);
-
-            size_t result = FibonacciHashMultiplier - StructModifier;
-
-            result += hash<String>()( strct->getName() );
-
-            for( size_t i=0; i<strct->getNumMembers(); ++i ) {
-                StaticType::Struct::MemberDescriptor member = strct->getMember(i);
-
-                result *= FibonacciHashMultiplier;
-                result += hash<String>()( member.name );
-                result *= FibonacciHashMultiplier;
-                result += hash<StaticType::CPtr>()( member.type );
-            }
-
-            return result;
-        }
-    };
-
-    size_t retVal =
-            typeType.index() * FibonacciHashMultiplier + std::visit( Visitor{._this = type}, typeType );
-
-    size_t asserter = 0;
-    if( (type.getFlags() & StaticType::Flags::Reference) != 0 ) {
-        retVal *= FibonacciHashMultiplier-ReferenceModifier;
-        asserter |= StaticType::Flags::Reference;
-    }
-    if( (type.getFlags() & StaticType::Flags::Mutable) != 0 ) {
-        retVal *= FibonacciHashMultiplier-MutableModifier;
-        asserter |= StaticType::Flags::Mutable;
-    }
-    ASSERT( type.getFlags() == asserter )<<"Unhandled type flag. Flags "<<type.getFlags()<<", handled "<<asserter;
-
-    return retVal;
+    size_t ret = AST::downCast( &type )->getHash();
+    indent--;
+    return ret;
 }
 
 } // namespace std

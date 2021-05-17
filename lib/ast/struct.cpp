@@ -1,5 +1,6 @@
 #include "ast/struct.h"
 
+#include "ast/hash_modifiers.h"
 #include "ast/lookup_context.h"
 
 namespace AST {
@@ -45,6 +46,19 @@ size_t StructTypeImpl::getSize() const {
 
 size_t StructTypeImpl::getAlignment() const {
     return _alignment;
+}
+
+void StructTypeImpl::calcHash() {
+    ASSERT( _hash==0 );
+    _hash = calcHashHelper( this );
+}
+
+size_t StructTypeImpl::calcHash( const StructTypeImpl *anchor ) const {
+    if( anchor==this ) {
+        return RecursiveStructHash;
+    }
+
+    return calcHashHelper(anchor);
 }
 
 void StructTypeImpl::getMangledName(std::ostringstream &formatter) const {
@@ -112,6 +126,25 @@ bool StructTypeImpl::definitionPass2(
     }
 
     return true;
+}
+
+size_t StructTypeImpl::calcHashHelper( const StructTypeImpl *anchor ) const {
+    ASSERT( getSize()!=0 )<<"Tried to get hash of incomplete type "<<this;
+
+    size_t result = FibonacciHashMultiplier - StructModifier;
+
+    result += std::hash<String>()( getName() );
+
+    for( size_t i=0; i<getNumMembers(); ++i ) {
+        StaticType::Struct::MemberDescriptor member = getMember(i);
+
+        result *= FibonacciHashMultiplier;
+        result += std::hash<String>()( member.name );
+        result *= FibonacciHashMultiplier;
+        result += downCast( member.type )->calcHashInternal( anchor );
+    }
+
+    return result;
 }
 
 } // namespace AST

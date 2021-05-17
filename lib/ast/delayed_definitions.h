@@ -19,6 +19,7 @@
 namespace AST {
 
 class LookupContext;
+class StructTypeImpl;
 
 struct PendingType {
     LookupContext *context;
@@ -55,6 +56,7 @@ using ReverseDependencies =
     std::unordered_map<PracticalSemanticAnalyzer::StaticType::Types, ReverseDependency>;
 
 struct DelayedDefinitions {
+    std::vector< StructTypeImpl * > hashless;
     ReadyTypes ready;
     PendingTypes pending;
     ReverseDependencies reverseDependencies;

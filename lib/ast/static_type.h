@@ -132,6 +132,9 @@ public:
     bool sizeKnown() const;
     virtual size_t getSize() const override;
     virtual size_t getAlignment() const override;
+    size_t getHash() const;
+
+    size_t calcHashInternal(const StructTypeImpl *anchor) const;
 
     ValueRangeBase::CPtr defaultRange() const {
         return valueRange;
