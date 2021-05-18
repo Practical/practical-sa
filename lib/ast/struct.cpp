@@ -105,6 +105,7 @@ bool StructTypeImpl::definitionPass2(
         _size = 0;
         _alignment = 0;
         _members.clear();
+        *_context = LookupContext( _context->getParent() );
 
         return false;
     }
