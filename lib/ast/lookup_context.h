@@ -18,6 +18,7 @@
 
 #include <practical/slice.h>
 
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

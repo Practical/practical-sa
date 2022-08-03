@@ -12,6 +12,8 @@
 
 #include <practical/errors.h>
 
+#include <limits>
+
 namespace NonTerminals {
 
 using namespace InternalNonTerminals;

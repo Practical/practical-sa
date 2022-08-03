@@ -10,6 +10,7 @@
 #define AST_WEIGHT_H
 
 #include <iostream>
+#include <limits>
 
 namespace AST {
 

@@ -15,6 +15,8 @@
 
 #include <practical/practical.h>
 
+#include <optional>
+
 namespace AST {
 
 class VariableDefinition {

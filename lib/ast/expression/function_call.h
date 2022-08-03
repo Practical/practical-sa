@@ -14,6 +14,8 @@
 #include "ast/expression.h"
 #include "parser.h"
 
+#include <optional>
+
 namespace AST::ExpressionImpl {
 
 class FunctionCall : public Base {
